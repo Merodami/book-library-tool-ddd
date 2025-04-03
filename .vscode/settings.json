@@ -1,0 +1,32 @@
+{
+  "cSpell.words": ["Mailhog", "vitest"],
+  "cSpell.language": "en-US",
+  "editor.codeActionsOnSave": ["source.fixAll.eslint"],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/.hg": true,
+    "**/.svn": true,
+    "**/CVS": true,
+    "**/coverage": true,
+    "**/sample.dat": true
+  },
+  "search.exclude": {
+    // This is generated data, and it clutters up search results with
+    // many matches for things that should not be edited.
+    //
+    // It is not .gitignored since it _should_ be committed to ensure
+    // stable builds, and that the project "just works" without depending
+    // on something external that can change.
+    "packages/sdk/src/openapi": true,
+    "**/node_modules": true,
+    "**/dist": true
+  },
+  "[dotenv]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  }
+}

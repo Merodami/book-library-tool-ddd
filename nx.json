@@ -1,0 +1,32 @@
+{
+  "extends": "nx/presets/npm.json",
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": ["build", "typecheck", "lint", "test"],
+        "parallel": 100,
+        "globalEnv": {
+          "DOTENV_PATH": ".env"
+        }
+      }
+    }
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["{projectRoot}/dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "local": {
+      "cache": false,
+      "persistent": true
+    }
+  },
+  "workspaceLayout": {
+    "appsDir": "packages",
+    "libsDir": "packages"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "book-library-tool",
+  "version": "1.0.0",
+  "private": true,
+  "author": "merodami",
+  "type": "module",
+  "scripts": {
+    "upgrade": "nx run-many --target=upgrade --all --parallel=100",
+    "upgrade:all": "nx run-many --target=upgrade --all --parallel=100",
+    "graph": "nx graph",
+    "docker:local": "docker compose -f docker-compose.local.yml up -d",
+    "docker:local:down": "docker compose -f docker-compose.local.yml down",
+    "test": "yarn vitest",
+    "build": "nx run-many --target=build --all --parallel=100 --output-style=stream --skip-nx-cache",
+    "typecheck": "nx run-many --target=typecheck --parallel=100",
+    "lint": "nx format:check && eslint '**/*.{js,tsx,jsx,ts}' && prettier --check .",
+    "lint:fix": "prettier --write . && eslint '**/*.{js,tsx,jsx,ts}' --fix",
+    "lint:report": "eslint --quiet --output-file eslint_report.json --format json '**/*.{js,tsx,jsx,ts}'",
+    "local": "nx run-many --target=local --verbose --parallel=100 --output-style=stream",
+    "reset:codebase": "yarn clear && yarn && yarn build",
+    "kill": "yarn kill:backend",
+    "kill:backend": "fkill --force --silent :3000 :3001 :3002 :3003",
+    "database:reset": "yarn docker:local:down && rm -rf mongodata && yarn docker:local -d",
+    "database:seed": "nx run @book-library-tool/database:seed-books",
+    "api:docs": "nx run @book-library-tool/api:open-docs",
+    "clear": "find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' + && find . -name \"dist\" -type d -prune -exec rm -rf '{}' +",
+    "user:create": "nx run @book-library-tool/auth:generate-user",
+    "generate:api": "nx run @book-library-tool/api:build",
+    "generate:sdk": "nx run @book-library-tool/sdk:sdk-gen",
+    "git-hooks-prepare": "husky install"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "@types/node": "^22.13.17",
+    "@types/supertest": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
+    "axios": "^1.8.4",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-loader": "^4.0.2",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-sonarjs": "^3.0.2",
+    "express": "5.1.0",
+    "fix-esm-import-path": "^1.10.1",
+    "fkill-cli": "^8.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
+    "nx": "^20.7.0",
+    "prettier": "^3.5.3",
+    "supertest": "^7.1.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.1.1"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "packageManager": "yarn@4.7.0",
+  "engines": {
+    "node": ">=20.0.0 <21.0.0"
+  }
+}

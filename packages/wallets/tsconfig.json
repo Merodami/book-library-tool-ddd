@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
+  },
+  "include": ["src"],
+  "exclude": ["dist", "../../node_modules", "node_modules"],
+  "references": [
+    {
+      "path": "../database"
+    },
+    {
+      "path": "../api"
+    },
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../sdk"
+    },
+    {
+      "path": "../auth"
+    },
+    {
+      "path": "../shared"
+    }
+  ]
+}

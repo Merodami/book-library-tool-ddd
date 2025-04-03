@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "dom"],
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "useUnknownInCatchVariables": false,
+    "isolatedModules": true,
+    "newLine": "lf",
+    "jsx": "preserve",
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
+    "sourceMap": true,
+    "noEmit": false,
+    "paths": {
+      "@book-library-tool/*": ["./packages/*"]
+    }
+  },
+  "exclude": ["**/dist", "node_modules"],
+  "references": [
+    { "path": "packages/types" },
+    { "path": "packages/api" },
+    { "path": "packages/sdk" },
+    { "path": "packages/database" },
+    { "path": "packages/auth" },
+    { "path": "packages/shared" },
+    { "path": "packages/books" },
+    { "path": "packages/wallets" },
+    { "path": "packages/reminders" }
+  ]
+}

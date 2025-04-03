@@ -1,0 +1,57 @@
+# compiled output
+/dist
+/tmp
+/out-tsc
+
+# dependencies
+/node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+npm-debug.log
+yarn-error.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+node_modules
+dist
+.env
+eslint_report.json
+*.tar
+.history
+
+# Yarn
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+tsconfig.tsbuildinfo
+
+.nx/cache
+.nx/workspace-data
+
+mongodata

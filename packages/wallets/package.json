@@ -1,0 +1,19 @@
+{
+  "name": "@book-library-tool/wallets",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "5.1.0",
+    "http-graceful-shutdown": "^3.1.14",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.17",
+    "@types/express": "^5.0.1",
+    "typescript": "^5.8.2"
+  }
+}

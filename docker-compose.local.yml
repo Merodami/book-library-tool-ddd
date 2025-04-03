@@ -1,0 +1,13 @@
+version: '3.5'
+services:
+  books-mongo:
+    container_name: books-mongo
+    image: mongo:6
+    restart: always
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_DATABASE: books-dev
+    volumes:
+      - ./mongodata/dev:/data/db
+      - ./packages/database/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js

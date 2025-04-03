@@ -1,0 +1,17 @@
+{
+  "name": "@book-library-tool/sdk",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@book-library-tool/api": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
+    "openapi-typescript-codegen": "^0.29.0",
+    "type-fest": "^4.38.0",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@book-library-tool/wallets",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "@book-library-tool/api",
+    "@book-library-tool/sdk",
+    "@book-library-tool/database",
+    "@book-library-tool/auth",
+    "@book-library-tool/shared"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx --watch ./src/app.ts",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

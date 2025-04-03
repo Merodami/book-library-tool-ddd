@@ -1,0 +1,36 @@
+{
+  "name": "@book-library-tool/sdk",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": ["@book-library-tool/api"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && tsc -p tsconfig.json",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "sdk-gen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "until [ -f ../api/dist/openapi.json ]; do echo 'Waiting for openapi.json...'; sleep 1; done; rm -rf src/openapi && mkdir src/openapi && openapi --input ../api/dist/openapi.json --output src/openapi --name API --useOptions --useUnionTypes && ../../node_modules/.bin/prettier src/openapi --write && npx fix-esm-import-path ./src/openapi",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

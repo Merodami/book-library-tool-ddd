@@ -1,0 +1,11 @@
+**/dist/**
+**/coverage/**
+/.yarn/**
+yarn.lock
+.env.*
+*.sh
+*.snap
+Dockerfile
+.gitignore
+.prettierignore
+packages/sdk/src/openapi
