@@ -1,16 +1,25 @@
 import { Router } from 'express'
-import { bookHandler } from './bookHandler.js'
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
+import { BookController } from '../../controllers/bookController.js'
 
-export default Router()
-  .post('/', validateBody(schemas.BookSchema), bookHandler.createBook)
-  .get(
-    '/:referenceId',
-    validateParams(schemas.BookIdSchema),
-    bookHandler.getBook,
+export default function (bookController: BookController) {
+  const router = Router()
+
+  router.post(
+    '/',
+    validateBody(schemas.BookRequestSchema),
+    bookController.createBook,
   )
-  .delete(
-    '/:referenceId',
+  router.get(
+    '/:isbn',
     validateParams(schemas.BookIdSchema),
-    bookHandler.deleteBook,
+    bookController.getBook,
   )
+  router.delete(
+    '/:isbn',
+    validateParams(schemas.BookIdSchema),
+    bookController.deleteBook,
+  )
+
+  return router
+}

@@ -2,7 +2,7 @@
 import { Ajv } from 'ajv'
 import { Request, Response, NextFunction } from 'express'
 import _addFormats from 'ajv-formats'
-import { formatApiErrors } from '@book-library-tool/api/util/formatApiError.js'
+import { formatApiErrors } from './util/formatApiError.js'
 
 // Import the Ajv formats plugin fix (cannot import directly AddFormat)
 const addFormats = _addFormats as unknown as typeof _addFormats.default

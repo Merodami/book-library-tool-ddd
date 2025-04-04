@@ -1,6 +1,7 @@
 import { Db } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
-import { DatabaseService } from '../databaseService.js'
+import { MongoDatabase } from '../MongoDatabase.js'
+import { IDatabaseService } from '../../books/infrastructure/src/database/IDatabaseService.js'
 
 // Define a type for dependencies that might be injected
 interface Dependencies {
@@ -15,6 +16,8 @@ export function setUpTestDatabase(dependencies?: Dependencies) {
   let mongoServer: MongoMemoryServer
   let originalMongoUri: string | undefined
   let originalDbName: string | undefined
+
+  const dbService: IDatabaseService = new MongoDatabase()
 
   // Before all tests setup
   const beforeAllCallback = async () => {
@@ -31,18 +34,15 @@ export function setUpTestDatabase(dependencies?: Dependencies) {
     process.env.MONGO_DB_NAME = 'test-db'
 
     // Connect to the test database
-    await DatabaseService.connect()
+    await dbService.connect()
 
-    return {
-      mongoUri,
-      dbName: 'test-db',
-    }
+    return dbService
   }
 
   // After all tests cleanup
   const afterAllCallback = async () => {
     // Disconnect from test database
-    await DatabaseService.disconnect()
+    await dbService.disconnect()
 
     // Restore original environment variables
     if (originalMongoUri) {
@@ -65,7 +65,9 @@ export function setUpTestDatabase(dependencies?: Dependencies) {
 
   // Before each test cleanup - can be used to reset collections
   const beforeEachCallback = async () => {
-    const db = DatabaseService['db'] as Db
+    // Get the internal MongoDB db instance from your dbService
+    const db = (dbService as any).db as Db
+
     if (!db) {
       throw new Error(
         'Database not connected. Make sure beforeAllCallback was called.',

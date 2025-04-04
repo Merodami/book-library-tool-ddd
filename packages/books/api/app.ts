@@ -1,12 +1,19 @@
 import express from 'express'
-import { DatabaseService } from '@book-library-tool/database'
 import { apiTokenAuth } from '@book-library-tool/auth'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import cors from 'cors'
 import gracefulShutdown from 'http-graceful-shutdown'
-import router from './routes/index.js'
+import { MongoDatabaseService } from '../infrastructure/src/database/MongoDatabaseService.js'
+import { BookController } from './controllers/bookController.js'
+import createRouter from './routes/index.js'
+import { BookRepository } from '../infrastructure/src/persistence/mongo/BookRepository.js'
+import { BookService } from '../application/src/use_cases/BookService.js'
+import { IDatabaseService } from '../infrastructure/src/database/IDatabaseService.js'
 
 async function startServer() {
+  // Create a new instance of the MongoDatabaseService
+  const DatabaseService: IDatabaseService = new MongoDatabaseService()
+
   try {
     await DatabaseService.connect()
     logger.info('Successfully connected to MongoDB.')
@@ -15,6 +22,11 @@ async function startServer() {
 
     process.exit(1)
   }
+
+  // Create a new instances of the BookRepository, BookService, and BookController
+  const bookRepository = new BookRepository(DatabaseService)
+  const bookService = new BookService(bookRepository)
+  const bookController = new BookController(bookService)
 
   const app = express()
     .disable('x-powered-by')
@@ -25,7 +37,7 @@ async function startServer() {
     )
     .use(express.json())
     .use(apiTokenAuth({ secret: process.env.JWT_SECRET || 'default-secret' }))
-    .use(router)
+    .use(createRouter(bookController)) // Injecting the controller into the routes.
     .use(errorMiddleware)
 
   const SERVER_PORT = process.env.BOOKS_SERVICE_SERVER_PORT || 3001

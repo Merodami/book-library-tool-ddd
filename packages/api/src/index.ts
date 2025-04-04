@@ -1,4 +1,4 @@
-export * as schemas from '@book-library-tool/api/schemas/index.js'
+export * as schemas from './schemas/index.js'
 export {
   validateBody,
   validateParams,

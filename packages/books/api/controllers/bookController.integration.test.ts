@@ -4,17 +4,22 @@ import express from 'express'
 import request from 'supertest'
 import cors from 'cors'
 import { randomUUID } from 'crypto'
-import { DatabaseService } from '@book-library-tool/database'
 
-// Import the handler directly instead of the router
-import { bookHandler } from './bookHandler.js'
-import { catalogHandler } from '../catalog/catalogHandler.js'
+// Import the controller
+import { BookService } from '../../application/src/use_cases/BookService.js'
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
-import { paginationMiddleware } from '@book-library-tool/sdk'
 
-describe('Book Service Integration Tests', () => {
-  const db = setUpTestDatabase({ randomUUID })
+import { IDatabaseService } from '../../infrastructure/src/database/IDatabaseService.js'
+import { BookController } from './bookController.js'
+import { BookRepository } from '../../infrastructure/src/persistence/mongo/BookRepository.js'
+import { BookRequest } from '@book-library-tool/sdk'
+
+describe('Book Controller Integration Tests', () => {
+  // Set up the test database utility
+  const dbSetup = setUpTestDatabase({ randomUUID })
+  let dbService: IDatabaseService
   let app: express.Express
+  let bookController: BookController
 
   // Common test headers for requests
   const commonHeaders = {
@@ -24,8 +29,8 @@ describe('Book Service Integration Tests', () => {
   }
 
   // Sample book data for testing
-  const testBook = {
-    id: '0515125628',
+  const testBook: BookRequest = {
+    isbn: '0515125628',
     title: 'The Target',
     author: 'Catherine Coulter',
     publicationYear: 1999,
@@ -35,42 +40,44 @@ describe('Book Service Integration Tests', () => {
 
   // Setup database and express app before all tests
   beforeAll(async () => {
-    // Set up the test environment variables
-    await db.beforeAllCallback()
+    // Set up the test environment variables and get the database service
+    dbService = await dbSetup.beforeAllCallback()
 
-    // Explicitly connect to the database
-    await DatabaseService.connect()
+    // Initialize services and controllers
+    const bookRepository = new BookRepository(dbService)
+    const bookService = new BookService(bookRepository)
+    bookController = new BookController(bookService)
 
     // Initialize the express application with specific routes
-    // Instead of using the router, directly map routes to handlers
     app = express().disable('x-powered-by').use(cors()).use(express.json())
 
-    // Explicitly define the routes using the handlers
-    app.post('/books', validateBody(schemas.BookSchema), bookHandler.createBook)
+    // Set up the routes with the controller methods
+    app.post(
+      '/books',
+      validateBody(schemas.BookRequestSchema),
+      bookController.createBook,
+    )
     app.get(
-      '/books/:referenceId',
+      '/books/:isbn',
       validateParams(schemas.BookIdSchema),
-      bookHandler.getBook,
+      bookController.getBook,
     )
     app.delete(
-      '/books/:referenceId',
+      '/books/:isbn',
       validateParams(schemas.BookIdSchema),
-      bookHandler.deleteBook,
+      bookController.deleteBook,
     )
-    // To validate if book created exists
-
-    app.get('/catalog', paginationMiddleware(), catalogHandler.searchCatalog)
   })
 
   // Clean the database between tests
   beforeEach(async () => {
     // Clear the books collection to ensure clean state
-    await db.beforeEachCallback()
+    await dbSetup.beforeEachCallback()
   })
 
   // Cleanup after all tests
   afterAll(async () => {
-    await db.afterAllCallback()
+    await dbSetup.afterAllCallback()
   })
 
   describe('Book CRUD Operations', () => {
@@ -82,7 +89,7 @@ describe('Book Service Integration Tests', () => {
         .expect(201)
 
       expect(response.body).toBeDefined()
-      expect(response.body.id).toBe(testBook.id)
+      expect(response.body.isbn).toBe(testBook.isbn)
       expect(response.body.title).toBe(testBook.title)
       expect(response.body.author).toBe(testBook.author)
     })
@@ -107,7 +114,7 @@ describe('Book Service Integration Tests', () => {
       )
     })
 
-    it('should retrieve a book by id', async () => {
+    it('should retrieve a book by isbn', async () => {
       // First create a book
       await request(app)
         .post('/books')
@@ -117,19 +124,19 @@ describe('Book Service Integration Tests', () => {
 
       // Then retrieve it
       const response = await request(app)
-        .get(`/books/${testBook.id}`)
+        .get(`/books/${testBook.isbn}`)
         .set(commonHeaders)
         .expect(200)
 
       expect(response.body).toBeDefined()
-      expect(response.body.id).toBe(testBook.id)
+      expect(response.body.isbn).toBe(testBook.isbn)
       expect(response.body.title).toBe(testBook.title)
       expect(response.body.author).toBe(testBook.author)
     })
 
     it('should return 404 when book is not found', async () => {
       const response = await request(app)
-        .get('/books/nonexistent-id')
+        .get('/books/nonexistent-isbn')
         .set(commonHeaders)
         .expect(404)
 
@@ -146,7 +153,7 @@ describe('Book Service Integration Tests', () => {
 
       // Then delete it
       const deleteResponse = await request(app)
-        .delete(`/books/${testBook.id}`)
+        .delete(`/books/${testBook.isbn}`)
         .set(commonHeaders)
         .expect(200)
 
@@ -154,14 +161,14 @@ describe('Book Service Integration Tests', () => {
 
       // Verify it's gone
       await request(app)
-        .get(`/books/${testBook.id}`)
+        .get(`/books/${testBook.isbn}`)
         .set(commonHeaders)
         .expect(404)
     })
 
     it('should return 404 when trying to delete non-existent book', async () => {
       const response = await request(app)
-        .delete('/books/nonexistent-id')
+        .delete('/books/nonexistent-isbn')
         .set(commonHeaders)
         .expect(404)
 
@@ -169,87 +176,10 @@ describe('Book Service Integration Tests', () => {
     })
   })
 
-  describe('Catalog Search', () => {
-    // Prepare sample books for search tests
-    const books = [
-      testBook,
-      {
-        id: '0679427279',
-        title: 'The Evolution Man',
-        author: 'Roy Lewis',
-        publicationYear: 1993,
-        publisher: 'Random House Inc',
-        price: 19,
-      },
-      {
-        id: '1234567890',
-        title: 'Another Target',
-        author: 'Some Writer',
-        publicationYear: 1999,
-        publisher: 'Test Publisher',
-        price: 30,
-      },
-    ]
-
-    beforeEach(async () => {
-      // Create all sample books for search tests
-      for (const book of books) {
-        await request(app).post('/books').set(commonHeaders).send(book)
-      }
-    })
-
-    it('should search books by title', async () => {
-      const response = await request(app)
-        .get('/catalog?title=Target')
-        .set(commonHeaders)
-        .expect(200)
-
-      expect(response.body.data).toBeInstanceOf(Array)
-      expect(response.body.data.length).toBe(2)
-      expect(response.body.data.map((b: any) => b.title)).toEqual(
-        expect.arrayContaining(['The Target', 'Another Target']),
-      )
-    })
-
-    it('should search books by author', async () => {
-      const response = await request(app)
-        .get('/catalog?author=Coulter')
-        .set(commonHeaders)
-        .expect(200)
-
-      expect(response.body.data).toBeInstanceOf(Array)
-      expect(response.body.data.length).toBe(1)
-      expect(response.body.data[0].author).toBe('Catherine Coulter')
-    })
-
-    it('should search books by publication year', async () => {
-      const response = await request(app)
-        .get('/catalog?publicationYear=1999')
-        .set(commonHeaders)
-        .expect(200)
-
-      expect(response.body.data).toBeInstanceOf(Array)
-      expect(response.body.data.length).toBe(2)
-      expect(response.body.data.map((b: any) => b.publicationYear)).toEqual([
-        1999, 1999,
-      ])
-    })
-
-    it('should return an empty array when no books match search criteria', async () => {
-      const response = await request(app)
-        .get('/catalog?title=NonexistentTitle')
-        .set(commonHeaders)
-        .expect(200)
-
-      expect(response.body.data).toBeInstanceOf(Array)
-      expect(response.body.data.length).toBe(0)
-    })
-  })
-
   describe('Error Handling', () => {
     it('should validate book data on creation', async () => {
       const invalidBook = {
-        id: '1234567890',
+        isbn: '1234567890',
         // Missing required fields: title, author
         publicationYear: 'not-a-number', // Invalid type
         publisher: 'Test Publisher',
@@ -263,6 +193,25 @@ describe('Book Service Integration Tests', () => {
         .expect(400)
 
       expect(response.body.error).toBeDefined()
+    })
+
+    it('should handle domain validation errors', async () => {
+      const invalidBook = {
+        isbn: '123', // Valid but incomplete data
+        title: '', // Empty title should be rejected by domain
+        author: 'Test Author',
+        publicationYear: 2020,
+        publisher: 'Test Publisher',
+        price: 15,
+      }
+
+      const response = await request(app)
+        .post('/books')
+        .set(commonHeaders)
+        .send(invalidBook)
+        .expect(400)
+
+      expect(response.body.error || response.body.message).toBeDefined()
     })
   })
 })

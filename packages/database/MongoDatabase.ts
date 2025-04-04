@@ -14,7 +14,6 @@ import {
   UpdateFilter,
   UpdateOptions,
 } from 'mongodb'
-import { IDatabaseService } from './IDatabaseService.js'
 
 // Generic interface for documents with timestamp fields.
 interface Timestamped {
@@ -22,15 +21,15 @@ interface Timestamped {
   updatedAt?: string
 }
 
-export class MongoDatabaseService implements IDatabaseService {
-  private static client: MongoClient | null = null
-  private static db: Db | null = null
+export class MongoDatabase {
+  private client: MongoClient | null = null
+  private db: Db | null = null
 
   /**
    * Connect to MongoDB using the provided MONGO_URI and MONGO_DB_NAME environment variables.
    * Returns the connected database instance.
    */
-  static async connect(): Promise<Db> {
+  async connect(): Promise<Db> {
     if (this.db) {
       return this.db
     }
@@ -58,9 +57,20 @@ export class MongoDatabaseService implements IDatabaseService {
   }
 
   /**
+   * Returns a type-safe collection from the connected database.
+   */
+  getCollection<T extends Document = Document>(name: string): Collection<T> {
+    if (!this.db) {
+      throw new Error('Database not connected. Call connect() first.')
+    }
+
+    return this.db.collection<T>(name)
+  }
+
+  /**
    * Find a document in any collection based on the provided query.
    */
-  static async findOne<T extends Document = Document>(
+  async findOne<T extends Document = Document>(
     collection: Collection<T>,
     query: Filter<T>,
     options?: FindOptions<T>,
@@ -81,7 +91,7 @@ export class MongoDatabaseService implements IDatabaseService {
    * Count documents in a collection based on the provided query.
    * Used in the reservationHandler to count active reservations.
    */
-  static async countDocuments<T extends Document = Document>(
+  async countDocuments<T extends Document = Document>(
     collection: Collection<T>,
     query: Filter<T>,
   ): Promise<number> {
@@ -91,7 +101,7 @@ export class MongoDatabaseService implements IDatabaseService {
   /**
    * Insert a document into a collection with createdAt and updatedAt timestamps.
    */
-  static async insertDocument<T extends Document>(
+  async insertDocument<T extends Document>(
     collection: Collection<T>,
     document: T,
   ): Promise<InsertOneResult<T & Timestamped>> {
@@ -112,7 +122,7 @@ export class MongoDatabaseService implements IDatabaseService {
    * Update a document in a collection by merging the provided update filter with an automatically
    * added 'updatedAt' timestamp. Supports update operators such as $inc, $set, etc.
    */
-  static async updateDocument<T extends Document>(
+  async updateDocument<T extends Document>(
     collection: Collection<T>,
     filter: Filter<T>,
     update: UpdateFilter<T> | Partial<T>,
@@ -143,7 +153,7 @@ export class MongoDatabaseService implements IDatabaseService {
   /**
    * Generic pagination method for any collection
    */
-  static async paginateCollection<T extends Document = Document>(
+  async paginateCollection<T extends Document = Document>(
     collection: Collection<T>,
     query: Filter<T>,
     pagination: PaginationParams,
@@ -192,7 +202,7 @@ export class MongoDatabaseService implements IDatabaseService {
   /**
    * Disconnect from MongoDB.
    */
-  static async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (this.client) {
       await this.client.close()
       this.client = null

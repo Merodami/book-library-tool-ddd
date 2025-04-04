@@ -1,5 +1,5 @@
 export class Book {
-  public readonly id: string
+  public readonly isbn: string
   public title: string
   public author: string
   public publicationYear: number
@@ -10,7 +10,7 @@ export class Book {
   public deletedAt: Date
 
   constructor(
-    id: string,
+    isbn: string,
     title: string,
     author: string,
     publicationYear: number,
@@ -20,7 +20,20 @@ export class Book {
     updatedAt: Date = new Date(),
     deletedAt: Date = new Date(),
   ) {
-    if (!id.trim()) {
+    if (
+      !isbn ||
+      !title ||
+      !author ||
+      !publicationYear ||
+      !publisher ||
+      !price
+    ) {
+      throw Error(
+        'ISBN, title, author, publicationYear, publisher and price are required',
+      )
+    }
+
+    if (!isbn.trim()) {
       throw new Error('Book ID cannot be empty')
     }
 
@@ -36,11 +49,11 @@ export class Book {
       throw new Error('Publication year must be a number')
     }
 
-    this.id = id
-    this.title = title
-    this.author = author
+    this.isbn = isbn.trim()
+    this.title = title.trim()
+    this.author = author.trim()
     this.publicationYear = publicationYear
-    this.publisher = publisher
+    this.publisher = publisher.trim()
     this.price = price
     this.createdAt = createdAt
     this.updatedAt = updatedAt

@@ -18,7 +18,7 @@ import {
   PaginatedUserResponseSchema,
   ErrorResponseSchema,
   ReservationsHistoryQuerySchema,
-} from '@book-library-tool/api/schemas/index.js'
+} from './schemas/index.js'
 import {
   paramPaginationLimit,
   paramPaginationPage,
@@ -28,7 +28,7 @@ import {
   paramUserId,
   paramBookId,
   paramReservationId,
-} from '@book-library-tool/api/parameters/index.js'
+} from './parameters/index.js'
 
 export const OpenAPISpec = {
   openapi: '3.0.0',

@@ -3,7 +3,7 @@ import path from 'path'
 import { OpenAPIV3 } from 'openapi-types'
 import SwaggerParser from '@apidevtools/swagger-parser'
 import { cloneDeep } from 'lodash-es'
-import { OpenAPISpec } from '../../api-old/src/openapi.js'
+import { OpenAPISpec } from '../openapi.js'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)

@@ -4,7 +4,7 @@ export interface IBookRepository {
   /**
    * Finds a book by its unique identifier.
    */
-  findById(id: string): Promise<Book | null>
+  findByISBN(isbn: Book['isbn']): Promise<Book | null>
 
   /**
    * Persists a new book.
@@ -14,5 +14,5 @@ export interface IBookRepository {
   /**
    * Deletes a book by its id.
    */
-  deleteById(id: string): Promise<boolean>
+  deleteByISBN(isbn: Book['isbn']): Promise<boolean>
 }

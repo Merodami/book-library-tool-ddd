@@ -1,6 +1,8 @@
-import { DatabaseService } from './databaseService.js'
+import { MongoDatabaseService } from './MongoDatabaseService.js'
 
 async function initDatabase() {
+  const DatabaseService = new MongoDatabaseService()
+
   try {
     // Connect to the database.
     await DatabaseService.connect()

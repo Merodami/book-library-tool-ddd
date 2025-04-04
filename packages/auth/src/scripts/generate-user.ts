@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto'
 import Jwt from 'jsonwebtoken'
-import { DatabaseService } from '@book-library-tool/database'
+import { MongoDatabase } from '@book-library-tool/database'
 import { formatISO } from 'date-fns'
 import { schemas } from '@book-library-tool/api'
 
@@ -27,8 +27,10 @@ const newUser: schemas.User & { createdAt: string; updatedAt: string } = {
 }
 
 async function createUserAndGenerateToken() {
+  const dbService = new MongoDatabase()
+
   // Connect to the database
-  const db = await DatabaseService.connect()
+  const db = await dbService.connect()
   const usersCollection = db.collection<schemas.User>('users')
 
   // Validate if the email already exists
@@ -56,7 +58,7 @@ async function createUserAndGenerateToken() {
   console.log('\nGenerated JWT token:\n')
   console.log(`${token}\n`)
 
-  await DatabaseService.disconnect()
+  await dbService.disconnect()
   process.exit(0)
 }
 

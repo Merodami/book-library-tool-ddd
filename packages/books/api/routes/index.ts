@@ -1,4 +1,11 @@
 import { Router } from 'express'
-import bookRoute from './book/index.js'
+import createBookRoutes from './book/index.js'
+import { BookController } from '../controllers/bookController.js'
 
-export default Router().use('/books', bookRoute)
+export default function (bookController: BookController) {
+  const router = Router()
+
+  router.use('/books', createBookRoutes(bookController))
+
+  return router
+}

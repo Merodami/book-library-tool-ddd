@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getPaginatedData } from './paginationHelper.js'
-import { DatabaseService } from '../../books/infrastructure/src/database/databaseService.js'
+
 import { Request } from 'express'
 import { Collection } from 'mongodb'
+import { MongoDatabaseService } from '../MongoDatabaseService.js'
+
+const databaseService = new MongoDatabaseService()
 
 // Define test suite for the getPaginatedData function
 describe('getPaginatedData', () => {
@@ -42,10 +45,8 @@ describe('getPaginatedData', () => {
       pagination: { page: 1, limit: 10 },
     }
 
-    // Mocking DatabaseService.paginateCollection to return the predefined paginationData
-    vi.spyOn(DatabaseService, 'paginateCollection').mockResolvedValue(
-      paginationData,
-    )
+    // Mocking dbService.paginateCollection to return the predefined paginationData
+    vi.spyOn(dbService, 'paginateCollection').mockResolvedValue(paginationData)
   })
 
   // After each test, restore all mocks to avoid side effects
@@ -53,8 +54,8 @@ describe('getPaginatedData', () => {
     vi.restoreAllMocks()
   })
 
-  // Test to check if DatabaseService.paginateCollection is called with correct arguments
-  it('should call DatabaseService.paginateCollection with correct arguments', async () => {
+  // Test to check if dbService.paginateCollection is called with correct arguments
+  it('should call dbService.paginateCollection with correct arguments', async () => {
     const query = { title: { $regex: /test/i } }
     const options = {
       projection: { _id: 0 },
@@ -69,7 +70,7 @@ describe('getPaginatedData', () => {
     )
 
     // Verify that paginateCollection was called with the correct parameters
-    expect(DatabaseService.paginateCollection).toHaveBeenCalledWith(
+    expect(dbService.paginateCollection).toHaveBeenCalledWith(
       fakeCollection,
       query,
       { page: 1, limit: 10 },
@@ -90,7 +91,7 @@ describe('getPaginatedData', () => {
     )
 
     // Verify that paginateCollection was called with an empty query object and undefined options
-    expect(DatabaseService.paginateCollection).toHaveBeenCalledWith(
+    expect(dbService.paginateCollection).toHaveBeenCalledWith(
       fakeCollection,
       {},
       { page: 1, limit: 10 },
