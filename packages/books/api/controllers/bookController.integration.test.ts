@@ -6,12 +6,12 @@ import cors from 'cors'
 import { randomUUID } from 'crypto'
 
 // Import the controller
-import { BookService } from '../../application/src/use_cases/BookService.js'
+import { BookService } from '../../application/use_cases/BookService.js'
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
 
-import { IDatabaseService } from '../../infrastructure/src/database/IDatabaseService.js'
+import { IDatabaseService } from '../../infrastructure/database/IDatabaseService.js'
 import { BookController } from './bookController.js'
-import { BookRepository } from '../../infrastructure/src/persistence/mongo/BookRepository.js'
+import { BookRepository } from '../../infrastructure/persistence/mongo/BookRepository.js'
 import { BookRequest } from '@book-library-tool/sdk'
 
 describe('Book Controller Integration Tests', () => {

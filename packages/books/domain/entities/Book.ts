@@ -1,3 +1,5 @@
+import { validateRequiredFields } from '@book-library-tool/shared'
+
 export class Book {
   public readonly isbn: string
   public title: string
@@ -20,34 +22,14 @@ export class Book {
     updatedAt: Date = new Date(),
     deletedAt: Date = new Date(),
   ) {
-    if (
-      !isbn ||
-      !title ||
-      !author ||
-      !publicationYear ||
-      !publisher ||
-      !price
-    ) {
-      throw Error(
-        'ISBN, title, author, publicationYear, publisher and price are required',
-      )
-    }
-
-    if (!isbn.trim()) {
-      throw new Error('Book ID cannot be empty')
-    }
-
-    if (!title.trim()) {
-      throw new Error('Title cannot be empty')
-    }
-
-    if (!author.trim()) {
-      throw new Error('Author cannot be empty')
-    }
-
-    if (isNaN(publicationYear)) {
-      throw new Error('Publication year must be a number')
-    }
+    validateRequiredFields({
+      isbn,
+      title,
+      author,
+      publicationYear,
+      publisher,
+      price,
+    })
 
     this.isbn = isbn.trim()
     this.title = title.trim()
@@ -60,13 +42,13 @@ export class Book {
     this.deletedAt = deletedAt
   }
 
-  // Use case Update Title
+  // Business behavior to update the title
   updateTitle(newTitle: string): void {
-    if (!newTitle.trim()) {
-      throw new Error('Title cannot be empty')
-    }
+    validateRequiredFields({
+      newTitle,
+    })
 
-    this.title = newTitle
+    this.title = newTitle.trim()
 
     this.updatedAt = new Date()
   }

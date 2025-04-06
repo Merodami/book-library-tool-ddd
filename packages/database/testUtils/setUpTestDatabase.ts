@@ -1,7 +1,7 @@
 import { Db } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import { MongoDatabase } from '../MongoDatabase.js'
-import { IDatabaseService } from '../../books/infrastructure/src/database/IDatabaseService.js'
+import { IDatabaseService } from '../../books/infrastructure/database/IDatabaseService.js'
 
 // Define a type for dependencies that might be injected
 interface Dependencies {

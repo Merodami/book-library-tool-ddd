@@ -3,12 +3,12 @@ import { apiTokenAuth } from '@book-library-tool/auth'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import cors from 'cors'
 import gracefulShutdown from 'http-graceful-shutdown'
-import { MongoDatabaseService } from '../infrastructure/src/database/MongoDatabaseService.js'
+import { MongoDatabaseService } from '../infrastructure/database/MongoDatabaseService.js'
 import { BookController } from './controllers/bookController.js'
 import createRouter from './routes/index.js'
-import { BookRepository } from '../infrastructure/src/persistence/mongo/BookRepository.js'
-import { BookService } from '../application/src/use_cases/BookService.js'
-import { IDatabaseService } from '../infrastructure/src/database/IDatabaseService.js'
+import { BookRepository } from '../infrastructure/persistence/mongo/BookRepository.js'
+import { BookService } from '../application/use_cases/BookService.js'
+import { IDatabaseService } from '../infrastructure/database/IDatabaseService.js'
 
 async function startServer() {
   // Create a new instance of the MongoDatabaseService

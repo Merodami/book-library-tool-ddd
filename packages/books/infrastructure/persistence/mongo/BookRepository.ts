@@ -1,5 +1,5 @@
-import { Book } from '../../../../domain/src/entities/Book.js'
-import { IBookRepository } from '../../../../domain/src/repositories/IBookRepository.js'
+import { Book } from '../../../domain/entities/Book.js'
+import { IBookRepository } from '../../../domain/repositories/IBookRepository.js'
 import { IDatabaseService } from '../../database/IDatabaseService.js'
 
 export class BookRepository implements IBookRepository {

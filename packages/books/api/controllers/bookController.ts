@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { BookService } from '../../application/src/use_cases/BookService.js'
+import { BookService } from '../../application/use_cases/BookService.js'
 import { BookRequest } from '@book-library-tool/sdk'
 
 export class BookController {
@@ -70,7 +70,7 @@ export class BookController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { isbn } = req.params
+      const { isbn } = req.params as Pick<BookRequest, 'isbn'>
 
       const referencedBook = await this.bookService.getBookByISBN(isbn)
 

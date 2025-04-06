@@ -1,8 +1,8 @@
 import { describe, beforeEach, afterEach, test, expect, vi } from 'vitest'
 import { BookController } from './bookController.js'
-import { BookService } from '../../application/src/use_cases/BookService.js'
+import { BookService } from '../../application/use_cases/BookService.js'
 import { BookRequest } from '@book-library-tool/sdk'
-import { Book } from '../../domain/src/entities/Book.js'
+import { Book } from '../../domain/entities/Book.js'
 
 // Mock the BookService
 vi.mock('../../application/src/use_cases/BookService.js')

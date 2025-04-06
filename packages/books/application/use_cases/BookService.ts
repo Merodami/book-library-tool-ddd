@@ -1,6 +1,6 @@
 import { BookRequest } from '@book-library-tool/sdk'
-import { Book } from '../../../domain/src/entities/Book.js'
-import { IBookRepository } from '../../../domain/src/repositories/IBookRepository.js'
+import { Book } from '../../domain/entities/Book.js'
+import { IBookRepository } from '../../domain/repositories/IBookRepository.js'
 
 export class BookService {
   constructor(private readonly bookRepository: IBookRepository) {}
@@ -38,6 +38,10 @@ export class BookService {
    * @returns The found Book entity, or null if not found.
    */
   async getBookByISBN(isbn: Book['isbn']): Promise<Book | null> {
+    if (!isbn) {
+      throw new Error('ISBN cannot be empty')
+    }
+
     return this.bookRepository.findByISBN(isbn)
   }
 
@@ -48,6 +52,31 @@ export class BookService {
    * @returns True if the deletion was successful, false otherwise.
    */
   async deleteBookByISBN(isbn: Book['isbn']): Promise<boolean> {
+    if (!isbn) {
+      throw new Error('ISBN cannot be empty')
+    }
+
     return this.bookRepository.deleteByISBN(isbn)
   }
+
+  /**
+   * Updates the title of a book.
+   *
+   * @param isbn - The book's unique identifier.
+   * @param newTitle - The new title for the book.
+   * @returns The updated Book entity.
+   */
+  // async updateBookTitle(isbn: string, newTitle: string): Promise<Book> {
+  //   const book = await this.bookRepository.findByISBN(isbn)
+
+  //   if (!book) {
+  //     throw new Error('Book not found')
+  //   }
+
+  //   book.updateTitle(newTitle)
+
+  //   await this.bookRepository.update(book)
+
+  //   return book
+  // }
 }
