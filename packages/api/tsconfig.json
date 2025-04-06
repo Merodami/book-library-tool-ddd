@@ -6,7 +6,12 @@
     "composite": true,
     "tsBuildInfoFile": "dist/.tsbuildinfo",
     "declaration": true,
-    "declarationDir": "dist"
+    "declarationDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      // Main
+      "./*": ["src/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "../../node_modules", "node_modules"],

@@ -31,8 +31,8 @@
     { "path": "packages/database" },
     { "path": "packages/auth" },
     { "path": "packages/shared" },
-    { "path": "packages/books" },
-    { "path": "packages/wallets" },
-    { "path": "packages/reminders" }
+    { "path": "packages/books" }
+    // { "path": "packages/wallets" },
+    // { "path": "packages/reminders" }
   ]
 }

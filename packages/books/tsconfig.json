@@ -6,7 +6,29 @@
     "composite": true,
     "tsBuildInfoFile": "dist/.tsbuildinfo",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      // Main
+      "@books/*": ["src/*"],
+
+      // API
+      "@controllers/*": ["src/api/controllers/*"],
+      "@routes/*": ["src/api/routes/*"],
+
+      // Application
+      "@dto/*": ["src/application/dtos/*"],
+      "@use_cases/*": ["src/application/use_cases/*"],
+
+      // Domain
+      "@entities/*": ["src/domain/entities/*"],
+      "@repositories/*": ["src/domain/repositories/*"],
+      "@value_objects/*": ["src/domain/value_objects/*"],
+
+      // Infrastructure
+      "@database/*": ["src/infrastructure/database/*"],
+      "@persistence/*": ["src/infrastructure/persistence/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["dist", "../../node_modules", "node_modules"],

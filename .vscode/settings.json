@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["Mailhog", "vitest"],
+  "cSpell.words": ["dtos", "Mailhog", "vitest"],
   "cSpell.language": "en-US",
   "editor.codeActionsOnSave": ["source.fixAll.eslint"],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
