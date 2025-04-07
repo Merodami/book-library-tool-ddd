@@ -1,5 +1,8 @@
 import { describe, beforeAll, afterAll, it, expect, beforeEach } from 'vitest'
-import { setUpTestDatabase } from '@book-library-tool/database/testUtils/setUpTestDatabase.js'
+import {
+  MongoDatabaseService,
+  setUpTestDatabase,
+} from '@book-library-tool/database'
 import express from 'express'
 import request from 'supertest'
 import cors from 'cors'
@@ -9,7 +12,6 @@ import { randomUUID } from 'crypto'
 import { BookService } from '@use_cases/BookService.js'
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
 
-import { IDatabaseService } from '@database/IDatabaseService.js'
 import { BookController } from '@controllers/bookController.js'
 import { BookRepository } from '@persistence/mongo/BookRepository.js'
 import { BookRequest } from '@book-library-tool/sdk'
@@ -17,7 +19,7 @@ import { BookRequest } from '@book-library-tool/sdk'
 describe('Book Controller Integration Tests', () => {
   // Set up the test database utility
   const dbSetup = setUpTestDatabase({ randomUUID })
-  let dbService: IDatabaseService
+  let dbService: MongoDatabaseService
   let app: express.Express
   let bookController: BookController
 

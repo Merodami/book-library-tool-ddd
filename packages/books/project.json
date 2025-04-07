@@ -9,6 +9,20 @@
     "@book-library-tool/database"
   ],
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "depcheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "depcheck",
+        "cwd": "{projectRoot}"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {
@@ -16,13 +30,6 @@
         "cwd": "{projectRoot}"
       },
       "outputs": ["{projectRoot}/dist"]
-    },
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc -p tsconfig.json --noEmit",
-        "cwd": "{projectRoot}"
-      }
     },
     "local": {
       "executor": "nx:run-commands",

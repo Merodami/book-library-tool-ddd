@@ -1,11 +1,12 @@
 import { randomUUID } from 'crypto'
 import Jwt from 'jsonwebtoken'
-import { MongoDatabase } from '@book-library-tool/database'
+import { MongoDatabaseService } from '@book-library-tool/database'
 import { formatISO } from 'date-fns'
 import { schemas } from '@book-library-tool/api'
 
 // Get the email from command-line arguments
 const email = process.argv[2]
+
 if (!email) {
   console.error('Usage: yarn tsx ./src/scripts/create-user.ts <email>')
   process.exit(1)
@@ -17,7 +18,7 @@ const secret = process.env.JWT_SECRET || 'default-secret'
 // Set current time for createdAt and updatedAt
 const now = formatISO(new Date())
 
-// Create a new user object
+// Create a new user object with timestamps
 const newUser: schemas.User & { createdAt: string; updatedAt: string } = {
   userId: randomUUID(),
   email,
@@ -27,11 +28,14 @@ const newUser: schemas.User & { createdAt: string; updatedAt: string } = {
 }
 
 async function createUserAndGenerateToken() {
-  const dbService = new MongoDatabase()
+  // Instantiate the new MongoDatabaseService
+  const dbService = new MongoDatabaseService()
 
   // Connect to the database
-  const db = await dbService.connect()
-  const usersCollection = db.collection<schemas.User>('users')
+  await dbService.connect()
+
+  // Get the "users" collection in a type‑safe way
+  const usersCollection = dbService.getCollection<schemas.User>('users')
 
   // Validate if the email already exists
   const existingUser = await usersCollection.findOne({ email })
@@ -42,6 +46,7 @@ async function createUserAndGenerateToken() {
 
   // Insert the new user document into the collection
   await usersCollection.insertOne(newUser)
+
   console.log(`\nUser created successfully with userId:\n\n${newUser.userId}`)
 
   // Generate the JWT token using the user's information
@@ -58,6 +63,7 @@ async function createUserAndGenerateToken() {
   console.log('\nGenerated JWT token:\n')
   console.log(`${token}\n`)
 
+  // Disconnect from the database
   await dbService.disconnect()
   process.exit(0)
 }

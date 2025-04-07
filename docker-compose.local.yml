@@ -10,4 +10,4 @@ services:
       MONGO_INITDB_DATABASE: books-dev
     volumes:
       - ./mongodata/dev:/data/db
-      - ./packages/database/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+      - ./packages/database/src/mongo/initDatabase.js:/docker-entrypoint-initdb.d/initDatabase.js

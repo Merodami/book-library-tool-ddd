@@ -1,12 +1,14 @@
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
-import { IDatabaseService } from '@database/IDatabaseService.js'
+import { MongoDatabaseService } from '@book-library-tool/database'
+import { Collection } from 'mongodb'
 
 export class BookRepository implements IBookRepository {
-  constructor(private readonly dbService: IDatabaseService) {}
+  constructor(private readonly dbService: MongoDatabaseService) {}
 
   async findByISBN(isbn: Book['isbn']): Promise<Book | null> {
-    const collection = this.dbService.getCollection<Book>('books')
+    const collection: Collection<Book> =
+      this.dbService.getCollection<Book>('books')
 
     const book = await collection.findOne({ isbn })
 

@@ -9,3 +9,6 @@ Dockerfile
 .gitignore
 .prettierignore
 packages/sdk/src/openapi
+*.txt
+*.csv
+*/initDatabase.js

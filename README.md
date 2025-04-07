@@ -206,7 +206,7 @@ yarn build
 ```
 
 Now we need to create the docker instance of MongoDB
-This will also automatically execute the initial migration (packages/database/mongo/init-mongo.js)
+This will also automatically execute the initial migration (packages/database/src/mongo/initDatabase.js)
 that sets initial database schema
 
 ```sh

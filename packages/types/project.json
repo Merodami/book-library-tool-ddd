@@ -2,6 +2,13 @@
   "name": "@book-library-tool/types",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {
@@ -9,13 +16,6 @@
         "cwd": "{projectRoot}"
       },
       "outputs": ["{projectRoot}/dist"]
-    },
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc -p tsconfig.json --noEmit",
-        "cwd": "{projectRoot}"
-      }
     },
     "local": {
       "executor": "nx:run-commands",
