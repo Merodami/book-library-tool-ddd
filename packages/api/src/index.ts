@@ -3,7 +3,7 @@ export {
   validateBody,
   validateParams,
   validateQuery,
-} from './src/requestValidation.js'
+  makeValidator,
+} from './src/validation.js'
 
-export { makeValidator } from './src/makeValidator.js'
 export { ErrorMessages } from './util/errorMessages.js'

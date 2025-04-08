@@ -31,4 +31,11 @@ export interface IReservationRepository {
     reservationId: string,
     newStatus: RESERVATION_STATUS,
   ): Promise<void>
+
+  /**
+   * Deletes a reservation by its unique identifier.
+   * @param reservationId The unique identifier of the reservation.
+   * @returns True if the reservation was deleted, false otherwise.
+   */
+  deleteById(reservationId: string): Promise<void>
 }

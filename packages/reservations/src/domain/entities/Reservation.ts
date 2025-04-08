@@ -1,4 +1,5 @@
 import { makeValidator, schemas } from '@book-library-tool/api'
+import { Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { randomUUID } from 'crypto'
 
@@ -90,7 +91,11 @@ export class Reservation {
       this.status !== RESERVATION_STATUS.BORROWED &&
       this.status !== RESERVATION_STATUS.LATE
     ) {
-      throw new Error('Reservation cannot be returned in its current status')
+      throw new Errors.ApplicationError(
+        400,
+        'RESERVATION_CANNOT_BE_RETURNED',
+        `Reservation with id ${this.reservationId} cannot be returned in its current status.`,
+      )
     }
 
     this.status = RESERVATION_STATUS.RETURNED

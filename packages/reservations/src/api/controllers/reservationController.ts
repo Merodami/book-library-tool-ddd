@@ -54,6 +54,7 @@ export class ReservationController {
   ): Promise<void> {
     try {
       const { userId } = req.params as UserId
+
       const history =
         await this.reservationService.getReservationHistory(userId)
 

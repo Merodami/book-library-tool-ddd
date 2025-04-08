@@ -2,6 +2,7 @@ import { Reservation } from '@entities/Reservation.js'
 import { IReservationRepository } from '@repositories/IReservationRepository.js'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { apiBooks, apiWallet, ReservationRequest } from '@book-library-tool/sdk'
+import { Errors } from '@book-library-tool/shared'
 
 export class ReservationService {
   constructor(private readonly reservationRepository: IReservationRepository) {}
@@ -40,15 +41,36 @@ export class ReservationService {
         requestBody: { amount: Number(process.env.BOOK_RESERVATION_FEE) || 3 },
       })
 
-      throw new Error('Failed to create reservation. Wallet refunded.')
+      throw new Errors.ApplicationError(
+        500,
+        'RESERVATION_CREATION_FAILED',
+        `Failed to create reservation for user ${data.userId}.`,
+      )
     }
 
     // Update the reservation status to RESERVED.
-    await this.reservationRepository.updateStatus(
-      newReservation.reservationId,
-      RESERVATION_STATUS.RESERVED,
-    )
+    try {
+      await this.reservationRepository.updateStatus(
+        newReservation.reservationId,
+        RESERVATION_STATUS.RESERVED,
+      )
+    } catch (error) {
+      // If the status update fails, revert reservation created and refund the user's wallet.
+      await this.reservationRepository.deleteById(newReservation.reservationId)
 
+      await apiWallet.default.postWalletsBalance({
+        userId: data.userId,
+        requestBody: { amount: Number(process.env.BOOK_RESERVATION_FEE) || 3 },
+      })
+
+      throw new Errors.ApplicationError(
+        500,
+        'RESERVATION_STATUS_UPDATE_FAILED',
+        `Failed to update reservation status for user ${data.userId}.`,
+      )
+    }
+
+    // Set the due date based on BOOK_RETURN_DUE_DATE_DAYS environment variable.
     return newReservation
   }
 
@@ -82,7 +104,11 @@ export class ReservationService {
     const reservation = await this.reservationRepository.findById(reservationId)
 
     if (!reservation) {
-      throw new Error('Active reservation not found.')
+      throw new Errors.ApplicationError(
+        404,
+        'RESERVATION_NOT_FOUND',
+        `Reservation with id ${reservationId} not found.`,
+      )
     }
 
     const now = new Date()
@@ -104,7 +130,11 @@ export class ReservationService {
 
     // Check that the referenced book exists.
     if (!referencedBook) {
-      throw new Error('Referenced book not found.')
+      throw new Errors.ApplicationError(
+        404,
+        'BOOK_NOT_FOUND',
+        `Book with isbn ${reservation.isbn} not found.`,
+      )
     }
 
     if (daysLate > 0) {
@@ -117,10 +147,18 @@ export class ReservationService {
 
     // If a late fee applies, update the user's wallet.
     if (fee > 0) {
-      await apiWallet.default.patchWalletsLateReturn({
-        userId: reservation.userId,
-        requestBody: { daysLate, retailPrice },
-      })
+      try {
+        await apiWallet.default.patchWalletsLateReturn({
+          userId: reservation.userId,
+          requestBody: { daysLate, retailPrice },
+        })
+      } catch (error) {
+        throw new Errors.ApplicationError(
+          500,
+          'WALLET_UPDATE_FAILED',
+          `Failed to update wallet for user ${reservation.userId}.`,
+        )
+      }
     }
 
     // Determine the new status.
@@ -130,7 +168,15 @@ export class ReservationService {
         : RESERVATION_STATUS.RETURNED
 
     // Update the reservation status.
-    await this.reservationRepository.updateStatus(reservationId, newStatus)
+    try {
+      await this.reservationRepository.updateStatus(reservationId, newStatus)
+    } catch (error) {
+      throw new Errors.ApplicationError(
+        500,
+        'RESERVATION_UPDATE_FAILED',
+        `Failed to update reservation with id ${reservationId}.`,
+      )
+    }
 
     return {
       message: `Reservation marked as ${newStatus}.`,

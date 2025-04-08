@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { BookController } from '@controllers/bookController.js'
 import { BookRequest } from '@book-library-tool/sdk'
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
+import { errorMiddleware, Errors } from '@book-library-tool/shared'
 
 // Create a fake BookService with stubbed methods.
 class FakeBookService {
@@ -42,19 +43,34 @@ describe('BookController Routes', () => {
       bookController.deleteBook,
     )
     app.use('/books', router)
+
+    app.use(errorMiddleware)
   })
 
   describe('POST /books', () => {
     it('should return 400 if request body is invalid', async () => {
       // Missing required fields (e.g., isbn is missing)
       const invalidBody = { title: 'Test Book', author: 'Tester' }
-      const response = await request(app).post('/books').send(invalidBody)
 
-      expect(response.status).toBe(400)
+      const { body } = await request(app).post('/books').send(invalidBody)
 
-      // Assume your validation middleware sends an error with property "error" = "ValidationError"
-      expect(response.body.error).toBe('ValidationError')
+      expect(body.status).toBe(400)
+
       expect(fakeBookService.createBook).not.toHaveBeenCalled()
+
+      // It must forward the correct error to next()
+      expect(body).toStrictEqual(
+        expect.objectContaining({
+          status: 400,
+          message: 'VALIDATION_ERROR',
+          content: [
+            "data must have required property 'isbn'",
+            "data must have required property 'publicationYear'",
+            "data must have required property 'publisher'",
+            "data must have required property 'price'",
+          ],
+        } as Partial<Errors.ApplicationError>),
+      )
     })
 
     it('should create a new book and return 201 for valid input', async () => {

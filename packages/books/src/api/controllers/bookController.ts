@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { BookService } from '@use_cases/BookService.js'
 import { BookRequest } from '@book-library-tool/sdk'
+import { Errors } from '@book-library-tool/shared'
 
 export class BookController {
   /**
@@ -38,16 +39,6 @@ export class BookController {
       const { isbn, title, author, publicationYear, publisher, price } =
         req.body as BookRequest
 
-      // Check if the book already exists.
-      const referencedBook = await this.bookService.getBookByISBN(isbn)
-
-      if (referencedBook) {
-        res.status(400).json({
-          message: 'Book with provided ID already exists.',
-        })
-        return
-      }
-
       // Create a new book reference.
       const newBook: BookRequest = {
         isbn,
@@ -80,11 +71,6 @@ export class BookController {
 
       const referencedBook = await this.bookService.getBookByISBN(isbn)
 
-      if (!referencedBook) {
-        res.status(404).json({ message: 'Book not found.' })
-        return
-      }
-
       res.status(200).json(referencedBook)
     } catch (error) {
       next(error)
@@ -103,12 +89,7 @@ export class BookController {
     try {
       const { isbn } = req.params as Pick<BookRequest, 'isbn'>
 
-      const result = await this.bookService.deleteBookByISBN(isbn)
-
-      if (!result) {
-        res.status(404).json({ message: 'Book not found.' })
-        return
-      }
+      await this.bookService.deleteBookByISBN(isbn)
 
       res.status(200).json({ message: 'Book deleted successfully.' })
     } catch (error) {

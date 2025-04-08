@@ -7,7 +7,7 @@ export default function (bookController: BookController) {
 
   router.post(
     '/',
-    // validateBody(schemas.BookRequestSchema),
+    validateBody(schemas.BookRequestSchema),
     bookController.createBook,
   )
   router.get(

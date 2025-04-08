@@ -104,9 +104,7 @@ export class ApplicationError extends Error {
 
     this.status = statusCode
     this.message = message
-    this.content = {
-      ...content,
-    }
+    this.content = content
   }
 }
 

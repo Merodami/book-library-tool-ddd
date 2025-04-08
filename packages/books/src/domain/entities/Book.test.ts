@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Book } from '@entities/Book.js'
 import { BookRequest } from '@book-library-tool/sdk'
+import { Errors } from '@book-library-tool/shared'
 
 describe('Book entity', () => {
   let validBookData: BookRequest
@@ -35,12 +36,12 @@ describe('Book entity', () => {
       Book.create({ ...validBookData, isbn: '' })
 
       throw new Error('Expected validation error not thrown')
-    } catch (error: any) {
+    } catch (error) {
       // Parse the error message assuming it's JSON-stringified array.
-      const errors = JSON.parse(error.message) as string[]
+      const errors = error.content as string[]
 
       // Check that one of the errors mentions the ISBN.
-      expect(errors.some((msg) => msg.includes('/isbn'))).toBe(true)
+      expect(errors.some((msg) => msg.includes('isbn'))).toBe(true)
     }
   })
 
@@ -51,9 +52,14 @@ describe('Book entity', () => {
 
       throw new Error('Expected validation error not thrown')
     } catch (error: any) {
-      const errors = JSON.parse(error.message) as string[]
+      const appErr = error as Errors.ApplicationError
 
-      expect(errors.some((msg) => msg.includes('/title'))).toBe(true)
+      expect(appErr.status).toBe(400)
+      expect(
+        appErr.content.some((message: string) =>
+          message.includes('title: must match pattern'),
+        ),
+      ).toBe(true)
     }
 
     // For Author
@@ -62,9 +68,14 @@ describe('Book entity', () => {
 
       throw new Error('Expected validation error not thrown')
     } catch (error: any) {
-      const errors = JSON.parse(error.message) as string[]
+      const appErr = error as Errors.ApplicationError
 
-      expect(errors.some((msg) => msg.includes('/author'))).toBe(true)
+      expect(appErr.status).toBe(400)
+      expect(
+        appErr.content.some((message: string) =>
+          message.includes('author: must match pattern'),
+        ),
+      ).toBe(true)
     }
   })
 

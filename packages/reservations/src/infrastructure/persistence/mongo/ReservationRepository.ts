@@ -22,7 +22,9 @@ export class ReservationRepository implements IReservationRepository {
 
     const reservation = await collection.findOne({ reservationId })
 
-    if (!reservation) return null
+    if (!reservation) {
+      return null
+    }
 
     return Reservation.rehydrate({
       reservationId: reservation.reservationId,
@@ -72,5 +74,37 @@ export class ReservationRepository implements IReservationRepository {
       { reservationId },
       { $set: { status: newStatus, updatedAt: new Date() } },
     )
+  }
+
+  /**
+   * Deletes a reservation by its unique identifier.
+   *
+   * This method performs a hard delete from the database.
+   * Since this operation is called after validation in the service layer,
+   * it focuses on database operations rather than business logic.
+   *
+   * @param reservationId - The reservation's unique identifier.
+   * @returns Promise<void> - There's no return value as this matches the pattern of other repository methods
+   * @throws If there's a database error during the operation
+   */
+  async deleteById(reservationId: string): Promise<void> {
+    if (!reservationId) {
+      throw new Error('Reservation ID is required for deletion')
+    }
+
+    try {
+      const collection: Collection<Reservation> =
+        this.dbService.getCollection<Reservation>('reservations')
+
+      // Perform the deletion operation
+      await collection.deleteOne({ reservationId })
+    } catch (error) {
+      // Return raw error catch and rethrow database-specific errors with more context
+      const message = error instanceof Error ? error.message : String(error)
+
+      throw new Error(
+        `Database error when deleting reservation ${reservationId}: ${message}`,
+      )
+    }
   }
 }

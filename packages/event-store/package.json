@@ -1,0 +1,28 @@
+{
+  "name": "@book-library-tool/event-store",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {},
+  "devDependencies": {
+    "depcheck": "^1.4.7",
+    "typescript": "^5.8.3"
+  },
+  "depcheck": {
+    "ignore": [
+      "nx",
+      "ts-node",
+      "tsconfig-paths"
+    ],
+    "parsers": {
+      "**/*.ts": "typescript"
+    },
+    "detectors": [
+      "requireCallExpression",
+      "importDeclaration",
+      "typescriptImportEqualsDeclaration"
+    ]
+  }
+}

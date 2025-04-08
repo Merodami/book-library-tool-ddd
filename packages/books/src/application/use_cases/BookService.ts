@@ -1,4 +1,5 @@
 import { BookRequest } from '@book-library-tool/sdk'
+import { Errors } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
 
@@ -14,6 +15,18 @@ export class BookService {
    * @returns The created Book entity.
    */
   async createBook(data: BookRequest): Promise<Book> {
+    // Check if the book already exists.
+    const referencedBook = await this.getBookByISBN(data.isbn)
+
+    // If the book already exists, throw an error.
+    if (referencedBook) {
+      throw new Errors.ApplicationError(
+        400,
+        'BOOK_ALREADY_EXISTS',
+        `Book with isbn ${data.isbn} already exists.`,
+      )
+    }
+
     // Instantiate a new Book domain entity.
     // If any business rule is violated, the constructor should throw an error.
     const book = Book.create(data)
@@ -31,45 +44,37 @@ export class BookService {
    * @returns The found Book entity, or null if not found.
    */
   async getBookByISBN(isbn: Book['isbn']): Promise<Book | null> {
-    if (!isbn) {
-      throw new Error('ISBN cannot be empty')
+    const book = await this.bookRepository.findByISBN(isbn)
+
+    // If the book is not found, throw an error.
+    if (!book) {
+      throw new Errors.ApplicationError(
+        404,
+        'BOOK_NOT_FOUND',
+        `Book with isbn ${isbn} not found.`,
+      )
     }
 
-    return this.bookRepository.findByISBN(isbn)
+    return book
   }
 
   /**
    * Deletes a book by its unique identifier.
    *
-   * @param id - The book's unique identifier.
+   * @param isbn - The book's unique identifier.
    * @returns True if the deletion was successful, false otherwise.
    */
   async deleteBookByISBN(isbn: Book['isbn']): Promise<boolean> {
-    if (!isbn) {
-      throw new Error('ISBN cannot be empty')
+    try {
+      await this.bookRepository.deleteByISBN(isbn)
+    } catch (error) {
+      throw new Errors.ApplicationError(
+        500,
+        'BOOK_DELETION_FAILED',
+        `Failed to delete book with isbn ${isbn}.`,
+      )
     }
 
-    return this.bookRepository.deleteByISBN(isbn)
+    return true
   }
-
-  /**
-   * Updates the title of a book.
-   *
-   * @param isbn - The book's unique identifier.
-   * @param newTitle - The new title for the book.
-   * @returns The updated Book entity.
-   */
-  // async updateBookTitle(isbn: string, newTitle: string): Promise<Book> {
-  //   const book = await this.bookRepository.findByISBN(isbn)
-
-  //   if (!book) {
-  //     throw new Error('Book not found')
-  //   }
-
-  //   book.updateTitle(newTitle)
-
-  //   await this.bookRepository.update(book)
-
-  //   return book
-  // }
 }

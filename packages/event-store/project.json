@@ -1,14 +1,7 @@
 {
-  "name": "@book-library-tool/books",
+  "name": "@book-library-tool/event-store",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "@book-library-tool/types",
-    "@book-library-tool/api",
-    "@book-library-tool/event-store",
-    "@book-library-tool/auth",
-    "@book-library-tool/shared",
-    "@book-library-tool/database"
-  ],
+  "implicitDependencies": [],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -35,7 +28,7 @@
     "local": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsx --watch ./src/api/app.ts",
+        "command": "tsc -p tsconfig.json --watch --preserveWatchOutput",
         "cwd": "{projectRoot}"
       }
     }

@@ -36,7 +36,7 @@ async function startServer() {
     )
     .use(express.json())
     .use(apiTokenAuth({ secret: process.env.JWT_SECRET || 'default-secret' }))
-    .use(createRouter(bookController)) // Injecting the controller into the routes.
+    .use(createRouter(bookController))
     .use(errorMiddleware)
 
   const SERVER_PORT = process.env.BOOKS_SERVICE_SERVER_PORT || 3001

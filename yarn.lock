@@ -211,6 +211,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@book-library-tool/event-store@workspace:packages/event-store":
+  version: 0.0.0-use.local
+  resolution: "@book-library-tool/event-store@workspace:packages/event-store"
+  dependencies:
+    depcheck: "npm:^1.4.7"
+    typescript: "npm:^5.8.3"
+  languageName: unknown
+  linkType: soft
+
 "@book-library-tool/reservations@workspace:packages/reservations":
   version: 0.0.0-use.local
   resolution: "@book-library-tool/reservations@workspace:packages/reservations"

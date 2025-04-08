@@ -8,6 +8,7 @@ export const formatApiErrors = (
   return errors.map((err) => {
     // Remove leading slash from instancePath (e.g., "/id" -> "id")
     const field = err.instancePath ? err.instancePath.substring(1) : 'data'
+
     return `${field || 'data'} ${err.message}`
   })
 }
