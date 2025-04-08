@@ -3,10 +3,10 @@
  */
 export const paramBookId = {
   in: 'path',
-  name: 'id',
+  name: 'isbn',
   description: 'The book identifier',
   required: true,
-  schema: { $ref: '#/components/schemas/BookId' },
+  schema: { type: 'string', minLength: 1 },
   examples: {
     bookId1: {
       summary: 'Book reference id example',

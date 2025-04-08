@@ -236,7 +236,7 @@ export const OpenAPISpec = {
         security: [{ ApiTokenAuth: [] }],
       },
     },
-    '/books/{id}': {
+    '/books/{isbn}': {
       servers: [
         {
           url: 'http://localhost:3001',

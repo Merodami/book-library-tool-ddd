@@ -11,4 +11,3 @@ Dockerfile
 packages/sdk/src/openapi
 *.txt
 *.csv
-*/initDatabase.js

@@ -51,14 +51,7 @@ describe('BookController', () => {
       req = { body: bookRequest }
 
       // Setup mock to simulate book already exists
-      const existingBook = new Book(
-        bookRequest.isbn,
-        bookRequest.title,
-        bookRequest.author,
-        bookRequest.publicationYear,
-        bookRequest.publisher,
-        bookRequest.price,
-      )
+      const existingBook = Book.create(bookRequest)
 
       vi.mocked(mockBookService.getBookByISBN).mockResolvedValue(existingBook)
 
@@ -94,14 +87,8 @@ describe('BookController', () => {
       vi.mocked(mockBookService.getBookByISBN).mockResolvedValue(null)
 
       // Mock created book
-      const createdBook = new Book(
-        bookRequest.isbn,
-        bookRequest.title,
-        bookRequest.author,
-        bookRequest.publicationYear,
-        bookRequest.publisher,
-        bookRequest.price,
-      )
+      const createdBook = Book.create(bookRequest)
+
       vi.mocked(mockBookService.createBook).mockResolvedValue(createdBook)
 
       // Execute
@@ -168,14 +155,15 @@ describe('BookController', () => {
       req = { params: { isbn: '978-3-16-148410-0' } }
 
       // Setup mock to return a book
-      const foundBook = new Book(
-        '978-3-16-148410-0',
-        'Found Book',
-        'Found Author',
-        2020,
-        'Found Publisher',
-        29.99,
-      )
+      const foundBook = Book.create({
+        isbn: '978-3-16-148410-0',
+        title: 'Found Book',
+        author: 'Found Author',
+        publicationYear: 2020,
+        publisher: 'Found Publisher',
+        price: 29.99,
+      })
+
       vi.mocked(mockBookService.getBookByISBN).mockResolvedValue(foundBook)
 
       // Execute

@@ -1,16 +1,4 @@
-export type {
-  BookRequest,
-  BalanceWalletRequest,
-  Book,
-  BookId,
-  CatalogSearchQuery,
-  ErrorResponse,
-  Reservation,
-  ReservationRequest,
-  Wallet,
-  User,
-  UserId,
-} from './openapi/index.js'
+export type * from './openapi/index.js'
 
 /**
  * An error message returned by the API.

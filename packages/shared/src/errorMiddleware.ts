@@ -21,6 +21,7 @@ export const errorMiddleware: ErrorRequestHandler = async (
   }
 
   logger.error(err)
+  console.log('🚀 ~ err instanceof ApplicationError:', err)
 
   if (err instanceof ApplicationError) {
     res.status(err.status).json({
@@ -29,14 +30,6 @@ export const errorMiddleware: ErrorRequestHandler = async (
       data: err.content,
     })
     return // ensure nothing is returned
-  }
-
-  if (err.name === 'EntityNotFound') {
-    res.status(404).json({
-      message: 'Not found.',
-      code: 404,
-    })
-    return
   }
 
   res.status(500).json({

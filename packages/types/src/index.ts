@@ -1,4 +1,4 @@
-export enum ReservationStatus {
+export enum RESERVATION_STATUS {
   RESERVED = 'reserved',
   BORROWED = 'borrowed',
   RETURNED = 'returned',

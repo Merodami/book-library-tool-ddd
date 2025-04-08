@@ -12,6 +12,6 @@
     "@types/lodash-es": "^4.17.12",
     "openapi-typescript-codegen": "^0.29.0",
     "type-fest": "^4.39.1",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }

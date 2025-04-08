@@ -48,11 +48,11 @@ export const WalletSchema = Type.Object(
   {
     userId: Type.String({ format: 'uuid' }),
     balance: Type.Number(),
-    createdAt: Type.String({ format: 'date-time' }),
-    updatedAt: Type.String({ format: 'date-time' }),
+    createdAt: Type.Optional(Type.String({ format: 'date-time' })),
+    updatedAt: Type.Optional(Type.String({ format: 'date-time' })),
     deletedAt: Type.Optional(Type.String({ format: 'date-time' })),
   },
   { $id: '#/components/schemas/Wallet' },
 )
-export type Wallet = Static<typeof WalletSchema>
+export type WalletDTO = Static<typeof WalletSchema>
 export const WalletRef = Type.Ref('#/components/schemas/Wallet')

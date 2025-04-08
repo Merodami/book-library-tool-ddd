@@ -1,5 +1,5 @@
 import { Type, Static } from '@sinclair/typebox'
-import { ReservationStatus } from '@book-library-tool/types'
+import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { PaginationMetadataSchema } from './shared.js'
 
 // --------------------------------
@@ -44,8 +44,12 @@ export const ReservationsHistoryQueryRef = Type.Ref(
  */
 export const ReservationRequestSchema = Type.Object(
   {
-    userId: Type.String({ format: 'uuid' }),
-    isbn: Type.String({ minLength: 1 }),
+    userId: Type.String({
+      format: 'uuid',
+      minLength: 1,
+      pattern: '^(?!\\s*$).+',
+    }),
+    isbn: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
   },
   { $id: '#/components/schemas/ReservationRequest' },
 )
@@ -79,29 +83,36 @@ export const ReservationReturnParamsRef = Type.Ref(
  */
 export const ReservationSchema = Type.Object(
   {
-    reservationId: Type.String({ format: 'uuid' }),
-    userId: Type.String({ format: 'uuid' }),
-    isbn: Type.String(),
+    reservationId: Type.String({
+      format: 'uuid',
+      minLength: 1,
+      pattern: '^(?!\\s*$).+',
+    }),
+    userId: Type.String({
+      format: 'uuid',
+      minLength: 1,
+      pattern: '^(?!\\s*$).+',
+    }),
+    isbn: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     reservedAt: Type.String({ format: 'date-time' }),
     dueDate: Type.String({ format: 'date-time' }),
-    status: Type.Unsafe<string>({
-      type: 'string',
+    status: Type.String({
       enum: [
-        ReservationStatus.RESERVED,
-        ReservationStatus.BORROWED,
-        ReservationStatus.RETURNED,
-        ReservationStatus.LATE,
-        ReservationStatus.BOUGHT,
+        RESERVATION_STATUS.RESERVED,
+        RESERVATION_STATUS.BORROWED,
+        RESERVATION_STATUS.RETURNED,
+        RESERVATION_STATUS.LATE,
+        RESERVATION_STATUS.BOUGHT,
       ],
     }),
-    feeCharged: Type.Optional(Type.Number()),
-    createdAt: Type.String({ format: 'date-time' }),
-    updatedAt: Type.String({ format: 'date-time' }),
+    feeCharged: Type.Number({ minimum: 0 }),
+    createdAt: Type.Optional(Type.String({ format: 'date-time' })),
+    updatedAt: Type.Optional(Type.String({ format: 'date-time' })),
     deletedAt: Type.Optional(Type.String({ format: 'date-time' })),
   },
   { $id: '#/components/schemas/Reservation' },
 )
-export type Reservation = Static<typeof ReservationSchema>
+export type ReservationDTO = Static<typeof ReservationSchema>
 export const ReservationRef = Type.Ref('#/components/schemas/Reservation')
 
 /**
@@ -117,11 +128,11 @@ export const ReservationReturnResponseSchema = Type.Object(
     status: Type.Unsafe<string>({
       type: 'string',
       enum: [
-        ReservationStatus.RESERVED,
-        ReservationStatus.BORROWED,
-        ReservationStatus.RETURNED,
-        ReservationStatus.LATE,
-        ReservationStatus.BOUGHT,
+        RESERVATION_STATUS.RESERVED,
+        RESERVATION_STATUS.BORROWED,
+        RESERVATION_STATUS.RETURNED,
+        RESERVATION_STATUS.LATE,
+        RESERVATION_STATUS.BOUGHT,
       ],
     }),
     feeCharged: Type.Optional(Type.Number()),

@@ -16,14 +16,7 @@ export class BookService {
   async createBook(data: BookRequest): Promise<Book> {
     // Instantiate a new Book domain entity.
     // If any business rule is violated, the constructor should throw an error.
-    const book = new Book(
-      data.isbn,
-      data.title,
-      data.author,
-      data.publicationYear,
-      data.publisher,
-      data.price,
-    )
+    const book = Book.create(data)
 
     // Persist the book using the repository.
     await this.bookRepository.create(book)

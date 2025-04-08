@@ -33,13 +33,13 @@ export const UserSchema = Type.Object(
     userId: Type.String({ format: 'uuid' }),
     email: Type.String({ format: 'email' }),
     role: Type.String({ minLength: 1 }),
-    createdAt: Type.String({ format: 'date-time' }),
-    updatedAt: Type.String({ format: 'date-time' }),
+    createdAt: Type.Optional(Type.String({ format: 'date-time' })),
+    updatedAt: Type.Optional(Type.String({ format: 'date-time' })),
     deletedAt: Type.Optional(Type.String({ format: 'date-time' })),
   },
   { $id: '#/components/schemas/User' },
 )
-export type User = Static<typeof UserSchema>
+export type UserDTO = Static<typeof UserSchema>
 export const UserRef = Type.Ref('#/components/schemas/User')
 
 // --------------------------------

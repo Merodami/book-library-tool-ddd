@@ -50,11 +50,11 @@ export const BookIdRef = Type.Ref('#/components/schemas/BookId')
  */
 export const BookRequestSchema = Type.Object(
   {
-    isbn: Type.String({ minLength: 1 }),
-    title: Type.String({ minLength: 1 }),
-    author: Type.String({ minLength: 1 }),
+    isbn: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    title: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    author: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     publicationYear: Type.Number(),
-    publisher: Type.String({ minLength: 1 }),
+    publisher: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     price: Type.Number(),
   },
   { $id: '#/components/schemas/BookRequest' },
@@ -71,19 +71,19 @@ export const BookRequestRef = Type.Ref('#/components/schemas/BookRequest')
  */
 export const BookSchema = Type.Object(
   {
-    isbn: Type.String(),
-    title: Type.String(),
-    author: Type.String(),
-    publicationYear: Type.Number(),
-    publisher: Type.String(),
-    price: Type.Number(),
-    createdAt: Type.String({ format: 'date-time' }),
-    updatedAt: Type.String({ format: 'date-time' }),
+    isbn: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    title: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    author: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    publicationYear: Type.Number({ minimum: 0 }),
+    publisher: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    price: Type.Number({ minimum: 0 }),
+    createdAt: Type.Optional(Type.String({ format: 'date-time' })),
+    updatedAt: Type.Optional(Type.String({ format: 'date-time' })),
     deletedAt: Type.Optional(Type.String({ format: 'date-time' })),
   },
   { $id: '#/components/schemas/Book' },
 )
-export type Book = Static<typeof BookSchema>
+export type BookDTO = Static<typeof BookSchema>
 export const BookRef = Type.Ref('#/components/schemas/Book')
 
 // --------------------------------

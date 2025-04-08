@@ -20,21 +20,39 @@ function removeIdProperties(obj: any): any {
     return obj.map(removeIdProperties)
   } else if (obj && typeof obj === 'object') {
     const newObj: any = {}
-
     for (const key of Object.keys(obj)) {
       if (key === '$id') continue
-
       newObj[key] = removeIdProperties(obj[key])
     }
-
     return newObj
   }
-
   return obj
 }
 
 /**
- * Remove routes that should be hidden from documentation
+ * Recursively remove custom keywords from an object.
+ * @param obj - The object (or schema) to clean.
+ * @param keysToRemove - The keys to remove. Defaults to ['errorMessage'].
+ */
+function removeCustomKeywords(
+  obj: any,
+  keysToRemove: string[] = ['errorMessage'],
+): any {
+  if (Array.isArray(obj)) {
+    return obj.map((item) => removeCustomKeywords(item, keysToRemove))
+  } else if (obj && typeof obj === 'object') {
+    const newObj: any = {}
+    for (const key of Object.keys(obj)) {
+      if (keysToRemove.includes(key)) continue
+      newObj[key] = removeCustomKeywords(obj[key], keysToRemove)
+    }
+    return newObj
+  }
+  return obj
+}
+
+/**
+ * Remove routes that should be hidden from documentation.
  */
 function removeHiddenRoutes(spec: OpenAPIV3.Document): OpenAPIV3.Document {
   // List of paths to hide from documentation
@@ -42,7 +60,6 @@ function removeHiddenRoutes(spec: OpenAPIV3.Document): OpenAPIV3.Document {
 
   // Create a new object without the hidden paths
   const filteredPaths: Record<string, any> = {}
-
   for (const path in spec.paths) {
     if (!hiddenPaths.includes(path)) {
       filteredPaths[path] = spec.paths[path]
@@ -64,11 +81,14 @@ async function main() {
     // Remove $id properties from the spec so that it complies with OpenAPI
     const cleanedSpec = removeIdProperties(spec)
 
+    // Remove custom keywords (like errorMessage) that are not allowed by OpenAPI
+    const finalSpec = removeCustomKeywords(cleanedSpec, ['errorMessage'])
+
     // Create a version of the spec for documentation with hidden routes removed
-    const docsSpec = removeHiddenRoutes(cleanedSpec)
+    const docsSpec = removeHiddenRoutes(finalSpec)
 
     // Validate the cleaned OpenAPI spec (this also dereferences $refs)
-    await SwaggerParser.validate(cleanedSpec)
+    await SwaggerParser.validate(finalSpec)
     console.log('OpenAPI spec is valid.')
 
     // Prepare the output directory (e.g. "dist")
@@ -77,7 +97,7 @@ async function main() {
 
     // Write the complete OpenAPI spec JSON (with all routes for API usage)
     const apiJsonPath = path.join(outputDir, 'openapi.json')
-    await fs.writeFile(apiJsonPath, JSON.stringify(cleanedSpec, null, 2))
+    await fs.writeFile(apiJsonPath, JSON.stringify(finalSpec, null, 2))
     console.log(`Complete OpenAPI JSON written to ${apiJsonPath}`)
 
     // Write the filtered documentation OpenAPI spec JSON
@@ -87,7 +107,6 @@ async function main() {
 
     // Optionally, generate HTML documentation.
     const templatePath = fromRoot('src', 'docs-template.html')
-
     if (await fs.pathExists(templatePath)) {
       const template = await fs.readFile(templatePath, 'utf8')
 
@@ -97,9 +116,7 @@ async function main() {
         .replace('{{TITLE}}', docsSpec.info.title)
 
       const htmlPath = path.join(outputDir, 'openapi.html')
-
       await fs.writeFile(htmlPath, htmlOutput)
-
       console.log(`OpenAPI HTML documentation written to ${htmlPath}`)
     } else {
       console.warn(
