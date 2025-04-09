@@ -1,84 +1,56 @@
-import { Reservation } from '@entities/Reservation.js'
-import { IReservationRepository } from '@repositories/IReservationRepository.js'
-import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { apiBooks, apiWallet, ReservationRequest } from '@book-library-tool/sdk'
+import { ReservationRequest } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
+import { EventBus } from '@book-library-tool/event-store'
+import { IReservationRepositoryEvent } from '@repositories/IReservationRepositoryEvent.js'
+import { Reservation } from '@entities/Reservation.js'
 
 export class ReservationService {
-  constructor(private readonly reservationRepository: IReservationRepository) {}
+  constructor(
+    private readonly reservationRepository: IReservationRepositoryEvent,
+    private readonly eventBus: EventBus,
+  ) {}
 
   /**
-   * Creates a new reservation following business rules:
-   * - Deduct the reservation fee from the user's wallet.
-   * - Set the reservation status to RESERVED.
-   * - Calculate due date based on BOOK_RETURN_DUE_DATE_DAYS environment variable.
+   * Creates a new reservation.
+   *
+   * In the event‑sourced flow, the reservation aggregate is created
+   * and a ReservationCreated event is produced. That event is persisted and published.
+   * Downstream, a saga orchestrator (listening on the EventBus) will trigger
+   * operations such as wallet fund deduction.
    *
    * @param data - The reservation request data.
-   * @returns The newly created Reservation entity.
+   * @returns The newly created Reservation aggregate.
    */
   async createReservation(data: ReservationRequest): Promise<Reservation> {
-    // Create a new reservation entity.
-    const newReservation = Reservation.create({
+    // Create the Reservation aggregate from the command. This returns both the aggregate and the ReservationCreated event.
+    const { reservation, event } = Reservation.create({
       userId: data.userId.trim(),
       isbn: data.isbn.trim(),
       reservedAt: new Date().toISOString(),
-      status: RESERVATION_STATUS.RESERVED,
+      status: 'RESERVED', // or use your RESERVATION_STATUS.RESERVED constant
+      // Other required properties such as dueDate can be computed by the aggregate.
     })
 
-    // Deduct reservation fee from user's wallet.
-    await apiWallet.default.postWalletsBalance({
-      userId: data.userId,
-      requestBody: { amount: -(Number(process.env.BOOK_RESERVATION_FEE) || 3) },
-    })
+    // Persist the ReservationCreated event to the event store.
+    // For a new aggregate, expected version is 0.
+    await this.reservationRepository.saveEvents(
+      reservation.reservationId,
+      [event],
+      0,
+    )
 
-    // Persist the reservation using the repository.
-    try {
-      await this.reservationRepository.create(newReservation)
-    } catch (error) {
-      // If the reservation creation fails, refund the user's wallet.
-      await apiWallet.default.postWalletsBalance({
-        userId: data.userId,
-        requestBody: { amount: Number(process.env.BOOK_RESERVATION_FEE) || 3 },
-      })
+    // Publish the event asynchronously on the EventBus.
+    await this.eventBus.publish(event)
 
-      throw new Errors.ApplicationError(
-        500,
-        'RESERVATION_CREATION_FAILED',
-        `Failed to create reservation for user ${data.userId}.`,
-      )
-    }
-
-    // Update the reservation status to RESERVED.
-    try {
-      await this.reservationRepository.updateStatus(
-        newReservation.reservationId,
-        RESERVATION_STATUS.RESERVED,
-      )
-    } catch (error) {
-      // If the status update fails, revert reservation created and refund the user's wallet.
-      await this.reservationRepository.deleteById(newReservation.reservationId)
-
-      await apiWallet.default.postWalletsBalance({
-        userId: data.userId,
-        requestBody: { amount: Number(process.env.BOOK_RESERVATION_FEE) || 3 },
-      })
-
-      throw new Errors.ApplicationError(
-        500,
-        'RESERVATION_STATUS_UPDATE_FAILED',
-        `Failed to update reservation status for user ${data.userId}.`,
-      )
-    }
-
-    // Set the due date based on BOOK_RETURN_DUE_DATE_DAYS environment variable.
-    return newReservation
+    // Return the new aggregate.
+    return reservation
   }
 
   /**
    * Retrieves the reservation history for a given user.
    *
    * @param userId - The user identifier.
-   * @returns An array of Reservation entities.
+   * @returns An array of Reservation aggregates.
    */
   async getReservationHistory(userId: string): Promise<Reservation[]> {
     return this.reservationRepository.findByUserId(userId)
@@ -86,102 +58,54 @@ export class ReservationService {
 
   /**
    * Processes the return of a reservation.
-   * Business rules:
-   * - Calculate how many days late the return is (if any).
-   * - Compute the late fee as (daysLate * LATE_FEE_PER_DAY).
-   * - If the late fee meets or exceeds the retailPrice, mark the reservation as BOUGHT;
-   *   otherwise, mark it as RETURNED.
-   * - Update the user's wallet if a late fee applies.
+   *
+   * In an event‑sourced system, this method rehydrates the Reservation aggregate,
+   * calls a domain method (here: markAsReturned) that produces a ReservationReturned event,
+   * then persists and publishes the resulting event.
+   * A saga orchestrator can listen for this event and trigger subsequent processes like wallet updates.
    *
    * @param reservationId - The reservation identifier.
-   * @param retailPrice - The retail price of the book.
-   * @returns An object containing the outcome message, late fee applied (as a string), and days late.
+   * @returns An object containing outcome information.
    */
   async returnReservation(
     reservationId: string,
-  ): Promise<{ message: string; late_fee_applied: string; days_late: number }> {
-    // Retrieve the active reservation.
-    const reservation = await this.reservationRepository.findById(reservationId)
+  ): Promise<{ message: string; lateFeeApplied: string; daysLate: number }> {
+    // Load all events for the reservation.
+    const events =
+      await this.reservationRepository.getEventsForAggregate(reservationId)
 
-    if (!reservation) {
+    if (!events || events.length === 0) {
       throw new Errors.ApplicationError(
         404,
         'RESERVATION_NOT_FOUND',
         `Reservation with id ${reservationId} not found.`,
       )
     }
+    // Rehydrate the Reservation aggregate from its event stream.
+    const reservation = Reservation.rehydrate(events)
 
-    const now = new Date()
-    const dueDate = reservation.dueDate
+    // Execute the return process on the aggregate.
+    // In our updated aggregate the method is now markAsReturned().
+    const { reservation: updatedReservation, event } =
+      reservation.markAsReturned()
 
-    let daysLate = 0
+    // Persist the new event with optimistic concurrency (expected version is the current aggregate version).
+    await this.reservationRepository.saveEvents(
+      reservation.reservationId,
+      [event],
+      reservation.version,
+    )
 
-    if (now > dueDate) {
-      daysLate = Math.floor(
-        (now.getTime() - dueDate.getTime()) / (24 * 60 * 60 * 1000),
-      )
-    }
+    // Publish the event so that the saga orchestrator (or other processors) can trigger wallet adjustments.
+    await this.eventBus.publish(event)
 
-    let retailPrice = 0
-
-    const referencedBook = await apiBooks.default.getBooks({
-      isbn: reservation.isbn,
-    })
-
-    // Check that the referenced book exists.
-    if (!referencedBook) {
-      throw new Errors.ApplicationError(
-        404,
-        'BOOK_NOT_FOUND',
-        `Book with isbn ${reservation.isbn} not found.`,
-      )
-    }
-
-    if (daysLate > 0) {
-      retailPrice = referencedBook.price
-    }
-
-    // Calculate late fee.
-    const fee =
-      daysLate > 0 ? daysLate * Number(process.env.LATE_FEE_PER_DAY) : 0
-
-    // If a late fee applies, update the user's wallet.
-    if (fee > 0) {
-      try {
-        await apiWallet.default.patchWalletsLateReturn({
-          userId: reservation.userId,
-          requestBody: { daysLate, retailPrice },
-        })
-      } catch (error) {
-        throw new Errors.ApplicationError(
-          500,
-          'WALLET_UPDATE_FAILED',
-          `Failed to update wallet for user ${reservation.userId}.`,
-        )
-      }
-    }
-
-    // Determine the new status.
-    const newStatus =
-      daysLate > 0 && fee >= retailPrice
-        ? RESERVATION_STATUS.BOUGHT
-        : RESERVATION_STATUS.RETURNED
-
-    // Update the reservation status.
-    try {
-      await this.reservationRepository.updateStatus(reservationId, newStatus)
-    } catch (error) {
-      throw new Errors.ApplicationError(
-        500,
-        'RESERVATION_UPDATE_FAILED',
-        `Failed to update reservation with id ${reservationId}.`,
-      )
-    }
-
+    // Build the response using event payload data. Adjust property names based on your implementation.
     return {
-      message: `Reservation marked as ${newStatus}.`,
-      late_fee_applied: fee.toFixed(1),
-      days_late: daysLate,
+      message: `Reservation return processed.`,
+      lateFeeApplied: event.payload.lateFeeApplied
+        ? event.payload.lateFeeApplied.toFixed(1)
+        : '0.0',
+      daysLate: event.payload.daysLate || 0,
     }
   }
 }

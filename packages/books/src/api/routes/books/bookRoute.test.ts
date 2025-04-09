@@ -2,7 +2,7 @@ import express from 'express'
 import request from 'supertest'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { BookController } from '@controllers/bookController.js'
-import { BookRequest } from '@book-library-tool/sdk'
+import { BookCreateRequest } from '@book-library-tool/sdk'
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
 import { errorMiddleware, Errors } from '@book-library-tool/shared'
 
@@ -29,7 +29,7 @@ describe('BookController Routes', () => {
     const router = express.Router()
     router.post(
       '/',
-      validateBody(schemas.BookRequestSchema),
+      validateBody(schemas.BookCreateRequestSchema),
       bookController.createBook,
     )
     router.get(
@@ -74,7 +74,7 @@ describe('BookController Routes', () => {
     })
 
     it('should create a new book and return 201 for valid input', async () => {
-      const validBody: BookRequest = {
+      const validBody: BookCreateRequest = {
         isbn: '1234567890',
         title: 'Test Book',
         author: 'Tester',

@@ -4,9 +4,9 @@ import { errorMiddleware } from './errorMiddleware.js'
 import { validateRequiredFields } from './validateRequiredFields.js'
 
 export {
-  errorMiddleware,
   Errors,
   logger,
+  errorMiddleware,
   setContextGetter,
   validateRequiredFields,
 }

@@ -8,6 +8,7 @@ import createRouter from './routes/index.js'
 import { BookRepository } from '@persistence/mongo/BookRepository.js'
 import { BookService } from '@use_cases/BookService.js'
 import { MongoDatabaseService } from '@book-library-tool/database'
+import { SimpleEventBus } from '@book-library-tool/event-store'
 
 async function startServer() {
   // Create a new instance of the MongoDatabaseService
@@ -24,7 +25,8 @@ async function startServer() {
 
   // Create a new instances of the BookRepository, BookService, and BookController
   const bookRepository = new BookRepository(DatabaseService)
-  const bookService = new BookService(bookRepository)
+  const eventBus = new SimpleEventBus()
+  const bookService = new BookService(bookRepository, eventBus)
   const bookController = new BookController(bookService)
 
   const app = express()

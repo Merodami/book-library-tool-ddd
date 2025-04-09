@@ -1,110 +1,161 @@
-import { Collection } from 'mongodb'
+import { DomainEvent } from '@book-library-tool/event-store'
 import { Reservation } from '@entities/Reservation.js'
-import { IReservationRepository } from '@repositories/IReservationRepository.js'
-import { MongoDatabaseService } from '@book-library-tool/database'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { schemas } from '@book-library-tool/api'
+import { Errors } from '@book-library-tool/shared'
+import { IReservationRepositoryEvent } from '@repositories/IReservationRepositoryEvent.js'
+import { BaseEventSourcedRepository } from './BaseEventSourcedRepository.js'
 
-export class ReservationRepository implements IReservationRepository {
-  constructor(private readonly dbService: MongoDatabaseService) {}
-
-  async create(reservation: Reservation): Promise<void> {
-    const collection: Collection<Reservation> =
-      this.dbService.getCollection<Reservation>('reservations')
-
-    // Convert Date objects to ISO strings if needed.
-    await collection.insertOne(reservation)
-  }
-
-  async findById(reservationId: string): Promise<Reservation | null> {
-    const collection: Collection<Reservation> =
-      this.dbService.getCollection<Reservation>('reservations')
-
-    const reservation = await collection.findOne({ reservationId })
-
-    if (!reservation) {
-      return null
-    }
-
-    return Reservation.rehydrate({
-      reservationId: reservation.reservationId,
-      userId: reservation.userId,
-      isbn: reservation.isbn,
-      status: reservation.status as RESERVATION_STATUS,
-      feeCharged: reservation.feeCharged,
-      reservedAt: reservation.reservedAt.toISOString(),
-      dueDate: reservation.dueDate.toISOString(),
-      createdAt: reservation.createdAt.toISOString(),
-      updatedAt: reservation.updatedAt.toISOString(),
-      deletedAt: reservation.deletedAt
-        ? reservation.deletedAt.toISOString()
-        : undefined,
-    })
-  }
-
-  async findByUserId(userId: string): Promise<Reservation[]> {
-    const collection: Collection<schemas.ReservationDTO> =
-      this.dbService.getCollection<schemas.ReservationDTO>('reservations')
-
-    const reservations = await collection.find({ userId }).toArray()
-
-    return reservations.map((reservation) =>
-      Reservation.rehydrate({
-        reservationId: reservation.reservationId,
-        userId: reservation.userId,
-        isbn: reservation.isbn,
-        feeCharged: 3,
-        reservedAt: reservation.reservedAt,
-        dueDate: reservation.dueDate,
-        status: reservation.status as RESERVATION_STATUS,
-        createdAt: reservation.createdAt,
-        updatedAt: reservation.updatedAt,
-      }),
+export class ReservationRepository
+  extends BaseEventSourcedRepository<Reservation>
+  implements IReservationRepositoryEvent
+{
+  /**
+   * Create reservation-specific indexes
+   * @protected
+   */
+  protected async createEntitySpecificIndexes(): Promise<void> {
+    await this.collection.createIndex(
+      { 'payload.userId': 1 },
+      { background: true },
     )
-  }
 
-  async updateStatus(
-    reservationId: string,
-    newStatus: RESERVATION_STATUS,
-  ): Promise<void> {
-    const collection: Collection<Reservation> =
-      this.dbService.getCollection<Reservation>('reservations')
-
-    await collection.updateOne(
-      { reservationId },
-      { $set: { status: newStatus, updatedAt: new Date() } },
+    await this.collection.createIndex(
+      { 'payload.userId': 1, 'payload.isbn': 1 },
+      { background: true },
     )
   }
 
   /**
-   * Deletes a reservation by its unique identifier.
-   *
-   * This method performs a hard delete from the database.
-   * Since this operation is called after validation in the service layer,
-   * it focuses on database operations rather than business logic.
-   *
-   * @param reservationId - The reservation's unique identifier.
-   * @returns Promise<void> - There's no return value as this matches the pattern of other repository methods
-   * @throws If there's a database error during the operation
+   * Rehydrate a Reservation from events
+   * @param events Array of domain events
+   * @returns Rehydrated Reservation or null
+   * @protected
    */
-  async deleteById(reservationId: string): Promise<void> {
-    if (!reservationId) {
-      throw new Error('Reservation ID is required for deletion')
+  protected rehydrateFromEvents(events: DomainEvent[]): Reservation | null {
+    try {
+      return Reservation.rehydrate(events)
+    } catch (error) {
+      console.error('Failed to rehydrate reservation:', error)
+      return null
+    }
+  }
+
+  /**
+   * Find all reservations for a user
+   * @param userId User identifier
+   * @returns Array of reservations
+   */
+  async findByUserId(userId: string): Promise<Reservation[]> {
+    if (!userId) {
+      throw new Errors.ApplicationError(
+        400,
+        'INVALID_USER_ID',
+        'User ID is required',
+      )
     }
 
     try {
-      const collection: Collection<Reservation> =
-        this.dbService.getCollection<Reservation>('reservations')
+      // Query for reservation-related events
+      const events = await this.collection
+        .find({
+          'payload.userId': userId,
+          eventType: {
+            $in: [
+              'ReservationCreated',
+              'ReservationUpdated',
+              'ReservationStatusChanged',
+              'ReservationCancelled',
+              'ReservationReturned',
+            ],
+          },
+        })
+        .sort({ timestamp: 1 })
+        .toArray()
 
-      // Perform the deletion operation
-      await collection.deleteOne({ reservationId })
+      // Group and rehydrate
+      const eventsByAggregateId = this.groupEventsByAggregateId(events)
+
+      return Object.values(eventsByAggregateId)
+        .map((eventGroup) => this.rehydrateFromEvents(eventGroup))
+        .filter(Boolean) as Reservation[]
     } catch (error) {
-      // Return raw error catch and rethrow database-specific errors with more context
       const message = error instanceof Error ? error.message : String(error)
-
-      throw new Error(
-        `Database error when deleting reservation ${reservationId}: ${message}`,
+      throw new Errors.ApplicationError(
+        500,
+        'RESERVATION_RETRIEVAL_FAILED',
+        `Failed to retrieve reservations for user ${userId}: ${message}`,
       )
     }
+  }
+
+  /**
+   * Find active reservation by user and ISBN
+   * @param userId User identifier
+   * @param isbn Book ISBN
+   * @returns Active reservation or null
+   */
+  async findActiveByUserAndIsbn(
+    userId: string,
+    isbn: string,
+  ): Promise<Reservation | null> {
+    if (!userId || !isbn) {
+      throw new Errors.ApplicationError(
+        400,
+        'INVALID_PARAMETERS',
+        'Both userId and ISBN are required',
+      )
+    }
+
+    try {
+      const events = await this.collection
+        .find({
+          'payload.userId': userId,
+          'payload.isbn': isbn,
+          eventType: {
+            $in: [
+              'ReservationCreated',
+              'ReservationUpdated',
+              'ReservationStatusChanged',
+            ],
+          },
+        })
+        .sort({ timestamp: 1 })
+        .toArray()
+
+      if (events.length === 0) return null
+
+      const eventsByAggregateId = this.groupEventsByAggregateId(events)
+
+      // Find first active reservation
+      for (const eventList of Object.values(eventsByAggregateId)) {
+        const reservation = this.rehydrateFromEvents(eventList)
+
+        if (reservation && this.isReservationActive(reservation)) {
+          return reservation
+        }
+      }
+
+      return null
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+
+      throw new Errors.ApplicationError(
+        500,
+        'RESERVATION_RETRIEVAL_FAILED',
+        `Failed to retrieve active reservation for user ${userId} and book ${isbn}: ${message}`,
+      )
+    }
+  }
+
+  /**
+   * Check if a reservation is active
+   * @private
+   */
+  private isReservationActive(reservation: Reservation): boolean {
+    return (
+      reservation.status !== RESERVATION_STATUS.RETURNED &&
+      reservation.status !== RESERVATION_STATUS.CANCELLED &&
+      reservation.status !== RESERVATION_STATUS.BOUGHT
+    )
   }
 }

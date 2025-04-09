@@ -4,6 +4,7 @@ export enum RESERVATION_STATUS {
   RETURNED = 'returned',
   LATE = 'late',
   BOUGHT = 'bought',
+  CANCELLED = 'cancelled',
 }
 
 export interface PaginationParams {

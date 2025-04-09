@@ -1,11 +1,12 @@
 {
   "name": "@book-library-tool/event-store",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
+  "description": "Event-store library for Book Library Tool",
+  "author": "merodami",
   "type": "module",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "dependencies": {},
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "devDependencies": {
     "depcheck": "^1.4.7",
     "typescript": "^5.8.3"

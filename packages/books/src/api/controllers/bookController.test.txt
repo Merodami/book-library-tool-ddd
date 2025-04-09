@@ -1,7 +1,7 @@
 import { describe, beforeEach, afterEach, test, expect, vi } from 'vitest'
 import { BookController } from '@controllers/bookController.js'
 import { BookService } from '@use_cases/BookService.js'
-import { BookRequest } from '@book-library-tool/sdk'
+import { BookCreateRequest } from '@book-library-tool/sdk'
 import { Book } from '@entities/Book.js'
 import { Errors } from '@book-library-tool/shared'
 
@@ -39,7 +39,7 @@ describe('BookController', () => {
   describe('createBook', () => {
     test('should create a new book and return 201', async () => {
       // Mock input data
-      const bookRequest: BookRequest = {
+      const bookRequest: BookCreateRequest = {
         isbn: '978-3-16-148410-0',
         title: 'Test Book',
         author: 'Test Author',
@@ -66,7 +66,7 @@ describe('BookController', () => {
 
     test('should call next with error if an exception occurs', async () => {
       // Mock input data
-      const bookRequest: BookRequest = {
+      const bookRequest: BookCreateRequest = {
         isbn: '978-3-16-148410-0',
         title: 'Test Book',
         author: 'Test Author',

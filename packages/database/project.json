@@ -38,6 +38,20 @@
         "command": "node --import tsx ./src/scripts/seedBooks.ts",
         "cwd": "{projectRoot}"
       }
+    },
+    "migrate:up": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "migrate-mongo up",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "migrate:down": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "migrate-mongo down",
+        "cwd": "{projectRoot}"
+      }
     }
   }
 }

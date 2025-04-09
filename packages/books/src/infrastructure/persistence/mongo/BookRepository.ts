@@ -1,53 +1,74 @@
+import {
+  BOOK_CREATED,
+  BOOK_DELETED,
+  BOOK_UPDATED,
+  type DomainEvent,
+} from '@book-library-tool/event-store'
+import { IBookRepositoryEvent } from '@repositories/IBookRepositoryEvent.js'
+import { Errors } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
-import { IBookRepository } from '@repositories/IBookRepository.js'
-import { MongoDatabaseService } from '@book-library-tool/database'
-import { Collection } from 'mongodb'
+import { BaseEventSourcedRepository } from './BaseEventSourcedRepository.js'
 
-export class BookRepository implements IBookRepository {
-  constructor(private readonly dbService: MongoDatabaseService) {}
-
-  async create(book: Book): Promise<void> {
-    const collection = this.dbService.getCollection<Book>('books')
-
-    await collection.insertOne(book)
+export class BookRepository
+  extends BaseEventSourcedRepository<Book>
+  implements IBookRepositoryEvent
+{
+  /**
+   * Rehydrate a Reservation from events
+   * @param events Array of domain events
+   * @returns Rehydrated Reservation or null
+   * @protected
+   */
+  protected rehydrateFromEvents(events: DomainEvent[]): Book | null {
+    try {
+      return Book.rehydrate(events)
+    } catch (error) {
+      console.error('Failed to rehydrate reservation:', error)
+      return null
+    }
   }
 
-  async findByISBN(isbn: Book['isbn']): Promise<Book | null> {
-    const collection: Collection<Book> =
-      this.dbService.getCollection<Book>('books')
+  /**
+   * Finds the aggregateId (UUID) for a Book with the given ISBN
+   * if—and only if—the latest event for that aggregate is NOT BookDeleted.
+   *
+   * @param isbn - The book’s ISBN (natural key).
+   * @returns The aggregateId of the active Book, or null if none exists.
+   */
+  async findAggregateIdByISBN(isbn: string): Promise<string | null> {
+    try {
+      const events = await this.collection
+        .find({
+          'payload.isbn': isbn,
+          eventType: { $in: [BOOK_CREATED] },
+        })
+        .sort({ version: 1 })
+        .toArray()
 
-    const book = await collection.findOne({ isbn })
+      if (events.length === 0) return null
 
-    if (!book) return null
+      const grouped: Record<string, DomainEvent[]> = {}
 
-    return Book.rehydrate({
-      isbn: book.isbn,
-      title: book.title,
-      author: book.author,
-      publicationYear: book.publicationYear,
-      publisher: book.publisher,
-      price: book.price,
-      createdAt:
-        book.createdAt instanceof Date
-          ? book.createdAt.toISOString()
-          : book.createdAt,
-      updatedAt:
-        book.updatedAt instanceof Date
-          ? book.updatedAt.toISOString()
-          : book.updatedAt,
-      deletedAt: book.deletedAt
-        ? book.deletedAt instanceof Date
-          ? book.deletedAt.toISOString()
-          : book.deletedAt
-        : undefined,
-    })
-  }
+      for (const evt of events) {
+        ;(grouped[evt.aggregateId] ??= []).push(evt)
+      }
 
-  async deleteByISBN(isbn: Book['isbn']): Promise<boolean> {
-    const collection = this.dbService.getCollection<Book>('books')
+      for (const [aggregateId, eventList] of Object.entries(grouped)) {
+        const lastEvent = eventList[eventList.length - 1]
 
-    const result = await collection.deleteOne({ isbn })
+        if (lastEvent.eventType !== BOOK_DELETED) {
+          return aggregateId
+        }
+      }
 
-    return result.deletedCount === 1
+      return null
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      throw new Errors.ApplicationError(
+        500,
+        'BOOK_LOOKUP_FAILED',
+        `Failed to retrieve active book for ISBN ${isbn}: ${msg}`,
+      )
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { BookRequest } from '@book-library-tool/sdk'
+import { BookCreateRequest } from '@book-library-tool/sdk'
 import type { IBookRepository } from '@repositories/IBookRepository.js'
 import { BookService } from '@use_cases/BookService.js'
 import { Book } from '@entities/Book.js'
@@ -17,7 +17,7 @@ function createFakeBookRepository(): IBookRepository {
 describe('BookService', () => {
   let fakeBookRepository: IBookRepository
   let bookService: BookService
-  let validBookData: BookRequest
+  let validBookData: BookCreateRequest
 
   beforeEach(() => {
     fakeBookRepository = createFakeBookRepository()
@@ -74,7 +74,7 @@ describe('BookService', () => {
       // to get past the "book already exists" check
       vi.spyOn(bookService, 'getBookByISBN').mockResolvedValueOnce(null)
 
-      const data: BookRequest = {
+      const data: BookCreateRequest = {
         isbn: '1234567890',
         title: '   ', // empty after trimming
         author: 'Test Author',

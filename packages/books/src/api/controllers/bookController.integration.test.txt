@@ -1,7 +1,7 @@
 import { describe, beforeEach, afterEach, test, expect, vi } from 'vitest'
 import { BookController } from '@controllers/bookController.js'
 import { BookService } from '@use_cases/BookService.js'
-import { BookRequest } from '@book-library-tool/sdk'
+import { BookCreateRequest } from '@book-library-tool/sdk'
 import { Book } from '@entities/Book.js'
 import { Errors } from '@book-library-tool/shared'
 import { IBookRepository } from '@repositories/IBookRepository.js'
@@ -95,7 +95,7 @@ describe('BookController Integration Tests', () => {
   describe('createBook', () => {
     test('should create a new book and return 201', async () => {
       // Test data
-      const bookRequest: BookRequest = {
+      const bookRequest: BookCreateRequest = {
         isbn: '978-3-16-148410-0',
         title: 'Test Book',
         author: 'Test Author',
@@ -129,7 +129,7 @@ describe('BookController Integration Tests', () => {
 
     test('should return error when trying to create a book that already exists', async () => {
       // Test data
-      const bookRequest: BookRequest = {
+      const bookRequest: BookCreateRequest = {
         isbn: '978-3-16-148410-0',
         title: 'Test Book',
         author: 'Test Author',
@@ -163,7 +163,7 @@ describe('BookController Integration Tests', () => {
   describe('getBook', () => {
     test('should return a book when it exists', async () => {
       // Create a book in the repository
-      const bookData: BookRequest = {
+      const bookData: BookCreateRequest = {
         isbn: '978-3-16-148410-0',
         title: 'Test Book',
         author: 'Test Author',
@@ -223,7 +223,7 @@ describe('BookController Integration Tests', () => {
   describe('deleteBook', () => {
     test('should delete a book when it exists', async () => {
       // Create a book in the repository
-      const bookData: BookRequest = {
+      const bookData: BookCreateRequest = {
         isbn: '978-3-16-148410-0',
         title: 'Test Book',
         author: 'Test Author',

@@ -2,7 +2,7 @@ import { OpenAPIV3 } from 'openapi-types'
 import {
   BookSchema,
   BookIdSchema,
-  BookRequestSchema,
+  BookCreateRequestSchema,
   CatalogSearchQuerySchema,
   ReservationRequestSchema,
   ReservationSchema,
@@ -18,6 +18,7 @@ import {
   PaginatedUserResponseSchema,
   ErrorResponseSchema,
   ReservationsHistoryQuerySchema,
+  BookUpdateRequestSchema,
 } from './schemas/index.js'
 import {
   paramPaginationLimit,
@@ -152,7 +153,7 @@ export const OpenAPISpec = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/BookRequest' },
+              schema: { $ref: '#/components/schemas/BookCreateRequest' },
               examples: {
                 theTarget: {
                   summary: 'The Target by Catherine Coulter',
@@ -847,18 +848,24 @@ export const OpenAPISpec = {
   },
   components: {
     schemas: {
-      // Use the schemas defined in your TypeBox files
+      ErrorResponse: ErrorResponseSchema,
       UserId: UserIdSchema,
+
+      // Book schemas
       Book: BookSchema,
       BookId: BookIdSchema,
-      BookRequest: BookRequestSchema,
+      BookCreateRequest: BookCreateRequestSchema,
+      BookUpdateRequest: BookUpdateRequestSchema,
+
+      // Reservation schemas
       Reservation: ReservationSchema,
       ReservationRequest: ReservationRequestSchema,
       ReservationReturnResponse: ReservationReturnResponseSchema,
       ReservationsHistoryQuery: ReservationsHistoryQuerySchema,
       ReservationReturnParams: ReservationReturnParamsSchema,
+
+      // Wallet schemas
       Wallet: WalletSchema,
-      ErrorResponse: ErrorResponseSchema,
       BalanceWalletRequest: WalletBalanceRequestSchema,
       LateReturnRequest: LateReturnRequestSchema,
       User: UserSchema,

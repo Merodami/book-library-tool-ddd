@@ -23,6 +23,8 @@
     "kill:backend": "fkill --force --silent :3000 :3001 :3002 :3003",
     "database:reset": "yarn docker:local:down && rm -rf mongodata && yarn docker:local -d",
     "database:seed": "nx run @book-library-tool/database:seed-books",
+    "database:migrate:up": "nx run @book-library-tool/database:migrate:up",
+    "database:migrate:down": "nx run @book-library-tool/database:migrate:down",
     "api:docs": "nx run @book-library-tool/api:open-docs",
     "clear": "find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' + && find . -name \"dist\" -type d -prune -exec rm -rf '{}' +",
     "user:create": "nx run @book-library-tool/auth:generate-user",

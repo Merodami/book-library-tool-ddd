@@ -19,6 +19,8 @@
       // Application
       "@dto/*": ["src/application/dtos/*"],
       "@use_cases/*": ["src/application/use_cases/*"],
+      "@commands/*": ["src/application/commands/*"],
+      "@handlers/*": ["src/application/handlers/*"],
 
       // Domain
       "@entities/*": ["src/domain/entities/*"],
@@ -34,19 +36,22 @@
   "exclude": ["dist", "../../node_modules", "node_modules"],
   "references": [
     {
+      "path": "../types"
+    },
+    {
+      "path": "../shared"
+    },
+    {
       "path": "../api"
+    },
+    {
+      "path": "../event-store"
     },
     {
       "path": "../database"
     },
     {
       "path": "../auth"
-    },
-    {
-      "path": "../shared"
-    },
-    {
-      "path": "../types"
     }
   ]
 }

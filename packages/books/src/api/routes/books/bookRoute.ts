@@ -7,8 +7,13 @@ export default function (bookController: BookController) {
 
   router.post(
     '/',
-    validateBody(schemas.BookRequestSchema),
+    validateBody(schemas.BookCreateRequestSchema),
     bookController.createBook,
+  )
+  router.patch(
+    '/:isbn',
+    validateBody(schemas.BookUpdateRequestSchema),
+    bookController.updateBook,
   )
   router.get(
     '/:isbn',
