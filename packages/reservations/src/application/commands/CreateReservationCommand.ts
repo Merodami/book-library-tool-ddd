@@ -1,4 +1,4 @@
-export interface CreateBookCommand {
+export interface CreateReservationCommand {
   isbn: string
   title: string
   author: string

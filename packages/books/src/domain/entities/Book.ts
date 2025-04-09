@@ -83,6 +83,7 @@ export class Book extends AggregateRoot {
       },
       timestamp,
       version: 1,
+      schemaVersion: 1,
     }
 
     book.addDomainEvent(event)
@@ -156,6 +157,7 @@ export class Book extends AggregateRoot {
       },
       timestamp,
       version: newVersion,
+      schemaVersion: 1,
     }
 
     updatedBook.addDomainEvent(event)
@@ -200,6 +202,7 @@ export class Book extends AggregateRoot {
       },
       timestamp,
       version: newVersion,
+      schemaVersion: 1,
     }
 
     deletedBook.addDomainEvent(event)

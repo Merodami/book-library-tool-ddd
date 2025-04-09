@@ -2,6 +2,7 @@
  * Domain event types for the Reservation aggregate.
  */
 export const RESERVATION_CREATED = 'ReservationCreated'
+export const RESERVATION_UPDATED = 'ReservationUpdated'
 export const RESERVATION_RETURNED = 'ReservationReturned'
 export const RESERVATION_DELETED = 'ReservationDeleted'
 export const RESERVATION_STATUS_UPDATED = 'ReservationStatusUpdated'
@@ -20,6 +21,7 @@ export const RESERVATION_STATUS_REMINDER_SENT = 'ReservationStatusReminderSent'
  */
 export type ReservationEventType =
   | typeof RESERVATION_CREATED
+  | typeof RESERVATION_UPDATED
   | typeof RESERVATION_RETURNED
   | typeof RESERVATION_DELETED
   | typeof RESERVATION_STATUS_UPDATED

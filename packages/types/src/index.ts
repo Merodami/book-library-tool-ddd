@@ -23,3 +23,16 @@ export interface PaginatedResponse<T> {
     hasPrev: boolean
   }
 }
+
+export interface BookProjection {
+  id: string // The aggregate ID
+  isbn: string // Business identifier
+  title: string
+  author: string
+  publicationYear: number
+  publisher: string
+  price: number
+  isDeleted: boolean // Flag for soft deletion
+  version: number // For optimistic concurrency
+  updatedAt: Date
+}

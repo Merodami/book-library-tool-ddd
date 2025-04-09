@@ -116,9 +116,11 @@ export class Reservation extends AggregateRoot {
       },
       timestamp: now,
       version: 1,
+      schemaVersion: 1,
     }
 
     reservation.addDomainEvent(event)
+
     return { reservation, event }
   }
 
@@ -167,6 +169,7 @@ export class Reservation extends AggregateRoot {
       },
       timestamp: now,
       version: newVersion,
+      schemaVersion: 1,
     }
 
     updatedReservation.addDomainEvent(event)

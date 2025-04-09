@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
 import { BookController } from '@controllers/bookController.js'
 
-export default function (bookController: BookController) {
+export function createBookRouter(bookController: BookController) {
   const router = Router()
 
   router.post(

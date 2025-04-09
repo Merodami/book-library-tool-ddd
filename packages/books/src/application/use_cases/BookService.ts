@@ -1,14 +1,12 @@
-// packages/books/src/application/BookService.ts
-
 import { BookCreateRequest, BookUpdateRequest } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
-import { IBookRepositoryEvent } from '@repositories/IBookRepositoryEvent.js'
+import { IBookRepository } from '@repositories/IBookRepository.js'
 import { EventBus } from '@book-library-tool/event-store'
 
 export class BookService {
   constructor(
-    private readonly bookRepository: IBookRepositoryEvent,
+    private readonly bookRepository: IBookRepository,
     private readonly eventBus: EventBus,
   ) {}
 

@@ -3,6 +3,7 @@ import { Errors } from '@book-library-tool/shared'
 import { EventBus } from '@book-library-tool/event-store'
 import { IReservationRepositoryEvent } from '@repositories/IReservationRepositoryEvent.js'
 import { Reservation } from '@entities/Reservation.js'
+import { RESERVATION_STATUS } from '@book-library-tool/types'
 
 export class ReservationService {
   constructor(
@@ -27,9 +28,22 @@ export class ReservationService {
       userId: data.userId.trim(),
       isbn: data.isbn.trim(),
       reservedAt: new Date().toISOString(),
-      status: 'RESERVED', // or use your RESERVATION_STATUS.RESERVED constant
-      // Other required properties such as dueDate can be computed by the aggregate.
+      status: RESERVATION_STATUS.RESERVED, // or use your RESERVATION_STATUS.RESERVED constant
     })
+
+    const existingReservation =
+      await this.reservationRepository.findActiveByUserAndIsbn(
+        reservation.userId,
+        reservation.isbn,
+      )
+
+    if (existingReservation) {
+      throw new Errors.ApplicationError(
+        400,
+        'RESERVATION_ALREADY_EXISTS',
+        `Reservation already exists for user ${reservation.userId} and ISBN ${reservation.isbn}.`,
+      )
+    }
 
     // Persist the ReservationCreated event to the event store.
     // For a new aggregate, expected version is 0.

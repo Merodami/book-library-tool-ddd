@@ -1,7 +1,6 @@
 import { Collection, Document, Filter, WithId } from 'mongodb'
-import { Request } from 'express'
 import { PaginatedResponse } from '@book-library-tool/types'
-import { MongoDatabase } from '../MongoDatabase.js'
+import { MongoDatabaseService } from '../mongo/MongoDatabaseService.js'
 
 /**
  * Helper function to fetch paginated data from any collection
@@ -10,20 +9,21 @@ import { MongoDatabase } from '../MongoDatabase.js'
 export async function getPaginatedData<T extends Document = Document>(
   collection: Collection<T>,
   query: Filter<T> = {},
-  req: Request,
+  pagination: {
+    page: number
+    limit: number
+  },
   options?: {
     projection?: Record<string, number>
     sort?: Record<string, 1 | -1>
   },
 ): Promise<PaginatedResponse<WithId<T>>> {
-  // Get pagination parameters from request (added by middleware)
-  const { page, limit } = req.pagination
+  const { page, limit } = pagination
 
-  const dbService = new MongoDatabase()
+  const dbService = new MongoDatabaseService('event')
 
   await dbService.connect()
 
-  // Use the DatabaseService's paginateCollection method
   return dbService.paginateCollection(
     collection,
     query,

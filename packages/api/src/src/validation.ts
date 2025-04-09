@@ -13,7 +13,7 @@ const addFormats = _addFormats as unknown as typeof _addFormats.default
 // Initialize AJV with all errors enabled.
 const ajv = new Ajv({
   allErrors: true,
-  coerceTypes: true,
+  coerceTypes: false,
 })
 addFormats(ajv)
 

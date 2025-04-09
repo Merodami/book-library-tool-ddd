@@ -11,6 +11,7 @@ export interface DomainEvent {
   aggregateId: string
   eventType: string
   version: number
+  schemaVersion: number
   timestamp: Date
   payload: any
   metadata?: EventMetadata // Add the metadata field here

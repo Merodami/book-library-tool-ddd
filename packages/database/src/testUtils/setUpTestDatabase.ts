@@ -16,7 +16,7 @@ export function setUpTestDatabase(dependencies?: Dependencies) {
   let originalMongoUri: string | undefined
   let originalDbName: string | undefined
 
-  const dbService = new MongoDatabaseService()
+  const dbService = new MongoDatabaseService('books-dev')
 
   // Before all tests setup
   const beforeAllCallback = async () => {

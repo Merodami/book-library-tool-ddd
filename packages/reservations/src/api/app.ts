@@ -15,7 +15,7 @@ import createRouter from './routes/index.js'
 
 async function startServer() {
   // Initialize the infrastructure service (database connection)
-  const databaseService = new MongoDatabaseService()
+  const databaseService = new MongoDatabaseService('books-dev')
   try {
     await databaseService.connect()
     logger.info('Successfully connected to MongoDB.')

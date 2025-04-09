@@ -29,7 +29,8 @@
 
       // Infrastructure
       "@database/*": ["src/infrastructure/database/*"],
-      "@persistence/*": ["src/infrastructure/persistence/*"]
+      "@persistence/*": ["src/infrastructure/persistence/*"],
+      "@event-store/*": ["src/infrastructure/event-store/*"]
     }
   },
   "include": ["src"],

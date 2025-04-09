@@ -1,17 +1,16 @@
 import {
   BOOK_CREATED,
   BOOK_DELETED,
-  BOOK_UPDATED,
   type DomainEvent,
 } from '@book-library-tool/event-store'
-import { IBookRepositoryEvent } from '@repositories/IBookRepositoryEvent.js'
 import { Errors } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
 import { BaseEventSourcedRepository } from './BaseEventSourcedRepository.js'
+import { IBookRepository } from '@repositories/IBookRepository.js'
 
 export class BookRepository
   extends BaseEventSourcedRepository<Book>
-  implements IBookRepositoryEvent
+  implements IBookRepository
 {
   /**
    * Rehydrate a Reservation from events

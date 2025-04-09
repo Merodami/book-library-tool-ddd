@@ -1,4 +1,9 @@
-import { DomainEvent } from '@book-library-tool/event-store'
+import {
+  DomainEvent,
+  RESERVATION_CREATED,
+  RESERVATION_STATUS_UPDATED,
+  RESERVATION_UPDATED,
+} from '@book-library-tool/event-store'
 import { Reservation } from '@entities/Reservation.js'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Errors } from '@book-library-tool/shared'
@@ -90,6 +95,7 @@ export class ReservationRepository
 
   /**
    * Find active reservation by user and ISBN
+   *
    * @param userId User identifier
    * @param isbn Book ISBN
    * @returns Active reservation or null
@@ -98,14 +104,6 @@ export class ReservationRepository
     userId: string,
     isbn: string,
   ): Promise<Reservation | null> {
-    if (!userId || !isbn) {
-      throw new Errors.ApplicationError(
-        400,
-        'INVALID_PARAMETERS',
-        'Both userId and ISBN are required',
-      )
-    }
-
     try {
       const events = await this.collection
         .find({
@@ -113,9 +111,9 @@ export class ReservationRepository
           'payload.isbn': isbn,
           eventType: {
             $in: [
-              'ReservationCreated',
-              'ReservationUpdated',
-              'ReservationStatusChanged',
+              RESERVATION_CREATED,
+              RESERVATION_UPDATED,
+              RESERVATION_STATUS_UPDATED,
             ],
           },
         })

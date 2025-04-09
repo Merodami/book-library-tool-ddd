@@ -1,10 +1,8 @@
-// packages/books/src/application/handlers/UpdateBookHandler.ts
-
 import { Book } from '@entities/Book.js'
 import { Errors } from '@book-library-tool/shared'
 import type { EventBus } from '@book-library-tool/event-store'
-import type { IBookRepositoryEvent } from '../../domain/repositories/IBookRepositoryEvent.js'
-import { UpdateBookCommand } from '../commands/UpdateBookCommand.js'
+import type { IBookRepository } from '@repositories/IBookRepository.js'
+import { UpdateBookCommand } from '@commands/UpdateBookCommand.js'
 
 /**
  * UpdateBookHandler
@@ -15,7 +13,7 @@ import { UpdateBookCommand } from '../commands/UpdateBookCommand.js'
  */
 export class UpdateBookHandler {
   constructor(
-    private readonly repository: IBookRepositoryEvent,
+    private readonly repository: IBookRepository,
     private readonly eventBus: EventBus,
   ) {}
 

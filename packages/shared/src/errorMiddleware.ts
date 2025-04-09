@@ -21,7 +21,7 @@ export const errorMiddleware: ErrorRequestHandler = async (
   }
 
   // (This will go to metrics like DD, Prometheus, etc.)
-  // logger.error(err)
+  logger.error(err)
 
   if (err instanceof ApplicationError) {
     res.status(err.status).json({
