@@ -10,7 +10,6 @@
   "dependencies": {
     "@book-library-tool/sdk": "workspace:^",
     "@book-library-tool/types": "workspace:^",
-    "fast-csv": "^5.0.2",
     "he": "^1.2.0",
     "mongodb": "^6.15.0"
   },

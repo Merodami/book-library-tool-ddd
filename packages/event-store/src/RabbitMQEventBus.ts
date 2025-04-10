@@ -1,3 +1,4 @@
+import { logger } from '@book-library-tool/shared'
 import amqplib from 'amqplib'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -111,11 +112,11 @@ export class RabbitMQEventBus implements EventBus {
       this.pendingSubscriptions = []
       this.initialized = true
 
-      console.log(
+      logger.info(
         `RabbitMQEventBus initialized. Exchange: ${this.exchangeName}, Queue: ${this.queueName}`,
       )
     } catch (error) {
-      console.error('Failed to initialize RabbitMQEventBus:', error)
+      logger.error('Failed to initialize RabbitMQEventBus:', error)
 
       // Important: If initialization fails, attempt to close connections
       try {
@@ -126,7 +127,7 @@ export class RabbitMQEventBus implements EventBus {
           await this.connection.close().catch(() => {}) // Ignore errors if already closed
         }
       } catch (closeError) {
-        console.error(
+        logger.error(
           'Error during cleanup after failed initialization:',
           closeError,
         )
@@ -157,7 +158,7 @@ export class RabbitMQEventBus implements EventBus {
         const routingKey = msg.fields.routingKey
 
         try {
-          console.debug(`Processing message ${messageId} [${routingKey}]`)
+          logger.debug(`Processing message ${messageId} [${routingKey}]`)
 
           // Track processing metrics
           const startTime = Date.now()
@@ -167,9 +168,9 @@ export class RabbitMQEventBus implements EventBus {
 
           // Log processing time for monitoring
           const processingTime = Date.now() - startTime
-          console.debug(`Processed message ${messageId} in ${processingTime}ms`)
+          logger.debug(`Processed message ${messageId} in ${processingTime}ms`)
         } catch (error) {
-          console.error(`Error processing message ${messageId}:`, error)
+          logger.error(`Error processing message ${messageId}:`, error)
 
           // Get message headers or create new ones
           const headers = msg.properties.headers || {}
@@ -180,7 +181,7 @@ export class RabbitMQEventBus implements EventBus {
           if (retryCount <= 3) {
             // Retry with exponential backoff
             const delay = 1000 * Math.pow(2, retryCount - 1)
-            console.info(
+            logger.info(
               `Retrying message ${messageId} (${retryCount}/3) after ${delay}ms`,
             )
 
@@ -209,7 +210,7 @@ export class RabbitMQEventBus implements EventBus {
             this.channel.ack(msg)
           } else {
             // Send to dead-letter queue after max retries
-            console.warn(
+            logger.warn(
               `Message ${messageId} exceeded retry limit, sending to DLQ`,
             )
             this.channel.nack(msg, false, false)
@@ -219,34 +220,34 @@ export class RabbitMQEventBus implements EventBus {
       { noAck: false },
     )
 
-    console.info(`Started consuming messages from queue: ${this.queueName}`)
+    logger.info(`Started consuming messages from queue: ${this.queueName}`)
   }
 
   private setupConnectionHandlers(): void {
     this.connection.on('error', (err: any) => {
-      console.error('RabbitMQ connection error:', err)
+      logger.error('RabbitMQ connection error:', err)
       this.reconnect()
     })
 
     this.connection.on('close', () => {
       if (!this.shuttingDown) {
-        console.warn('RabbitMQ connection closed unexpectedly')
+        logger.warn('RabbitMQ connection closed unexpectedly')
         this.reconnect()
       }
     })
 
     this.channel.on('error', (err: any) => {
-      console.error('RabbitMQ channel error:', err)
+      logger.error('RabbitMQ channel error:', err)
     })
 
     this.channel.on('close', () => {
-      console.warn('RabbitMQ channel closed')
+      logger.warn('RabbitMQ channel closed')
     })
   }
 
   async reconnect(): Promise<void> {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('Max reconnection attempts reached, giving up')
+      logger.error('Max reconnection attempts reached, giving up')
       // Trigger application alert/restart
       process.exit(1)
       return
@@ -255,7 +256,7 @@ export class RabbitMQEventBus implements EventBus {
     this.reconnectAttempts++
     const delay = Math.min(30000, 1000 * Math.pow(2, this.reconnectAttempts))
 
-    console.info(
+    logger.info(
       `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
     )
 
@@ -265,9 +266,9 @@ export class RabbitMQEventBus implements EventBus {
       this.initialized = false
       await this.init()
       this.reconnectAttempts = 0
-      console.info('Successfully reconnected to RabbitMQ')
+      logger.info('Successfully reconnected to RabbitMQ')
     } catch (error) {
-      console.error('Failed to reconnect:', error)
+      logger.error('Failed to reconnect:', error)
       this.reconnect()
     }
   }
@@ -295,7 +296,7 @@ export class RabbitMQEventBus implements EventBus {
       // Acknowledge message processing.
       this.channel.ack(msg)
     } catch (error) {
-      console.error('Error handling message:', error)
+      logger.error('Error handling message:', error)
       // Nack the message so it can be retried or sent to dead-letter.
       this.channel.nack(msg, false, false)
     }
@@ -336,10 +337,8 @@ export class RabbitMQEventBus implements EventBus {
 
     // Set up a return handler
     this.channel.on('return', (msg: any) => {
-      console.error(
-        `Message was returned from server: ${msg.fields.routingKey}`,
-      )
-      console.error('This means no queue was bound to receive it!')
+      logger.error(`Message was returned from server: ${msg.fields.routingKey}`)
+      logger.error('This means no queue was bound to receive it!')
     })
 
     // Implement back pressure if channel buffer is full
@@ -347,7 +346,7 @@ export class RabbitMQEventBus implements EventBus {
       await new Promise((resolve) => this.channel.once('drain', resolve))
     }
 
-    console.info(`Published event [${routingKey}] ID: ${properties.messageId}`)
+    logger.info(`Published event [${routingKey}] ID: ${properties.messageId}`)
   }
 
   /**
@@ -362,7 +361,7 @@ export class RabbitMQEventBus implements EventBus {
       this.pendingSubscriptions.push({ eventType, handler })
       if (!this.initializing) {
         this.init().catch((error) => {
-          console.error('Failed to initialize during subscribe:', error)
+          logger.error('Failed to initialize during subscribe:', error)
         })
       }
       return
@@ -384,11 +383,11 @@ export class RabbitMQEventBus implements EventBus {
       this.channel
         .bindQueue(this.queueName, this.exchangeName, bindingKey)
         .then(() => {
-          console.log(
+          logger.info(
             `Bound queue ${this.queueName} with binding key '${bindingKey}'`,
           )
         })
-        .catch((error: Error) => console.error('Error binding queue:', error))
+        .catch((error: Error) => logger.error('Error binding queue:', error))
     }
     this.handlers.get(eventType)!.push(handler)
   }
@@ -429,7 +428,7 @@ export class RabbitMQEventBus implements EventBus {
       const bindingKey = eventType === '*' ? '#' : eventType
       this.channel
         .unbindQueue(this.queueName, this.exchangeName, bindingKey)
-        .catch((error: Error) => console.error('Error unbinding queue:', error))
+        .catch((error: Error) => logger.error('Error unbinding queue:', error))
     }
     return true
   }
@@ -445,7 +444,7 @@ export class RabbitMQEventBus implements EventBus {
     for (const eventType of eventTypes) {
       await this.channel.bindQueue(this.queueName, this.exchangeName, eventType)
 
-      console.log(
+      logger.info(
         `Bound queue ${this.queueName} to exchange ${this.exchangeName} with key '${eventType}'`,
       )
     }
@@ -461,28 +460,28 @@ export class RabbitMQEventBus implements EventBus {
 
     // Set shuttingDown flag to prevent reconnection attempts during shutdown
     this.shuttingDown = true
-    console.info('Shutting down RabbitMQ connections...')
+    logger.info('Shutting down RabbitMQ connections...')
 
     try {
       if (this.channel) {
         await this.channel.close()
-        console.info('RabbitMQ channel closed successfully')
+        logger.info('RabbitMQ channel closed successfully')
       }
     } catch (error) {
-      console.error('Error closing channel:', error)
+      logger.error('Error closing channel:', error)
     }
 
     try {
       if (this.connection) {
         await this.connection.close()
-        console.info('RabbitMQ connection closed successfully')
+        logger.info('RabbitMQ connection closed successfully')
       }
     } catch (error) {
-      console.error('Error closing connection:', error)
+      logger.error('Error closing connection:', error)
     }
 
     this.initialized = false
-    console.info('RabbitMQ shutdown complete')
+    logger.info('RabbitMQ shutdown complete')
   }
 
   /**
@@ -528,7 +527,7 @@ export class RabbitMQEventBus implements EventBus {
 /**
  * Retrieves the RabbitMQ URL from environment variables or uses a default value.
  */
-export function getRabbitMQUrl(): string {
+function getRabbitMQUrl(): string {
   const rabbitMQUsername = process.env.RABBIT_MQ_USERNAME || 'library'
   const rabbitMQPassword = process.env.RABBIT_MQ_PASSWORD || 'library'
   const rabbitMQHost = process.env.RABBIT_MQ_URL || 'localhost'

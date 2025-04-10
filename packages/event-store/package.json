@@ -8,6 +8,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
+    "@book-library-tool/shared": "workspace:^",
     "amqplib": "^0.10.7",
     "uuid": "^11.1.0"
   },

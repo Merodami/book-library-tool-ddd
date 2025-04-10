@@ -45,7 +45,26 @@ export interface EventBus {
   ): boolean
 
   /**
-   * Optionally closes any underlying resources (e.g., connections).
+   * Closes any underlying resources (e.g., connections).
    */
-  shutdown?(): Promise<void>
+  shutdown(): Promise<void>
+
+  /**
+   * Start consuming messages from the queue.
+   * This should be called explicitly when the application is ready to process messages.
+   */
+  startConsuming(): Promise<void>
+
+  /**
+   * Binds the queue to receive specific event types.
+   * Useful when publishing events without any active subscribers.
+   * @param eventTypes - Array of event type strings to bind to
+   */
+  bindEventTypes(eventTypes: string[]): Promise<void>
+
+  /**
+   * Checks the health of the event bus and returns status information.
+   * @returns Object containing status and details about the event bus
+   */
+  checkHealth(): Promise<{ status: string; details: any }>
 }
