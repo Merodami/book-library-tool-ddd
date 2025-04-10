@@ -37,6 +37,7 @@ export function createReservationRouter(
   // Instantiate individual command handlers:
   const createHandler = new CreateReservationHandler(
     reservationRepository,
+    reservationProjectionRepository,
     eventBus,
   )
   const returnHandler = new ReturnReservationHandler(

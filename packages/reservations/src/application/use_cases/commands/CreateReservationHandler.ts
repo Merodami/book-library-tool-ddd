@@ -4,10 +4,11 @@ import {
   RESERVATION_BOOK_VALIDATION,
 } from '@book-library-tool/event-store'
 import type { ReservationRequest } from '@book-library-tool/sdk'
-import { Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Reservation } from '@entities/Reservation.js'
-import type { IReservationRepository } from '@repositories/IReservationRepository.js'
+import { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
+import { IReservationRepository } from '@repositories/IReservationRepository.js'
 
 /**
  * Handles the creation of new reservations.
@@ -16,6 +17,7 @@ import type { IReservationRepository } from '@repositories/IReservationRepositor
 export class CreateReservationHandler {
   constructor(
     private readonly reservationRepository: IReservationRepository,
+    private readonly reservationProjectionRepository: IReservationProjectionRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -30,14 +32,14 @@ export class CreateReservationHandler {
     if (!command.userId || !command.isbn) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_RESERVATION_DATA',
+        ErrorCode.RESERVATION_INVALID_DATA,
         'User ID and ISBN are required',
       )
     }
 
     // Check if user already has an active reservation for this book
     const existingReservation =
-      await this.reservationRepository.findActiveByUserAndIsbn(
+      await this.reservationProjectionRepository.getBookReservations(
         command.userId,
         command.isbn,
       )
@@ -45,7 +47,7 @@ export class CreateReservationHandler {
     if (existingReservation) {
       throw new Errors.ApplicationError(
         409,
-        'DUPLICATE_RESERVATION',
+        ErrorCode.RESERVATION_ALREADY_EXISTS,
         `User ${command.userId} already has an active reservation for book ${command.isbn}`,
       )
     }
@@ -63,7 +65,6 @@ export class CreateReservationHandler {
     await this.reservationRepository.saveEvents(reservation.id, [event], 0)
 
     // Publish a separate event to request book validation
-
     const validationEvent: DomainEvent = {
       eventType: RESERVATION_BOOK_VALIDATION,
       aggregateId: reservation.id,
