@@ -1,35 +1,38 @@
 import { OpenAPIV3 } from 'openapi-types'
+
 import {
-  BookSchema,
-  BookIdSchema,
-  BookCreateRequestSchema,
-  CatalogSearchQuerySchema,
-  ReservationRequestSchema,
-  ReservationSchema,
-  ReservationReturnParamsSchema,
-  ReservationReturnResponseSchema,
-  WalletSchema,
-  WalletBalanceRequestSchema,
-  LateReturnRequestSchema,
-  UserSchema,
-  UserIdSchema,
-  PaginatedBookResponseSchema,
-  PaginatedReservationResponseSchema,
-  PaginatedUserResponseSchema,
-  ErrorResponseSchema,
-  ReservationsHistoryQuerySchema,
-  BookUpdateRequestSchema,
-} from './schemas/index.js'
-import {
-  paramPaginationLimit,
-  paramPaginationPage,
+  paramBookId,
   paramCatalogAuthor,
   paramCatalogPublicationYear,
   paramCatalogTitle,
-  paramUserId,
-  paramBookId,
+  paramPaginationLimit,
+  paramPaginationPage,
   paramReservationId,
+  paramUserId,
 } from './parameters/index.js'
+import {
+  BookCreateRequestSchema,
+  BookIdSchema,
+  BookSchema,
+  BookUpdateRequestSchema,
+  CatalogSearchQuerySchema,
+  ErrorResponseSchema,
+  LateReturnRequestSchema,
+  PaginatedBookResponseSchema,
+  PaginatedReservationResponseSchema,
+  PaginatedResultSchema,
+  PaginatedUserResponseSchema,
+  PaginationQuerySchema,
+  ReservationRequestSchema,
+  ReservationReturnParamsSchema,
+  ReservationReturnResponseSchema,
+  ReservationSchema,
+  ReservationsHistoryQuerySchema,
+  UserIdSchema,
+  UserSchema,
+  WalletBalanceRequestSchema,
+  WalletSchema,
+} from './schemas/index.js'
 
 export const OpenAPISpec = {
   openapi: '3.0.0',
@@ -497,10 +500,10 @@ export const OpenAPISpec = {
                 schema: { $ref: '#/components/schemas/ErrorResponse' },
                 examples: {
                   invalidUserId: {
-                    summary: 'userId must match format \"uuid\"',
+                    summary: 'userId must match format "uuid"',
                     value: {
                       error: 'ValidationError',
-                      message: ['userId must match format \"uuid\"'],
+                      message: ['userId must match format "uuid"'],
                     },
                   },
                   invalidPagination: {
@@ -578,7 +581,7 @@ export const OpenAPISpec = {
                     summary: 'Invalid reservation ID',
                     value: {
                       error: 'ValidationError',
-                      message: ['reservationId must match format \"uuid\"'],
+                      message: ['reservationId must match format "uuid"'],
                     },
                   },
                 },
@@ -644,7 +647,7 @@ export const OpenAPISpec = {
                     summary: 'User not found',
                     value: {
                       error: 'ValidationError',
-                      message: ['userId must match format \"uuid\".'],
+                      message: ['userId must match format "uuid".'],
                     },
                   },
                 },
@@ -874,6 +877,8 @@ export const OpenAPISpec = {
       PaginatedBookResponse: PaginatedBookResponseSchema,
       PaginatedReservationResponse: PaginatedReservationResponseSchema,
       PaginatedUserResponse: PaginatedUserResponseSchema,
+      PaginationQuery: PaginationQuerySchema,
+      PaginatedResult: PaginatedResultSchema,
 
       // Query schemas
       CatalogSearchQuery: CatalogSearchQuerySchema,

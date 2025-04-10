@@ -1,9 +1,9 @@
+import { EventBus } from '@book-library-tool/event-store'
 import { ReservationRequest } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
-import { EventBus } from '@book-library-tool/event-store'
-import { IReservationRepositoryEvent } from '@repositories/IReservationRepositoryEvent.js'
-import { Reservation } from '@entities/Reservation.js'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
+import { Reservation } from '@entities/Reservation.js'
+import { IReservationRepositoryEvent } from '@repositories/IReservationRepositoryEvent.js'
 
 export class ReservationService {
   constructor(

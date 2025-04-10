@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from 'express'
-import { PaginationParams } from '@book-library-tool/types'
+import { NextFunction, Request, Response } from 'express'
+
+import { PaginationQuery } from '../openapi/index.js'
 
 /**
  * Middleware that extracts and normalizes pagination parameters from query params
@@ -9,7 +10,7 @@ export const paginationMiddleware = () => {
   return (req: Request, res: Response, next: NextFunction) => {
     // Apply limit constraints
     let limit = Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
-    let maxLimit = Number(process.env.PAGINATION_MAX_LIMIT) || 10
+    const maxLimit = Number(process.env.PAGINATION_MAX_LIMIT) || 10
 
     try {
       // Extract pagination parameters
@@ -46,7 +47,7 @@ export const paginationMiddleware = () => {
 declare global {
   namespace Express {
     interface Request {
-      pagination: PaginationParams
+      pagination: PaginationQuery
     }
   }
 }

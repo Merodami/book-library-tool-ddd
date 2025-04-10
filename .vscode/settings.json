@@ -28,5 +28,11 @@
   },
   "[dotenv]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
-  }
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ]
 }

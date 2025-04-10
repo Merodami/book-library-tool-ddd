@@ -1,4 +1,5 @@
 import amqplib from 'amqplib'
+
 import type { DomainEvent } from './domain/DomainEvent.js'
 import type { EventBus } from './EventBus.js'
 
@@ -54,7 +55,10 @@ export class RabbitMQEventBus implements EventBus {
       })
 
       // Declare an exclusive queue (or change to a named persistent queue for production)
-      const { queue } = await this.channel.assertQueue('', { exclusive: true })
+      const { queue } = await this.channel.assertQueue('', {
+        exclusive: false,
+        durable: true,
+      })
       this.queueName = queue
 
       // Start consuming messages on the queue

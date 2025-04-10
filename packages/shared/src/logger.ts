@@ -74,6 +74,8 @@ function log(
   }
 
   const message = messageParts.join(' ')
+
+  // eslint-disable-next-line security/detect-object-injection
   baseLogger[level](data, message)
 }
 

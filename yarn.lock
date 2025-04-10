@@ -2217,7 +2217,9 @@ __metadata:
     eslint-config-prettier: "npm:^10.1.1"
     eslint-loader: "npm:^4.0.2"
     eslint-plugin-security: "npm:^3.0.1"
+    eslint-plugin-simple-import-sort: "npm:^12.1.1"
     eslint-plugin-sonarjs: "npm:^3.0.2"
+    eslint-plugin-unused-imports: "npm:^4.1.4"
     express: "npm:5.1.0"
     fix-esm-import-path: "npm:^1.10.1"
     fkill-cli: "npm:^8.0.0"
@@ -3421,6 +3423,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-plugin-simple-import-sort@npm:^12.1.1":
+  version: 12.1.1
+  resolution: "eslint-plugin-simple-import-sort@npm:12.1.1"
+  peerDependencies:
+    eslint: ">=5.0.0"
+  checksum: 10/2a690cea9243fbefa70345687bca8952f5e185fa459b7a8db687a908cc31082435cfee236c619d5245548fa5f89a2f2c4f8499f80512e048d2bedc60e3662d5a
+  languageName: node
+  linkType: hard
+
 "eslint-plugin-sonarjs@npm:^3.0.2":
   version: 3.0.2
   resolution: "eslint-plugin-sonarjs@npm:3.0.2"
@@ -3437,6 +3448,19 @@ __metadata:
   peerDependencies:
     eslint: ^8.0.0 || ^9.0.0
   checksum: 10/971ed06ff2a7f24c561f9be212f89764cec9e279f6d18157df69f7f49fff56b5f7259ea00cbfb16ad261d1ed0f1eb179dd46ba760f78f95cc2c95bff37737974
+  languageName: node
+  linkType: hard
+
+"eslint-plugin-unused-imports@npm:^4.1.4":
+  version: 4.1.4
+  resolution: "eslint-plugin-unused-imports@npm:4.1.4"
+  peerDependencies:
+    "@typescript-eslint/eslint-plugin": ^8.0.0-0 || ^7.0.0 || ^6.0.0 || ^5.0.0
+    eslint: ^9.0.0 || ^8.0.0
+  peerDependenciesMeta:
+    "@typescript-eslint/eslint-plugin":
+      optional: true
+  checksum: 10/8e987028ad925ce1e04c01dcae70adbf44c2878a8b15c4327b33a2861e471d7fe00f6fe213fbd2b936f3fcefc8ccabb0d778aa1d6e0e0387a3dc7fe150cd4ed4
   languageName: node
   linkType: hard
 

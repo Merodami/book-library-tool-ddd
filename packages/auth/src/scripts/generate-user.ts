@@ -1,8 +1,8 @@
-import { randomUUID } from 'crypto'
-import Jwt from 'jsonwebtoken'
-import { MongoDatabaseService } from '@book-library-tool/database'
-import { formatISO } from 'date-fns'
 import { schemas } from '@book-library-tool/api'
+import { MongoDatabaseService } from '@book-library-tool/database'
+import { randomUUID } from 'crypto'
+import { formatISO } from 'date-fns'
+import Jwt from 'jsonwebtoken'
 
 // Get the email from command-line arguments
 const email = process.argv[2]

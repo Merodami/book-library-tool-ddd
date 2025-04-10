@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest'
-import { ApplicationError, catchError } from './errors.js'
+import { describe, expect, it } from 'vitest'
+
 import type { ErrorData } from '../src/errors/ErrorData.js'
+import { ApplicationError, catchError } from './errors.js'
 
 const sampleData: ErrorData = { content: ['/price: must be number'] }
 

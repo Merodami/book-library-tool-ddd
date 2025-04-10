@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express'
+import { NextFunction, Request, RequestHandler, Response } from 'express'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
 export interface ApiTokenOptions {
@@ -22,6 +22,7 @@ export function apiTokenAuth(options: ApiTokenOptions): RequestHandler {
   const headerName = (options.headerName || 'Authorization').toLowerCase()
 
   return (req: Request, res: Response, next: NextFunction): void => {
+    // eslint-disable-next-line security/detect-object-injection
     const authHeader = req.headers[headerName]
 
     if (!authHeader || typeof authHeader !== 'string') {
@@ -41,7 +42,7 @@ export function apiTokenAuth(options: ApiTokenOptions): RequestHandler {
       // Attach decoded payload to request; adjust property name as needed.
       ;(req as any).user = decoded
       next()
-    } catch (error) {
+    } catch (error: any) {
       res.status(401).json({ error: 'Invalid API token' })
     }
   }

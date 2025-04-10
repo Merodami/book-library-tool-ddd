@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler } from 'express'
-import logger from './logger.js'
+
 import { ApplicationError } from './errors.js'
+import logger from './logger.js'
 
 /**
  * This should be the last stop for errors.

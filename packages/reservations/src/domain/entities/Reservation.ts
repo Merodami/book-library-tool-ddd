@@ -1,14 +1,16 @@
 import { makeValidator, schemas } from '@book-library-tool/api'
-import { AggregateRoot, DomainEvent } from '@book-library-tool/event-store'
+import {
+  AggregateRoot,
+  DomainEvent,
+  RESERVATION_CANCELLED,
+  RESERVATION_CREATED,
+  RESERVATION_RETURNED,
+} from '@book-library-tool/event-store'
 import { Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { randomUUID } from 'crypto'
 
 const assertReservationSchema = makeValidator(schemas.ReservationSchema)
-
-// Reservation domain event type constants
-export const RESERVATION_CREATED = 'ReservationCreated'
-export const RESERVATION_RETURNED = 'ReservationReturned'
 
 export interface ReservationProps {
   userId: string
@@ -47,8 +49,9 @@ export class Reservation extends AggregateRoot {
     deletedAt?: Date,
   ) {
     super(id)
+
     // Use the AggregateRoot's id as the reservation identifier.
-    this.reservationId = this.id
+    this.reservationId = id || randomUUID()
     this.userId = props.userId
     this.isbn = props.isbn
     this.reservedAt = props.reservedAt
@@ -67,7 +70,7 @@ export class Reservation extends AggregateRoot {
    */
   public static create(
     props: Partial<schemas.ReservationDTO> &
-      Pick<schemas.ReservationDTO, 'userId' | 'isbn' | 'reservedAt' | 'status'>,
+      Pick<schemas.ReservationDTO, 'userId' | 'isbn'>,
   ): { reservation: Reservation; event: DomainEvent } {
     const now = new Date()
     const dueDate = props.dueDate
@@ -105,6 +108,7 @@ export class Reservation extends AggregateRoot {
 
     // Pass undefined to let AggregateRoot generate the true UUID.
     const reservation = new Reservation(undefined, reservationProps, now, now)
+
     const event: DomainEvent = {
       aggregateId: reservation.id,
       eventType: RESERVATION_CREATED,
@@ -240,8 +244,77 @@ export class Reservation extends AggregateRoot {
         this.updatedAt = new Date(event.timestamp)
         break
       }
+      case RESERVATION_CANCELLED: {
+        // Update mutable properties when reservation is cancelled
+        this.status =
+          event.payload.updatedStatus || RESERVATION_STATUS.CANCELLED
+        this.updatedAt = new Date(event.timestamp)
+        break
+      }
       default:
         console.warn(`Unhandled event type in applyEvent: ${event.eventType}`)
     }
+  }
+
+  /**
+   * Domain method to cancel the reservation.
+   * Produces a ReservationCancelled event.
+   *
+   * @param reason Optional reason for cancellation
+   * @returns The updated reservation and the generated event
+   */
+  public cancel(reason?: string): {
+    reservation: Reservation
+    event: DomainEvent
+  } {
+    if (
+      this.status !== RESERVATION_STATUS.RESERVED &&
+      this.status !== RESERVATION_STATUS.BORROWED &&
+      this.status !== RESERVATION_STATUS.LATE
+    ) {
+      throw new Errors.ApplicationError(
+        400,
+        'RESERVATION_CANNOT_BE_CANCELLED',
+        `Reservation with id ${this.reservationId} cannot be cancelled in its current status.`,
+      )
+    }
+
+    const now = new Date()
+    const newVersion = this.version + 1
+    const updatedProps: ReservationProps = {
+      userId: this.userId,
+      isbn: this.isbn,
+      reservedAt: this.reservedAt,
+      dueDate: this.dueDate,
+      status: RESERVATION_STATUS.CANCELLED,
+      feeCharged: this.feeCharged,
+    }
+
+    const updatedReservation = new Reservation(
+      this.id,
+      updatedProps,
+      this.createdAt,
+      now,
+      this.deletedAt,
+    )
+
+    const event: DomainEvent = {
+      aggregateId: this.id,
+      eventType: RESERVATION_CANCELLED,
+      payload: {
+        reservationId: this.reservationId,
+        previousStatus: this.status,
+        updatedStatus: RESERVATION_STATUS.CANCELLED,
+        cancelledAt: now.toISOString(),
+        reason: reason || 'No reason provided',
+      },
+      timestamp: now,
+      version: newVersion,
+      schemaVersion: 1,
+    }
+
+    updatedReservation.addDomainEvent(event)
+
+    return { reservation: updatedReservation, event }
   }
 }

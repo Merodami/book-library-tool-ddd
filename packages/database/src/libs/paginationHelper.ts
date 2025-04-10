@@ -1,5 +1,6 @@
+import { PaginatedResult } from '@book-library-tool/types'
 import { Collection, Document, Filter, WithId } from 'mongodb'
-import { PaginatedResponse } from '@book-library-tool/types'
+
 import { MongoDatabaseService } from '../mongo/MongoDatabaseService.js'
 
 /**
@@ -17,7 +18,7 @@ export async function getPaginatedData<T extends Document = Document>(
     projection?: Record<string, number>
     sort?: Record<string, 1 | -1>
   },
-): Promise<PaginatedResponse<WithId<T>>> {
+): Promise<PaginatedResult<WithId<T>>> {
   const { page, limit } = pagination
 
   const dbService = new MongoDatabaseService(

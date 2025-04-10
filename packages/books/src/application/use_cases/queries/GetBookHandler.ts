@@ -1,5 +1,6 @@
 import { Book } from '@book-library-tool/sdk'
 import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
+
 import { GetBookQuery } from './GetBookQuery.js'
 
 export class GetBookHandler {

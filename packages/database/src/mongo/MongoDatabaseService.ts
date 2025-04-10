@@ -1,11 +1,11 @@
-import { PaginatedResponse, PaginationParams } from '@book-library-tool/types'
+import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
 import {
-  MongoClient,
-  Db,
   Collection,
-  MongoClientOptions,
+  Db,
   Document,
   Filter,
+  MongoClient,
+  MongoClientOptions,
   WithId,
 } from 'mongodb'
 
@@ -65,6 +65,20 @@ export class MongoDatabaseService {
   }
 
   /**
+   * Retrieves the connected MongoDB database instance.
+   *
+   * @returns The MongoDB Db instance.
+   * @throws An error if the database connection has not been established.
+   */
+  getDb(): Db {
+    if (!this.db) {
+      throw new Error('Database not connected. Call connect() first.')
+    }
+
+    return this.db
+  }
+
+  /**
    * Retrieves a type‑safe collection from the connected MongoDB database.
    *
    * @param name - The name of the MongoDB collection.
@@ -99,12 +113,12 @@ export class MongoDatabaseService {
   async paginateCollection<T extends Document = Document>(
     collection: Collection<T>,
     query: Filter<T>,
-    pagination: PaginationParams,
+    pagination: PaginatedQuery,
     options?: {
       projection?: Record<string, number>
       sort?: Record<string, 1 | -1>
     },
-  ): Promise<PaginatedResponse<WithId<T>>> {
+  ): Promise<PaginatedResult<WithId<T>>> {
     const { page: possiblePage, limit: possibleLimit } = pagination
 
     const limit = possibleLimit ?? Number(process.env.PAGINATION_DEFAULT_LIMIT)

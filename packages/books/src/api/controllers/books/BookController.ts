@@ -1,8 +1,9 @@
-import { Request, Response, NextFunction } from 'express'
 import type {
   BookCreateRequest,
   BookUpdateRequest,
 } from '@book-library-tool/sdk'
+import { NextFunction, Request, Response } from 'express'
+
 import { BookFacade } from './BookFacade.js'
 
 export class BookController {

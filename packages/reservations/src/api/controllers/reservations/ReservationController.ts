@@ -1,13 +1,15 @@
-import { Request, Response, NextFunction } from 'express'
 import type {
   ReservationRequest,
   ReservationReturnParams,
+  ReservationsHistoryQuery,
   UserId,
 } from '@book-library-tool/sdk'
-import { ReservationService } from '@use_cases/ReservationService.js'
+import { NextFunction, Request, Response } from 'express'
+
+import { ReservationFacade } from './ReservationFacade.js'
 
 export class ReservationController {
-  constructor(private readonly reservationService: ReservationService) {
+  constructor(private readonly reservationService: ReservationFacade) {
     // Bind methods to ensure the correct "this" context when used as callbacks
     this.createReservation = this.createReservation.bind(this)
     this.getReservationHistory = this.getReservationHistory.bind(this)
@@ -22,6 +24,7 @@ export class ReservationController {
    *   "userId": string,
    *   "isbn": string
    * }
+   * The ReservationFacade will generate a ReservationCreated event, persist it, and publish it.
    */
   async createReservation(
     req: Request,
@@ -31,11 +34,16 @@ export class ReservationController {
     try {
       const { userId, isbn } = req.body as ReservationRequest
 
-      // Delegate to the service; the service will enforce business rules.
-      const newReservation = await this.reservationService.createReservation({
+      // Build the command
+      const reservationCommand: ReservationRequest = {
         userId,
         isbn,
-      })
+      }
+
+      // Delegate to the facade; the facade will delegate to the appropriate handler
+      // which enforces business rules and generates events.
+      const newReservation =
+        await this.reservationService.createReservation(reservationCommand)
 
       res.status(201).json(newReservation)
     } catch (error) {
@@ -46,6 +54,7 @@ export class ReservationController {
   /**
    * GET /reservations/user/:userId
    * Retrieve a user's reservation history.
+   * This uses the projection repository through the query handler.
    */
   async getReservationHistory(
     req: Request,
@@ -54,9 +63,14 @@ export class ReservationController {
   ): Promise<void> {
     try {
       const { userId } = req.params as UserId
+      const { page, limit } = req.query as ReservationsHistoryQuery
 
-      const history =
-        await this.reservationService.getReservationHistory(userId)
+      // Uses the query handler to retrieve data from the projection repository
+      const history = await this.reservationService.getReservationHistory({
+        userId,
+        page: page || 1,
+        limit: limit || 10,
+      })
 
       res.status(200).json(history)
     } catch (error) {
@@ -67,11 +81,7 @@ export class ReservationController {
   /**
    * PATCH /reservations/:reservationId/return
    * Mark a reservation as returned.
-   * Expects a JSON body:
-   * {
-   *   "retailPrice": number
-   * }
-   * The service will apply late fees and determine if the reservation should be marked as "returned" or "bought".
+   * Generates a ReservationReturned event, persists it, and publishes it.
    */
   async returnReservation(
     req: Request,
@@ -81,8 +91,10 @@ export class ReservationController {
     try {
       const { reservationId } = req.params as ReservationReturnParams
 
-      const result =
-        await this.reservationService.returnReservation(reservationId)
+      // Execute the command through the facade
+      const result = await this.reservationService.returnReservation({
+        reservationId,
+      })
 
       res.status(200).json(result)
     } catch (error) {

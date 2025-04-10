@@ -1,11 +1,13 @@
-// eslint.config.js
-
 import js from '@eslint/js'
 import security from 'eslint-plugin-security'
 import sonarjs from 'eslint-plugin-sonarjs'
 import tsParser from '@typescript-eslint/parser'
 import tsPlugin from '@typescript-eslint/eslint-plugin'
 import prettier from 'eslint-config-prettier'
+
+// New plugin imports:
+import simpleImportSort from 'eslint-plugin-simple-import-sort'
+import unusedImports from 'eslint-plugin-unused-imports'
 
 export default [
   // 1) Ignored files (replaces .eslintignore)
@@ -19,7 +21,6 @@ export default [
 
   // 3) General config (Node environment, plugin rules, custom rules)
   {
-    // "languageOptions" is where we specify parser settings, globals, etc.
     languageOptions: {
       parser: tsParser,
       ecmaVersion: 2020,
@@ -28,27 +29,23 @@ export default [
         ecmaVersion: 'latest',
         sourceType: 'module',
       },
-      // If you want to allow Node globals (like "process"), add them here:
       globals: {
         Atomics: 'readonly',
         SharedArrayBuffer: 'readonly',
         React: 'writable',
         window: 'writable',
         localStorage: 'writable',
-        // If needed:
-        process: 'readonly', // so `no-undef` won't complain about process
+        process: 'readonly',
       },
     },
 
-    // Register your plugins:
     plugins: {
       security,
       sonarjs,
-      // Prettier is typically just a config, not a plugin
+      // (We keep Prettier as a config only.)
     },
 
     rules: {
-      // Basic JS/Prettier-related
       'linebreak-style': ['error', 'unix'],
       'prefer-const': [
         'warn',
@@ -69,14 +66,14 @@ export default [
       'no-redeclare': 'off',
       'no-shadow': 'warn',
 
-      // SonarJS rules (since we’re not using "plugin:sonarjs/recommended")
+      // SonarJS rules
       'sonarjs/no-identical-functions': 'warn',
       'sonarjs/cognitive-complexity': 'warn',
       'sonarjs/no-nested-template-literals': 'warn',
       'sonarjs/no-duplicate-string': 'off',
       'sonarjs/no-redundant-boolean': 'warn',
 
-      // Security plugin rules (since we’re not using "plugin:security/recommended")
+      // Security plugin rules
       'security/detect-object-injection': 'error',
       'security/detect-non-literal-fs-filename': 'error',
       'security/detect-non-literal-regexp': 'warn',
@@ -88,7 +85,7 @@ export default [
 
   // 4) Override for TypeScript files
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'], // Updated glob patterns
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -99,17 +96,43 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
+      'simple-import-sort': simpleImportSort,
+      'unused-imports': unusedImports,
     },
     rules: {
       'no-undef': 'off', // TS handles types
-      'no-unused-vars': 'off', // prefer TS lint rule instead
-      '@typescript-eslint/no-unused-vars': [
-        'error',
+      'no-unused-vars': 'off', // disable base rule in favor of plugin rules
+      '@typescript-eslint/no-unused-vars': 'off', // disable TS rule to avoid duplicate reports
+
+      // New rules for automatically sorting and cleaning imports:
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
+        'warn',
         {
-          ignoreRestSiblings: true,
-          argsIgnorePattern: 'key|value|i|doc|next|jpath|event|params|router',
+          vars: 'all',
+          varsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
         },
       ],
+      'simple-import-sort/imports': [
+        'error',
+        {
+          groups: [
+            // Side effect imports.
+            ['^\\u0000'],
+            // Packages. Customize as needed.
+            ['^react', '^@?\\w'],
+            // Absolute imports.
+            ['^(?!\\.)'],
+            // Relative imports.
+            ['^\\.'],
+          ],
+        },
+      ],
+      'simple-import-sort/exports': 'error',
+
+      // Existing TypeScript rules:
       '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/camelcase': 'off',

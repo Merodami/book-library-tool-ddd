@@ -7,21 +7,26 @@ export enum RESERVATION_STATUS {
   CANCELLED = 'cancelled',
 }
 
-export interface PaginationParams {
-  page?: number
-  limit?: number
+export type PaginationMetadata = {
+  total: number
+  page: number
+  limit: number
+  pages: number
+  hasNext: boolean
+  hasPrev: boolean
 }
 
-export interface PaginatedResponse<T> {
+export type PaginatedResult<T> = {
   data: T[]
-  pagination: {
-    total: number
-    page: number
-    limit: number
-    pages: number
-    hasNext: boolean
-    hasPrev: boolean
-  }
+  pagination: PaginationMetadata
+}
+
+/**
+ * Generic type for paginated query parameters
+ */
+export type PaginatedQuery = {
+  page?: number
+  limit?: number
 }
 
 export interface BookProjection {

@@ -1,8 +1,8 @@
-import { Router } from 'express'
 import { schemas, validateQuery } from '@book-library-tool/api'
-import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
 import { CatalogController } from '@controllers/catalog/CatalogController.js'
+import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
 import { GetAllBooksHandler } from '@use_cases/queries/GetAllBooksHandler.js'
+import { Router } from 'express'
 
 export function createCatalogRouter(
   bookProjectionRepository: IBookProjectionRepository,

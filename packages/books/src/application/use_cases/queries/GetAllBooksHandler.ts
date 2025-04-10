@@ -1,6 +1,7 @@
-import { BookDTO } from '@book-library-tool/api/src/schemas/books.js'
+import { PaginatedBookResponse } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
+
 import { GetAllBooksQuery } from './GetAllBooksQuery.js'
 
 export class GetAllBooksHandler {
@@ -12,11 +13,11 @@ export class GetAllBooksHandler {
    *
    * @returns An array of Book aggregates.
    */
-  async execute(query: GetAllBooksQuery): Promise<BookDTO[]> {
+  async execute(query: GetAllBooksQuery): Promise<PaginatedBookResponse> {
     // Retrieve all events for the given aggregate ID.
     const books = await this.bookRepository.getAllBooks(query)
 
-    if (!books || books.length === 0) {
+    if (!books || books.data.length === 0) {
       throw new Errors.ApplicationError(
         404,
         'BOOK_NOT_FOUND',

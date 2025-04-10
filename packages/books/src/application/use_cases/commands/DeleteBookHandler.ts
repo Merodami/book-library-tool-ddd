@@ -1,7 +1,8 @@
+import { EventBus } from '@book-library-tool/event-store'
 import { Errors } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
-import { EventBus } from '@book-library-tool/event-store'
+
 import { DeleteBookCommand } from './DeleteBookCommand.js'
 
 export class DeleteBookHandler {

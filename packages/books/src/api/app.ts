@@ -1,20 +1,17 @@
-import express from 'express'
 import { apiTokenAuth } from '@book-library-tool/auth'
-import { errorMiddleware, logger } from '@book-library-tool/shared'
-import cors from 'cors'
-import gracefulShutdown from 'http-graceful-shutdown'
 import { MongoDatabaseService } from '@book-library-tool/database'
-
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
-import { setupEventSubscriptions } from '@event-store/setupEventSubscriptions.js'
+import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
-
+import { setupEventSubscriptions } from '@event-store/setupEventSubscriptions.js'
+import { BookProjectionRepository } from '@persistence/mongo/BookProjectionRepository.js'
 // Routers and controllers for different contexts
 import { BookRepository } from '@persistence/mongo/BookRepository.js'
-import { BookProjectionRepository } from '@persistence/mongo/BookProjectionRepository.js'
-
-import { createCatalogRouter } from '@routes/catalog/CatalogRoute.js'
 import { createBookRouter } from '@routes/books/BookRoute.js'
+import { createCatalogRouter } from '@routes/catalog/CatalogRoute.js'
+import cors from 'cors'
+import express from 'express'
+import gracefulShutdown from 'http-graceful-shutdown'
 
 async function startServer() {
   // Create and connect the database service (write and projection share the same DB context)

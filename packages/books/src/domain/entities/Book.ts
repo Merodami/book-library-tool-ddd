@@ -87,6 +87,7 @@ export class Book extends AggregateRoot {
     }
 
     book.addDomainEvent(event)
+
     return { book, event }
   }
 
@@ -248,7 +249,10 @@ export class Book extends AggregateRoot {
 
     // Apply all subsequent events
     for (let i = 1; i < events.length; i++) {
+      // eslint-disable-next-line security/detect-object-injection
       book.applyEvent(events[i])
+
+      // eslint-disable-next-line security/detect-object-injection
       book.version = events[i].version
     }
 

@@ -1,20 +1,17 @@
-import { Router } from 'express'
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
-import type { IBookRepository } from '@repositories/IBookRepository.js'
 import type { EventBus } from '@book-library-tool/event-store'
-
 // Command (write) handlers:
 import { CreateBookHandler } from '@commands/CreateBookHandler.js'
-import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
 import { DeleteBookHandler } from '@commands/DeleteBookHandler.js'
-
-// Query (read) handler:
-import { GetBookHandler } from '@queries/GetBookHandler.js'
-
+import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
+import { BookController } from '@controllers/books/BookController.js'
 // Unified facade and controller:
 import { BookFacade } from '@controllers/books/BookFacade.js'
+// Query (read) handler:
+import { GetBookHandler } from '@queries/GetBookHandler.js'
 import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
-import { BookController } from '@controllers/books/BookController.js'
+import type { IBookRepository } from '@repositories/IBookRepository.js'
+import { Router } from 'express'
 
 // The router now expects both the write repository and the projection repository as parameters.
 export function createBookRouter(
@@ -43,7 +40,6 @@ export function createBookRouter(
   // Create a single controller that delegates operations to the facade:
   const controller = new BookController(facade)
 
-  // Wire up the routes:
   router.post(
     '/',
     validateBody(schemas.BookCreateRequestSchema),
@@ -52,6 +48,7 @@ export function createBookRouter(
 
   router.patch(
     '/:isbn',
+    validateParams(schemas.BookIdSchema),
     validateBody(schemas.BookUpdateRequestSchema),
     controller.updateBook,
   )

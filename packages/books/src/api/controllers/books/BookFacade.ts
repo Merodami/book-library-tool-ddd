@@ -1,14 +1,12 @@
+import { Book } from '@book-library-tool/sdk'
 import { CreateBookCommand } from '@commands/CreateBookCommand.js'
 import { CreateBookHandler } from '@commands/CreateBookHandler.js'
-import { UpdateBookCommand } from '@commands/UpdateBookCommand.js'
-import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
 import { DeleteBookCommand } from '@commands/DeleteBookCommand.js'
 import { DeleteBookHandler } from '@commands/DeleteBookHandler.js'
-
-import { GetBookQuery } from '@queries/GetBookQuery.js'
+import { UpdateBookCommand } from '@commands/UpdateBookCommand.js'
+import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
 import { GetBookHandler } from '@queries/GetBookHandler.js'
-
-import { Book } from '@book-library-tool/sdk'
+import { GetBookQuery } from '@queries/GetBookQuery.js'
 
 // Unified BookFacade that delegates to the correct underlying handler:
 export class BookFacade {

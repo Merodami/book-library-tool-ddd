@@ -1,13 +1,13 @@
-// Updated IReservationRepositoryEvent.ts
-
 import type { DomainEvent } from '@book-library-tool/event-store'
-import { Reservation } from '@entities/Reservation.js'
+import type { ReservationRequest } from '@book-library-tool/sdk'
+import type { Reservation } from '@entities/Reservation.js'
 
 /**
- * IReservationRepositoryEvent abstracts the persistence and retrieval of domain events
+ * IReservationRepository abstracts the persistence and retrieval of domain events
  * for Reservation aggregates. It ensures optimistic concurrency via version checking.
+ * Following CQRS principles, this repository focuses only on commands/writes.
  */
-export interface IReservationRepositoryEvent {
+export interface IReservationRepository {
   /**
    * Save a list of domain events for a given aggregate using a single operation.
    * An optimistic concurrency check on the expected version ensures that no
@@ -47,22 +47,49 @@ export interface IReservationRepositoryEvent {
   getEventsForAggregate(aggregateId: string): Promise<DomainEvent[]>
 
   /**
-   * Finds all reservations associated with a given userId.
-   * This method queries the event store for events related to the userId
-   * and rehydrates the Reservation aggregates from those events.
+   * Creates a new reservation.
    *
-   * @param userId - The unique identifier of the user.
-   * @returns A promise that resolves to an array of Reservation aggregates.
+   * @param reservationData - The data needed to create a reservation
+   * @returns The created reservation
    */
-  findByUserId(userId: string): Promise<Reservation[]>
+  createReservation(reservationData: ReservationRequest): Promise<Reservation>
 
   /**
-   * Finds an active reservation by userId and ISBN.
-   * This method checks for reservations that are not returned, cancelled, or bought.
+   * Marks a reservation as returned.
    *
-   * @param userId - The user identifier.
-   * @param isbn - The ISBN of the book.
-   * @returns A Reservation object if found; otherwise, null.
+   * @param reservationId - The ID of the reservation to return
+   * @returns The updated reservation
+   */
+  returnReservation(reservationId: string): Promise<Reservation>
+
+  /**
+   * Cancels a reservation.
+   *
+   * @param reservationId - The ID of the reservation to cancel
+   * @param reason - Optional reason for cancellation
+   * @returns The updated reservation
+   */
+  cancelReservation(
+    reservationId: string,
+    reason?: string,
+  ): Promise<Reservation>
+
+  /**
+   * Gets a reservation by its ID for command operations.
+   * This is used for loading the aggregate before modifying it.
+   *
+   * @param reservationId - The ID of the reservation to retrieve
+   * @returns The reservation if found, null otherwise
+   */
+  findById(reservationId: string): Promise<Reservation | null>
+
+  /**
+   * Find active reservation by user and ISBN.
+   * This is needed for validation during reservation creation.
+   *
+   * @param userId User identifier
+   * @param isbn Book ISBN
+   * @returns Active reservation or null
    */
   findActiveByUserAndIsbn(
     userId: string,

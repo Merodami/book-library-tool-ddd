@@ -1,7 +1,8 @@
+import { EventBus } from '@book-library-tool/event-store'
 import { Errors } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
-import { EventBus } from '@book-library-tool/event-store'
+
 import { UpdateBookCommand } from './UpdateBookCommand.js'
 
 export class UpdateBookHandler {
@@ -21,15 +22,19 @@ export class UpdateBookHandler {
    * @returns The updated Book aggregate.
    */
   async execute(command: UpdateBookCommand): Promise<void> {
-    const events = await this.repository.getEventsForAggregate(command.isbn)
+    const aggregateId = await this.repository.findAggregateIdByISBN(
+      command.isbn,
+    )
 
-    if (!events || events.length === 0) {
+    if (!aggregateId) {
       throw new Errors.ApplicationError(
         404,
         'BOOK_NOT_FOUND',
         `Book with ISBN ${command.isbn} not found.`,
       )
     }
+
+    const events = await this.repository.getEventsForAggregate(aggregateId)
 
     const currentBook = Book.rehydrate(events)
 
@@ -41,11 +46,7 @@ export class UpdateBookHandler {
       price: command.price,
     })
 
-    await this.repository.saveEvents(
-      updatedBook.isbn,
-      [event],
-      currentBook.version,
-    )
+    await this.repository.saveEvents(aggregateId, [event], currentBook.version)
 
     await this.eventBus.publish(event)
 

@@ -1,4 +1,8 @@
-import type { Book, CatalogSearchQuery } from '@book-library-tool/sdk'
+import type {
+  Book,
+  CatalogSearchQuery,
+  PaginatedBookResponse,
+} from '@book-library-tool/sdk'
 
 export interface IBookProjectionRepository {
   /**
@@ -6,7 +10,7 @@ export interface IBookProjectionRepository {
    *
    * @returns A promise that resolves to an array of Book objects.
    */
-  getAllBooks(query: CatalogSearchQuery): Promise<Book[]>
+  getAllBooks(query: CatalogSearchQuery): Promise<PaginatedBookResponse>
 
   /**
    * Retrieve a single book projection by its ISBN.

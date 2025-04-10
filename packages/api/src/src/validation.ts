@@ -1,10 +1,11 @@
-import { Ajv } from 'ajv'
-import { Request, Response, NextFunction } from 'express'
-import _addFormats from 'ajv-formats'
-import ajvErrorsImport from 'ajv-errors'
-import { formatApiErrors } from '../util/formatApiError.js'
 import { Errors } from '@book-library-tool/shared'
 import { TSchema } from '@sinclair/typebox'
+import { Ajv } from 'ajv'
+import ajvErrorsImport from 'ajv-errors'
+import _addFormats from 'ajv-formats'
+import { NextFunction, Request, Response } from 'express'
+
+import { formatApiErrors } from '../util/formatApiError.js'
 import { formatErrors } from '../util/formatErrors.js'
 
 // Import the Ajv formats plugin fix (cannot import directly AddFormat)

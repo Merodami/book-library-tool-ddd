@@ -1,13 +1,14 @@
-import fs from 'fs'
-import path from 'path'
-import fastcsv from 'fast-csv'
-import { fileURLToPath } from 'url'
-import he from 'he'
-import { Book } from '@book-library-tool/sdk'
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { BookRepository } from '../infrastructure/persistence/mongo/BookRepository.js'
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
+import { Book } from '@book-library-tool/sdk'
+import fastcsv from 'fast-csv'
+import fs from 'fs'
+import he from 'he'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
 import { CreateBookHandler } from '../application/use_cases/commands/CreateBookHandler.js'
+import { BookRepository } from '../infrastructure/persistence/mongo/BookRepository.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -46,10 +47,7 @@ const isInvalidBook = (book: Book) => {
 
 async function seedBooks() {
   try {
-    const csvFilePath = path.join(
-      __dirname,
-      'csv/books_sample_technical_challenge.csv',
-    )
+    const csvFilePath = path.join(__dirname, '/csv/books_sample.csv')
 
     // Set up the CSV stream with fast-csv
     const stream = fs
@@ -107,19 +105,20 @@ async function seedBooks() {
         // Process the command by calling createBook on the BookService.
         await bookService.execute(command)
       } catch (error) {
-        console.error(`Error processing record #${processedCount}:`, error)
+        if (error.message === 'BOOK_ALREADY_EXISTS') {
+          console.log('Book already exists, skipping:', error.message)
+        } else {
+          console.error(`Error processing record #${processedCount}:`, error)
+        }
 
         skippedCount++
-      } finally {
-        console.log('Disconnected from MongoDB and destroyed stream.')
-        console.log(
-          'Seeding process completed (Possible errors handled by event sourcing).',
-        )
-
-        dbService.disconnect().catch(console.error)
-        stream.destroy()
       }
     }
+
+    dbService.disconnect().catch(console.error)
+    stream.destroy()
+
+    console.log('Disconnected from MongoDB and destroyed stream.')
 
     console.log(`
       Import Summary:
