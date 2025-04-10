@@ -68,6 +68,8 @@ export class ReservationProjectionRepository
 
   async getBookReservations(
     isbn: string,
+    userId?: string,
+    status?: RESERVATION_STATUS,
     pagination: PaginatedQuery = { page: 1, limit: 10 },
   ): Promise<PaginatedResult<Reservation>> {
     const { page = 1, limit = 10 } = pagination
@@ -75,34 +77,22 @@ export class ReservationProjectionRepository
     // Build the filter based on provided parameters
     const filter: Record<string, unknown> = { isbn }
 
-    if (status && status.trim().length > 0) {
+    // Add optional filters
+    if (status) {
       filter.status = status
     }
 
-    // Add date range filters if provided
-    // if (dateRange) {
-    //   const dateFilter: Record<string, unknown> = {}
-
-    //   if (dateRange.startDate) {
-    //     dateFilter.$gte = new Date(dateRange.startDate)
-    //   }
-
-    //   if (dateRange.endDate) {
-    //     dateFilter.$lte = new Date(dateRange.endDate)
-    //   }
-
-    //   if (Object.keys(dateFilter).length > 0) {
-    //     filter.createdAt = dateFilter
-    //   }
-    // }
+    if (userId) {
+      filter.userId = userId
+    }
 
     // Use the pagination helper to get paginated reservation data
     const paginatedReservations = await getPaginatedData<Reservation>(
       this.dbService,
       this.collection,
       filter,
-      { limit, page },
-      { projection: { _id: 0 }, sort: { createdAt: -1 } }, // Sort by creation date, most recent first
+      { limit: Math.floor(Number(limit)), page: Math.floor(Number(page)) },
+      { projection: { _id: 0 }, sort: { createdAt: -1 } },
     )
 
     // Map the results to ensure they match the expected format
@@ -118,7 +108,7 @@ export class ReservationProjectionRepository
     const activeReservations = await this.collection
       .find({
         isbn,
-        status: RESERVATION_STATUS.RESERVED, // Only get active reservations
+        status: [RESERVATION_STATUS.RESERVED, RESERVATION_STATUS.CONFIRMED],
       })
       .project({ _id: 0 })
       .toArray()

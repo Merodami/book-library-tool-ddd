@@ -1,17 +1,14 @@
-import type { BookCreateRequest } from '@book-library-tool/sdk'
+import { GetBookHandler } from '@queries/GetBookHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
-import { BookFacade } from './BookFacade.js'
-
 export class GetBookController {
-  constructor(private readonly bookService: BookFacade) {
+  constructor(private readonly getBookHandler: GetBookHandler) {
     this.getBook = this.getBook.bind(this)
   }
 
   /**
    * GET /books/:isbn
-   * Retrieves a book by its ISBN.
-   * This method calls the service which rehydrates the Book aggregate from its events.
+   * Retrieves a book by ISBN.
    */
   async getBook(
     req: Request,
@@ -19,13 +16,11 @@ export class GetBookController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { isbn } = req.params as Pick<BookCreateRequest, 'isbn'>
+      const { isbn } = req.params
 
-      // Retrieve the rehydrated Book aggregate via the service.
-      const bookAggregate = await this.bookService.getBook({ isbn })
+      const book = await this.getBookHandler.execute({ isbn })
 
-      // Return the current state of the Book aggregate.
-      res.status(200).json(bookAggregate)
+      res.status(200).json(book)
     } catch (error) {
       next(error)
     }

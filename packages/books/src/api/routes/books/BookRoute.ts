@@ -1,20 +1,17 @@
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
-// Command (write) handlers:
 import { CreateBookHandler } from '@commands/CreateBookHandler.js'
 import { DeleteBookHandler } from '@commands/DeleteBookHandler.js'
 import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
-import { BookController } from '@controllers/books/BookController.js'
-// Unified facade and controller:
-import { BookFacade } from '@controllers/books/BookFacade.js'
+import { CreateBookController } from '@controllers/books/CreateBookController.js'
+import { DeleteBookController } from '@controllers/books/DeleteBookController.js'
 import { GetBookController } from '@controllers/books/GetBookController.js'
-// Query (read) handler:
+import { UpdateBookController } from '@controllers/books/UpdateBookController.js'
 import { GetBookHandler } from '@queries/GetBookHandler.js'
 import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
 import type { IBookRepository } from '@repositories/IBookRepository.js'
 import { Router } from 'express'
 
-// The router now expects both the write repository and the projection repository as parameters.
 export function createBookRouter(
   bookRepository: IBookRepository,
   bookProjectionRepository: IBookProjectionRepository,
@@ -22,47 +19,37 @@ export function createBookRouter(
 ) {
   const router = Router()
 
-  // Instantiate individual handlers:
+  // Instantiate individual handlers
   const createHandler = new CreateBookHandler(bookRepository, eventBus)
   const updateHandler = new UpdateBookHandler(bookRepository, eventBus)
   const deleteHandler = new DeleteBookHandler(bookRepository, eventBus)
-
-  // The query (read) handler uses the projection repository.
   const getHandler = new GetBookHandler(bookProjectionRepository)
 
-  // Create a unified facade combining all the handlers:
-  const facade = new BookFacade(
-    createHandler,
-    updateHandler,
-    deleteHandler,
-    getHandler,
-  )
+  // Create specialized controllers
+  const createBookController = new CreateBookController(createHandler)
+  const updateBookController = new UpdateBookController(updateHandler)
+  const deleteBookController = new DeleteBookController(deleteHandler)
+  const getBookController = new GetBookController(getHandler)
 
-  // Create a single controller that delegates operations to the facade:
-  // Write
-  const mainBookController = new BookController(facade)
-
+  // Define routes
   router.post(
     '/',
     validateBody(schemas.BookCreateRequestSchema),
-    mainBookController.createBook,
+    createBookController.createBook,
   )
 
   router.patch(
     '/:isbn',
     validateParams(schemas.BookIdSchema),
     validateBody(schemas.BookUpdateRequestSchema),
-    mainBookController.updateBook,
+    updateBookController.updateBook,
   )
 
   router.delete(
     '/:isbn',
     validateParams(schemas.BookIdSchema),
-    mainBookController.deleteBook,
+    deleteBookController.deleteBook,
   )
-
-  // Read
-  const getBookController = new GetBookController(facade)
 
   router.get(
     '/:isbn',

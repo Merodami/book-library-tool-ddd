@@ -1,10 +1,51 @@
-# Book library tool
+# Book Library Tool
 
 This project implements a backend system for the Royal Library of Belgium.
 
 The library has a vast collection of book references (100 million entries) and 50k users.
 
 Users can search for books, make reservations, borrow books, and manage their wallet balances.
+
+## Architecture
+
+This system is built using several modern architectural patterns to ensure scalability, maintainability, and resilience:
+
+### Domain-Driven Design (DDD)
+
+- **Aggregates**: Core domain entities like Book and Reservation are modeled as aggregates with clear boundaries
+- **Value Objects**: Immutable objects like ISBN and dates are implemented as value objects
+- **Domain Events**: System uses events like BookCreated, ReservationConfirmed to communicate state changes
+- **Bounded Contexts**: Clear separation between domains (Books, Reservations, Wallets)
+
+### Hexagonal Architecture
+
+- **Domain Core**: Business logic isolated from external concerns
+- **Ports & Adapters**: Well-defined interfaces (ports) with interchangeable implementations (adapters)
+- **Inversion of Control**: Dependencies flow inward toward the domain
+
+### CQRS (Command Query Responsibility Segregation)
+
+- **Command Handlers**: Dedicated handlers for state-changing operations (CreateBookHandler, ReturnReservationHandler)
+- **Query Handlers**: Separate handlers for read operations (GetBookHandler, GetReservationHistoryHandler)
+- **Separate Data Models**: Write models are event-sourced, read models are denormalized projections
+
+### Event Sourcing
+
+- **Event Storage**: All state changes are stored as immutable events
+- **Event Projections**: Read models are built by processing events
+- **Event Replay**: System state can be reconstructed by replaying events
+
+### Event-Driven Architecture
+
+- **RabbitMQ Message Broker**: Handles asynchronous communication between services
+- **Eventual Consistency**: Services maintain consistency through event propagation
+- **Message Durability**: Events are persisted to ensure reliability
+
+### Microservices
+
+- **Books Service**: Manages book references and catalog
+- **Reservations Service**: Handles book reservations and returns
+- **Wallet Service**: Manages user balances and payments
 
 ## Key Functionalities
 
@@ -29,7 +70,7 @@ Users can search for books, make reservations, borrow books, and manage their wa
 ### Reminders
 
 - **Upcoming Due**: Users receive an email 2 days before their due date.
-- **Late Return**: Users receive an email reminder 7 days after the due date if they haven’t returned the book.
+- **Late Return**: Users receive an email reminder 7 days after the due date if they haven't returned the book.
 
 ### Wallet & Fees
 
@@ -39,7 +80,14 @@ Users can search for books, make reservations, borrow books, and manage their wa
 
 ## Contents
 
-- [Book library tool](#book-library-tool)
+- [Book Library Tool](#book-library-tool)
+  - [Architecture](#architecture)
+    - [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
+    - [Hexagonal Architecture](#hexagonal-architecture)
+    - [CQRS (Command Query Responsibility Segregation)](#cqrs-command-query-responsibility-segregation)
+    - [Event Sourcing](#event-sourcing)
+    - [Event-Driven Architecture](#event-driven-architecture)
+    - [Microservices](#microservices)
   - [Key Functionalities](#key-functionalities)
     - [References (Books) Management](#references-books-management)
     - [Catalog Search](#catalog-search)
