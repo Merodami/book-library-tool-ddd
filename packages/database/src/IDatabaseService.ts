@@ -1,4 +1,4 @@
-import { PaginatedResponse, PaginationParams } from '@book-library-tool/types'
+import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
 
 /**
  * A generic type representing query criteria for filtering records.
@@ -69,10 +69,10 @@ export interface IDatabaseService<T, InsertResult = T, UpdateResult = T> {
    */
   paginate(
     criteria: QueryCriteria<T>,
-    pagination: PaginationParams,
+    pagination: PaginatedQuery,
     options?: {
       projection?: Partial<Record<keyof T, 1 | 0>>
       sort?: Partial<Record<keyof T, 1 | -1>>
     },
-  ): Promise<PaginatedResponse<T>>
+  ): Promise<PaginatedResult<T>>
 }

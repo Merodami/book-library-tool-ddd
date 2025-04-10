@@ -4,21 +4,43 @@ export enum RESERVATION_STATUS {
   RETURNED = 'returned',
   LATE = 'late',
   BOUGHT = 'bought',
+  CANCELLED = 'cancelled',
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  REJECTED = 'rejected',
 }
 
-export interface PaginationParams {
+export type PaginationMetadata = {
+  total: number
+  page: number
+  limit: number
+  pages: number
+  hasNext: boolean
+  hasPrev: boolean
+}
+
+export type PaginatedResult<T> = {
+  data: T[]
+  pagination: PaginationMetadata
+}
+
+/**
+ * Generic type for paginated query parameters
+ */
+export type PaginatedQuery = {
   page?: number
   limit?: number
 }
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  pagination: {
-    total: number
-    page: number
-    limit: number
-    pages: number
-    hasNext: boolean
-    hasPrev: boolean
-  }
+export interface BookProjection {
+  id: string // The aggregate ID
+  isbn: string // Business identifier
+  title: string
+  author: string
+  publicationYear: number
+  publisher: string
+  price: number
+  version: number
+  updatedAt: Date
+  deletedAt?: Date
 }

@@ -1,10 +1,12 @@
-import fs from 'fs-extra'
-import path from 'path'
-import { OpenAPIV3 } from 'openapi-types'
 import SwaggerParser from '@apidevtools/swagger-parser'
+import { logger } from '@book-library-tool/shared'
+import fs from 'fs-extra'
 import { cloneDeep } from 'lodash-es'
-import { OpenAPISpec } from '../openapi.js'
+import { OpenAPIV3 } from 'openapi-types'
+import path from 'path'
 import { fileURLToPath } from 'url'
+
+import { OpenAPISpec } from '../openapi.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -22,6 +24,7 @@ function removeIdProperties(obj: any): any {
     const newObj: any = {}
     for (const key of Object.keys(obj)) {
       if (key === '$id') continue
+      // eslint-disable-next-line security/detect-object-injection
       newObj[key] = removeIdProperties(obj[key])
     }
     return newObj
@@ -44,6 +47,8 @@ function removeCustomKeywords(
     const newObj: any = {}
     for (const key of Object.keys(obj)) {
       if (keysToRemove.includes(key)) continue
+
+      // eslint-disable-next-line security/detect-object-injection
       newObj[key] = removeCustomKeywords(obj[key], keysToRemove)
     }
     return newObj
@@ -62,6 +67,7 @@ function removeHiddenRoutes(spec: OpenAPIV3.Document): OpenAPIV3.Document {
   const filteredPaths: Record<string, any> = {}
   for (const path in spec.paths) {
     if (!hiddenPaths.includes(path)) {
+      // eslint-disable-next-line security/detect-object-injection
       filteredPaths[path] = spec.paths[path]
     }
   }
@@ -89,42 +95,54 @@ async function main() {
 
     // Validate the cleaned OpenAPI spec (this also dereferences $refs)
     await SwaggerParser.validate(finalSpec)
-    console.log('OpenAPI spec is valid.')
+    logger.info('OpenAPI spec is valid.')
 
     // Prepare the output directory (e.g. "dist")
     const outputDir = fromRoot('dist')
     await fs.ensureDir(outputDir)
 
+    // Allowed file paths - defined explicitly to avoid security/detect-non-literal-fs-filename
+    const apiJsonFilename = 'openapi.json'
+    const docsJsonFilename = 'openapi-docs.json'
+    const htmlFilename = 'openapi.html'
+    const templateFilename = fromRoot('src', 'docs-template.html')
+
+    // Generate full paths
+    const apiJsonFullPath = path.join(outputDir, apiJsonFilename)
+    const docsJsonFullPath = path.join(outputDir, docsJsonFilename)
+    const htmlFullPath = path.join(outputDir, htmlFilename)
+
     // Write the complete OpenAPI spec JSON (with all routes for API usage)
-    const apiJsonPath = path.join(outputDir, 'openapi.json')
-    await fs.writeFile(apiJsonPath, JSON.stringify(finalSpec, null, 2))
-    console.log(`Complete OpenAPI JSON written to ${apiJsonPath}`)
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    await fs.writeFile(apiJsonFullPath, JSON.stringify(finalSpec, null, 2))
+    logger.info(`Complete OpenAPI JSON written to ${apiJsonFullPath}`)
 
     // Write the filtered documentation OpenAPI spec JSON
-    const docsJsonPath = path.join(outputDir, 'openapi-docs.json')
-    await fs.writeFile(docsJsonPath, JSON.stringify(docsSpec, null, 2))
-    console.log(`Documentation OpenAPI JSON written to ${docsJsonPath}`)
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    await fs.writeFile(docsJsonFullPath, JSON.stringify(docsSpec, null, 2))
+    logger.info(`Documentation OpenAPI JSON written to ${docsJsonFullPath}`)
 
     // Optionally, generate HTML documentation.
-    const templatePath = fromRoot('src', 'docs-template.html')
-    if (await fs.pathExists(templatePath)) {
-      const template = await fs.readFile(templatePath, 'utf8')
+
+    if (await fs.pathExists(templateFilename)) {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      const template = await fs.readFile(templateFilename, 'utf8')
 
       // Replace placeholders in the template. Adjust placeholders as needed.
       const htmlOutput = template
         .replace('{{SPEC}}', JSON.stringify(docsSpec))
         .replace('{{TITLE}}', docsSpec.info.title)
 
-      const htmlPath = path.join(outputDir, 'openapi.html')
-      await fs.writeFile(htmlPath, htmlOutput)
-      console.log(`OpenAPI HTML documentation written to ${htmlPath}`)
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      await fs.writeFile(htmlFullPath, htmlOutput)
+      logger.info(`OpenAPI HTML documentation written to ${htmlFullPath}`)
     } else {
-      console.warn(
-        `Template file not found at ${templatePath}. Skipping HTML generation.`,
+      logger.warn(
+        `Template file not found at ${templateFilename}. Skipping HTML generation.`,
       )
     }
   } catch (error) {
-    console.error('Error compiling OpenAPI spec:', error)
+    logger.error('Error compiling OpenAPI spec:', error)
     process.exit(1)
   }
 }

@@ -1,5 +1,6 @@
-import { Type, Static } from '@sinclair/typebox'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
+import { Static, Type } from '@sinclair/typebox'
+
 import { PaginationMetadataSchema } from './shared.js'
 
 // --------------------------------
@@ -103,6 +104,10 @@ export const ReservationSchema = Type.Object(
         RESERVATION_STATUS.RETURNED,
         RESERVATION_STATUS.LATE,
         RESERVATION_STATUS.BOUGHT,
+        RESERVATION_STATUS.CANCELLED,
+        RESERVATION_STATUS.PENDING,
+        RESERVATION_STATUS.CONFIRMED,
+        RESERVATION_STATUS.REJECTED,
       ],
     }),
     feeCharged: Type.Number({ minimum: 0 }),

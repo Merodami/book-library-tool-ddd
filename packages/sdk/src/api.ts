@@ -1,5 +1,15 @@
 import { API } from './openapi/index.js'
-import { MaybeAPIError } from './types.js'
+
+export type MaybeAPIError = Error & {
+  body?: {
+    message: string
+    data?: {
+      code?: string
+      statusCode?: string
+      message?: string
+    }
+  }
+}
 
 export const apiBooks = new API({
   BASE: process.env.BOOKS_API_URL || 'localhost:3001',

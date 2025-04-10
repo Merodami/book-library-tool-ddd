@@ -10,7 +10,7 @@ export type Context = {
 let getContext = (): Context => ({})
 
 // Determine environment.
-const isDevelopment = process.env.NODE_ENV === 'development'
+const isDevelopment = process.env.ENVIRONMENT === 'development'
 
 // Configure pino options.
 // In development, use pino-pretty for colorized, human-friendly logs.
@@ -74,6 +74,8 @@ function log(
   }
 
   const message = messageParts.join(' ')
+
+  // eslint-disable-next-line security/detect-object-injection
   baseLogger[level](data, message)
 }
 
