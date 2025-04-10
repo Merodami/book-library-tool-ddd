@@ -2,7 +2,9 @@ import {
   BOOK_CREATED,
   BOOK_DELETED,
   BOOK_UPDATED,
+  createErrorEvent,
   EventBus,
+  RESERVATION_BOOK_VALIDATION,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
@@ -43,6 +45,32 @@ export function setupEventSubscriptions(
       await projectionHandler.handleBookDeleted(event)
     } catch (error) {
       logger.error(`Error handling BOOK_DELETED event: ${error}`)
+    }
+  })
+
+  eventBus.subscribe(RESERVATION_BOOK_VALIDATION, async (event) => {
+    try {
+      // Process the validation request and get the result event
+      const validationResultEvent =
+        await projectionHandler.handleReservationValidateBook(event)
+
+      // Publish the validation result
+      await eventBus.publish(validationResultEvent)
+
+      logger.info(
+        `Book validation for reservation ${event.payload.reservationId}: ${validationResultEvent.payload.isValid ? 'Valid' : 'Invalid'}`,
+      )
+    } catch (error) {
+      logger.error(`Error validating book for reservation: ${error}`)
+
+      // Create and publish generic error response
+      const errorEvent = createErrorEvent(event, error, 'BookValidationFailed')
+
+      // Optionally add specific fields needed for error recovery
+      errorEvent.payload.reservationId = event.payload.reservationId
+      errorEvent.payload.isbn = event.payload.isbn
+
+      await eventBus.publish(errorEvent)
     }
   })
 

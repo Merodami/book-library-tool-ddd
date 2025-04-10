@@ -1,5 +1,9 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { DomainEvent } from '@book-library-tool/event-store'
+import {
+  BOOK_VALIDATION_RESULT,
+  DomainEvent,
+} from '@book-library-tool/event-store'
+import { ErrorCode } from '@book-library-tool/shared'
 
 const BOOK_PROJECTION_TABLE = 'book_projection'
 
@@ -64,5 +68,35 @@ export class BookProjectionHandler {
         },
       },
     )
+  }
+
+  async handleReservationValidateBook(
+    event: DomainEvent,
+  ): Promise<DomainEvent> {
+    // Extract information from the event
+    const { reservationId, isbn } = event.payload
+
+    // Check if the book exists in the projection table
+    const book = await this.db.getCollection(BOOK_PROJECTION_TABLE).findOne({
+      isbn: isbn,
+      deletedAt: { $exists: false },
+    })
+
+    // Create the validation result event
+    const validationResultEvent: DomainEvent = {
+      eventType: BOOK_VALIDATION_RESULT,
+      aggregateId: isbn,
+      payload: {
+        reservationId: reservationId,
+        isbn: isbn,
+        isValid: !!book,
+        reason: book ? null : ErrorCode.BOOK_NOT_FOUND,
+      },
+      timestamp: new Date(),
+      version: 1,
+      schemaVersion: 1,
+    }
+
+    return validationResultEvent
   }
 }

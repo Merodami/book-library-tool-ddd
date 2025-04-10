@@ -1,11 +1,10 @@
 import { Reservation } from '@book-library-tool/sdk'
+import { GetReservationStatusHandler } from '@queries/GetReservationStatusHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
-import { ReservationStatusFacade } from './ReservationStatusFacade.js'
-
-export class ReservationStatusController {
+export class GetReservationStatusController {
   constructor(
-    private readonly reservationStatusService: ReservationStatusFacade,
+    private readonly getReservationStatusHandler: GetReservationStatusHandler,
   ) {
     // Bind methods to ensure the correct "this" context when used as callbacks
     this.getReservationStatus = this.getReservationStatus.bind(this)
@@ -24,11 +23,10 @@ export class ReservationStatusController {
     try {
       const { reservationId } = req.params as Pick<Reservation, 'reservationId'>
 
-      // Delegate to the facade's query handler
-      const reservationStatus =
-        await this.reservationStatusService.getReservationStatus({
-          reservationId,
-        })
+      // Call the handler directly
+      const reservationStatus = await this.getReservationStatusHandler.execute({
+        reservationId,
+      })
 
       res.status(200).json(reservationStatus)
     } catch (error) {

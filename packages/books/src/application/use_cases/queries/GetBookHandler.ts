@@ -1,4 +1,5 @@
 import { Book } from '@book-library-tool/sdk'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
 
 import { GetBookQuery } from './GetBookQuery.js'
@@ -18,7 +19,11 @@ export class GetBookHandler {
     const book = await this.projectionRepository.getBookByISBN(command.isbn)
 
     if (!book) {
-      throw new Error(`Book with ISBN ${command.isbn} not found.`)
+      throw new Errors.ApplicationError(
+        404,
+        ErrorCode.BOOK_NOT_FOUND,
+        `Book with ISBN ${command.isbn} not found`,
+      )
     }
 
     return book

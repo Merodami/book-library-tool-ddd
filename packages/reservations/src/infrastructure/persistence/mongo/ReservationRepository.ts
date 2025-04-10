@@ -1,8 +1,6 @@
 import {
   type DomainEvent,
-  RESERVATION_CREATED,
-  RESERVATION_STATUS_UPDATED,
-  RESERVATION_UPDATED,
+  RESERVATION_CONFIRMED,
 } from '@book-library-tool/event-store'
 import type { ReservationRequest } from '@book-library-tool/sdk'
 import { Errors, logger } from '@book-library-tool/shared'
@@ -189,11 +187,7 @@ export class ReservationRepository
           'payload.userId': userId,
           'payload.isbn': isbn,
           eventType: {
-            $in: [
-              RESERVATION_CREATED,
-              RESERVATION_UPDATED,
-              RESERVATION_STATUS_UPDATED,
-            ],
+            $in: [RESERVATION_CONFIRMED],
           },
         })
         .sort({ timestamp: 1 })

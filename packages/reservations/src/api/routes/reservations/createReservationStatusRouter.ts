@@ -1,6 +1,5 @@
 import { schemas, validateParams } from '@book-library-tool/api'
-import { ReservationStatusController } from '@controllers/reservations/ReservationStatusController.js'
-import { ReservationStatusFacade } from '@controllers/reservations/ReservationStatusFacade.js'
+import { GetReservationStatusController } from '@controllers/reservations/GetReservationStatusController.js'
 // Query (read) handlers:
 import { GetReservationStatusHandler } from '@queries/GetReservationStatusHandler.js'
 import type { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
@@ -18,16 +17,13 @@ export function createReservationStatusRouter(
 ) {
   const router = Router()
 
-  // Instantiate individual query handlers:
+  // Instantiate the query handler directly:
   const getStatusHandler = new GetReservationStatusHandler(
     reservationProjectionRepository,
   )
 
-  // Create a unified facade combining the query handlers:
-  const facade = new ReservationStatusFacade(getStatusHandler)
-
-  // Create a controller that delegates operations to the facade:
-  const controller = new ReservationStatusController(facade)
+  // Create the controller with the specific handler:
+  const controller = new GetReservationStatusController(getStatusHandler)
 
   // Routes configuration
   router.get(

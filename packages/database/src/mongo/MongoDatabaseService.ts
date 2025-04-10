@@ -122,12 +122,10 @@ export class MongoDatabaseService {
   ): Promise<PaginatedResult<WithId<T>>> {
     const { page: possiblePage, limit: possibleLimit } = pagination
 
-    // Fixed: Ensure limit is properly converted to a number and has proper fallback
     const limit = possibleLimit
       ? Math.floor(Number(possibleLimit))
       : Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
 
-    // Fixed: Use possiblePage instead of possibleLimit for page calculation
     const page = possiblePage ? Math.floor(Number(possiblePage)) : 1
 
     const totalItems = await collection.countDocuments(query)

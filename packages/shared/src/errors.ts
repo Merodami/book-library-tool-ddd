@@ -1,3 +1,8 @@
+import {
+  ErrorCode,
+  getDefaultMessageForError,
+  getStatusCodeForError,
+} from './errorCodes.js'
 import { ErrorData } from './errors/ErrorData.js'
 import { StatusCodes } from './errors/StatusCodes.js'
 
@@ -117,3 +122,21 @@ export const catchError =
       throw err
     }
   }
+
+/**
+ * Creates a standardized application error
+ *
+ * @param code - The error code
+ * @param message - Optional custom error message
+ * @param details - Optional error details
+ * @returns An ApplicationError instance
+ */
+export function createError(
+  code: ErrorCode,
+  message?: string,
+): ApplicationError {
+  const statusCode = getStatusCodeForError(code)
+  const errorMessage = message || getDefaultMessageForError(code)
+
+  return new ApplicationError(statusCode, code, errorMessage)
+}

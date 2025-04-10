@@ -1,5 +1,7 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
 import { DomainEvent } from '@book-library-tool/event-store'
+import { logger } from '@book-library-tool/shared'
+import { RESERVATION_STATUS } from '@book-library-tool/types'
 
 const RESERVATION_PROJECTION_TABLE = 'reservation_projection'
 
@@ -16,7 +18,6 @@ export class ReservationProjectionHandler {
       id: event.aggregateId,
       userId: event.payload.userId,
       isbn: event.payload.isbn,
-      bookTitle: event.payload.bookTitle || '',
       status: 'active',
       createdAt: createdDate,
       dueDate: dueDate,
@@ -105,7 +106,6 @@ export class ReservationProjectionHandler {
       { isbn: event.payload.isbn, deletedAt: null },
       {
         $set: {
-          bookTitle: event.payload.title,
           updatedAt: new Date(event.timestamp),
         },
       },
@@ -122,6 +122,29 @@ export class ReservationProjectionHandler {
           updatedAt: new Date(event.timestamp),
         },
       },
+    )
+  }
+
+  async handleBookValidationResult(event: DomainEvent): Promise<void> {
+    // Get the reservation ID and validation result from the event
+    const { reservationId, isValid, reason } = event.payload
+
+    // Update the reservation status in the projection
+    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
+      { id: reservationId },
+      {
+        $set: {
+          status: isValid
+            ? RESERVATION_STATUS.CONFIRMED
+            : RESERVATION_STATUS.REJECTED,
+          statusReason: isValid ? null : reason,
+          updatedAt: new Date(),
+        },
+      },
+    )
+
+    logger.info(
+      `Reservation ${reservationId} validation result: ${isValid ? 'confirmed' : 'rejected'}`,
     )
   }
 }

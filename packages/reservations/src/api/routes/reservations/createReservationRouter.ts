@@ -9,9 +9,10 @@ import { paginationMiddleware } from '@book-library-tool/sdk'
 // Command (write) handlers:
 import { CreateReservationHandler } from '@commands/CreateReservationHandler.js'
 import { ReturnReservationHandler } from '@commands/ReturnReservationHandler.js'
-import { ReservationController } from '@controllers/reservations/ReservationController.js'
-// Unified facade and controller:
-import { ReservationFacade } from '@controllers/reservations/ReservationFacade.js'
+// Controllers for different operations:
+import { CreateReservationController } from '@controllers/reservations/CreateReservationController.js'
+import { GetReservationHistoryController } from '@controllers/reservations/GetReservationHistoryController.js'
+import { ReturnReservationController } from '@controllers/reservations/ReturnReservationController.js'
 // Query (read) handlers:
 import { GetReservationHistoryHandler } from '@queries/GetReservationHistoryHandler.js'
 import type { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
@@ -48,21 +49,24 @@ export function createReservationRouter(
     reservationProjectionRepository,
   )
 
-  // Create a unified facade combining all the handlers:
-  const facade = new ReservationFacade(
+  // Create specialized controllers for each operation:
+  const createReservationController = new CreateReservationController(
     createHandler,
+  )
+  const returnReservationController = new ReturnReservationController(
     returnHandler,
+  )
+  const getReservationHistoryController = new GetReservationHistoryController(
     getHistoryHandler,
   )
-
-  // Create a single controller that delegates operations to the facade:
-  const controller = new ReservationController(facade)
 
   // Routes configuration
   router.post(
     '/',
     validateBody(schemas.ReservationRequestSchema),
-    controller.createReservation,
+    createReservationController.createReservation.bind(
+      createReservationController,
+    ),
   )
 
   router.get(
@@ -70,13 +74,17 @@ export function createReservationRouter(
     validateParams(schemas.UserIdSchema),
     validateQuery(schemas.ReservationsHistoryQuerySchema),
     paginationMiddleware(),
-    controller.getReservationHistory,
+    getReservationHistoryController.getReservationHistory.bind(
+      getReservationHistoryController,
+    ),
   )
 
   router.patch(
     '/:reservationId/return',
     validateParams(schemas.ReservationReturnParamsSchema),
-    controller.returnReservation,
+    returnReservationController.returnReservation.bind(
+      returnReservationController,
+    ),
   )
 
   return router

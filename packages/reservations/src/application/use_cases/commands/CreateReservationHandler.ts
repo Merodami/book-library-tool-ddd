@@ -1,5 +1,8 @@
-// File: @commands/CreateReservationHandler.ts
-import type { EventBus } from '@book-library-tool/event-store'
+import {
+  type DomainEvent,
+  type EventBus,
+  RESERVATION_BOOK_VALIDATION,
+} from '@book-library-tool/event-store'
 import type { ReservationRequest } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
@@ -48,15 +51,32 @@ export class CreateReservationHandler {
     }
 
     // Create the Reservation aggregate and capture the corresponding ReservationCreated event
+    // We don't care about book existence for eventual consistency
     const { reservation, event } = Reservation.create({
       userId: command.userId.trim(),
       isbn: command.isbn.trim(),
       reservedAt: new Date().toISOString(),
-      status: RESERVATION_STATUS.RESERVED,
+      status: RESERVATION_STATUS.PENDING,
     })
 
     // Persist the new event with the expected aggregate version (0 for new aggregates)
     await this.reservationRepository.saveEvents(reservation.id, [event], 0)
+
+    // Publish a separate event to request book validation
+
+    const validationEvent: DomainEvent = {
+      eventType: RESERVATION_BOOK_VALIDATION,
+      aggregateId: reservation.id,
+      payload: {
+        reservationId: reservation.id,
+        isbn: command.isbn,
+      },
+      timestamp: new Date(),
+      version: 1,
+      schemaVersion: 1,
+    }
+
+    await this.eventBus.publish(validationEvent)
 
     // Publish the event so that any subscribers (e.g. projectors, integration handlers) are notified
     await this.eventBus.publish(event)

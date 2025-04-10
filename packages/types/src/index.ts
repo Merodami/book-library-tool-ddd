@@ -5,6 +5,9 @@ export enum RESERVATION_STATUS {
   LATE = 'late',
   BOUGHT = 'bought',
   CANCELLED = 'cancelled',
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  REJECTED = 'rejected',
 }
 
 export type PaginationMetadata = {
