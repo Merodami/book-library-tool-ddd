@@ -28,6 +28,7 @@
     { "path": "packages/types" },
     { "path": "packages/api" },
     { "path": "packages/sdk" },
+    { "path": "packages/event-store" },
     { "path": "packages/database" },
     { "path": "packages/auth" },
     { "path": "packages/shared" },

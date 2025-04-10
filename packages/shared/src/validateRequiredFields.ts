@@ -8,6 +8,7 @@ import { isNil, trim } from 'lodash-es'
  */
 export function validateRequiredFields(fields: Record<string, any>): void {
   const missingFields = Object.keys(fields).filter((key) => {
+    // eslint-disable-next-line security/detect-object-injection
     const value = fields[key]
 
     // Check for null or undefined

@@ -1,18 +1,50 @@
-import { Book } from '@entities/Book.js'
+import type { DomainEvent } from '@book-library-tool/event-store'
 
+/**
+ * IBookRepository abstracts the persistence and retrieval of domain events
+ * for Book aggregates. It ensures optimistic concurrency via version checking.
+ */
 export interface IBookRepository {
   /**
-   * Finds a book by its unique identifier.
+   * Save a list of domain events for a given aggregate using a single operation.
+   * An optimistic concurrency check on the expected version ensures that no
+   * conflicting updates occur.
+   *
+   * @param aggregateId - The unique identifier of the Book aggregate.
+   * @param events - The list of DomainEvent objects to be persisted.
+   * @param expectedVersion - The version of the aggregate prior to appending these events.
    */
-  findByISBN(isbn: Book['isbn']): Promise<Book | null>
+  saveEvents(
+    aggregateId: string,
+    events: DomainEvent[],
+    expectedVersion: number,
+  ): Promise<void>
 
   /**
-   * Persists a new book.
+   * Append a batch of events atomically for the given aggregate.
+   * This method enforces that the current version of the aggregate matches
+   * the expected version before the events are appended.
+   *
+   * @param aggregateId - The unique identifier of the Book aggregate.
+   * @param events - The batch of DomainEvent objects to be appended.
+   * @param expectedVersion - The current version expected on the aggregate.
    */
-  create(book: Book): Promise<void>
+  appendBatch(
+    aggregateId: string,
+    events: DomainEvent[],
+    expectedVersion: number,
+  ): Promise<void>
 
   /**
-   * Deletes a book by its id.
+   * Retrieves all the domain events for a specific aggregate, ordered by version.
+   *
+   * @param aggregateId - The unique identifier of the Book aggregate.
+   * @returns A promise that resolves to an array of DomainEvent objects.
    */
-  deleteByISBN(isbn: Book['isbn']): Promise<boolean>
+  getEventsForAggregate(aggregateId: string): Promise<DomainEvent[]>
+
+  /**
+   * Finds the aggregate ID associated with an ISBN
+   */
+  findAggregateIdByISBN(isbn: string): Promise<string | null>
 }

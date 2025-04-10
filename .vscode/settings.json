@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["dtos", "Mailhog", "vitest"],
+  "cSpell.words": ["dtos", "DVERDUE", "Mailhog", "rabbitmq", "uuidv", "vitest"],
   "cSpell.language": "en-US",
   "editor.codeActionsOnSave": ["source.fixAll.eslint"],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -28,5 +28,11 @@
   },
   "[dotenv]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
-  }
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ]
 }

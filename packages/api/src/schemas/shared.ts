@@ -1,4 +1,4 @@
-import { Type, Static } from '@sinclair/typebox'
+import { Static, TSchema, Type } from '@sinclair/typebox'
 
 // --------------------------------
 // Common Schema Components
@@ -25,6 +25,39 @@ export const PaginationMetadataRef = Type.Ref(
 )
 
 /**
+ * Pagination Query Parameters Schema
+ */
+export const PaginationQuerySchema = Type.Object(
+  {
+    page: Type.Optional(Type.Number({ minimum: 1, default: 1 })),
+    limit: Type.Optional(
+      Type.Number({ minimum: 1, maximum: 100, default: 20 }),
+    ),
+  },
+  { $id: '#/components/schemas/PaginationQuery' },
+)
+
+export type PaginationQuery = Static<typeof PaginationQuerySchema>
+export const PaginationQueryRef = Type.Ref(
+  '#/components/schemas/PaginationQuery',
+)
+
+/**
+ * Generic Paginated Result Schema
+ */
+export const PaginatedResultSchema = Type.Object(
+  {
+    data: Type.Array(Type.Any()),
+    pagination: PaginationMetadataSchema,
+  },
+  { $id: '#/components/schemas/PaginatedResult' },
+)
+
+export const PaginatedResultRef = Type.Ref(
+  '#/components/schemas/PaginatedResult',
+)
+
+/**
  * Error Response Schema
  */
 export const ErrorResponseSchema = Type.Object(
@@ -34,14 +67,31 @@ export const ErrorResponseSchema = Type.Object(
   },
   { $id: '#/components/schemas/ErrorResponse' },
 )
+
 export type ErrorResponse = Static<typeof ErrorResponseSchema>
 export const ErrorResponseRef = Type.Ref('#/components/schemas/ErrorResponse')
 
 /**
- * Helper function to create paginated response schemas
- * Note: This helper is provided for future use but isn't necessary with the explicit definitions above
+ * Generic Paginated Response Schema
+ * This can be used to create paginated response schemas for any entity type
  */
-export const createPaginatedResponse = <T extends Static<any>>(
+export function createPaginatedResponseSchema<T extends TSchema>(
+  itemSchema: T,
+  schemaId: string,
+) {
+  return Type.Object(
+    {
+      data: Type.Array(itemSchema),
+      pagination: PaginationMetadataSchema,
+    },
+    { $id: schemaId },
+  )
+}
+
+/**
+ * Helper function to create paginated response instances
+ */
+export const createPaginatedResponse = <T>(
   items: T[],
   page: number,
   limit: number,

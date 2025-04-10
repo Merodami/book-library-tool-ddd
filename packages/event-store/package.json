@@ -1,0 +1,35 @@
+{
+  "name": "@book-library-tool/event-store",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Event-store library for Book Library Tool",
+  "author": "merodami",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@book-library-tool/shared": "workspace:^",
+    "amqplib": "^0.10.7",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.7",
+    "depcheck": "^1.4.7",
+    "typescript": "^5.8.3"
+  },
+  "depcheck": {
+    "ignore": [
+      "nx",
+      "ts-node",
+      "tsconfig-paths"
+    ],
+    "parsers": {
+      "**/*.ts": "typescript"
+    },
+    "detectors": [
+      "requireCallExpression",
+      "importDeclaration",
+      "typescriptImportEqualsDeclaration"
+    ]
+  }
+}

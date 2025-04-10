@@ -1,5 +1,6 @@
 import { Db } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
+
 import { MongoDatabaseService } from '../mongo/MongoDatabaseService.js'
 
 // Define a type for dependencies that might be injected
@@ -16,13 +17,15 @@ export function setUpTestDatabase(dependencies?: Dependencies) {
   let originalMongoUri: string | undefined
   let originalDbName: string | undefined
 
-  const dbService = new MongoDatabaseService()
+  const dbService = new MongoDatabaseService(
+    process.env.MONGO_DB_NAME_LIBRARY || 'library',
+  )
 
   // Before all tests setup
   const beforeAllCallback = async () => {
     // Store original environment variables
     originalMongoUri = process.env.MONGO_URI
-    originalDbName = process.env.MONGO_DB_NAME
+    originalDbName = process.env.MONGO_DB_NAME_LIBRARY
 
     // Create a new MongoDB memory server instance
     mongoServer = await MongoMemoryServer.create()
@@ -30,7 +33,7 @@ export function setUpTestDatabase(dependencies?: Dependencies) {
 
     // Set environment variables for testing
     process.env.MONGO_URI = mongoUri
-    process.env.MONGO_DB_NAME = 'test-db'
+    process.env.MONGO_DB_NAME_LIBRARY = 'test-db'
 
     // Connect to the test database
     await dbService.connect()
@@ -51,9 +54,9 @@ export function setUpTestDatabase(dependencies?: Dependencies) {
     }
 
     if (originalDbName) {
-      process.env.MONGO_DB_NAME = originalDbName
+      process.env.MONGO_DB_NAME_LIBRARY = originalDbName
     } else {
-      delete process.env.MONGO_DB_NAME
+      delete process.env.MONGO_DB_NAME_LIBRARY
     }
 
     // Stop the MongoDB memory server

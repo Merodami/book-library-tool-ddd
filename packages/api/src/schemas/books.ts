@@ -1,4 +1,5 @@
-import { Type, Static } from '@sinclair/typebox'
+import { Static, Type } from '@sinclair/typebox'
+
 import { PaginationMetadataSchema } from './shared.js'
 
 // --------------------------------
@@ -48,7 +49,7 @@ export const BookIdRef = Type.Ref('#/components/schemas/BookId')
 /**
  * Add Book Reference Request Schema
  */
-export const BookRequestSchema = Type.Object(
+export const BookCreateRequestSchema = Type.Object(
   {
     isbn: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     title: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
@@ -57,10 +58,37 @@ export const BookRequestSchema = Type.Object(
     publisher: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     price: Type.Number(),
   },
-  { $id: '#/components/schemas/BookRequest' },
+  { $id: '#/components/schemas/BookCreateRequest' },
 )
-export type BookRequest = Static<typeof BookRequestSchema>
-export const BookRequestRef = Type.Ref('#/components/schemas/BookRequest')
+export type BookCreateRequest = Static<typeof BookCreateRequestSchema>
+export const BookCreateRequestRef = Type.Ref(
+  '#/components/schemas/BookCreateRequest',
+)
+
+/**
+ * Update Book Reference Request Schema
+ */
+export const BookUpdateRequestSchema = Type.Object(
+  {
+    isbn: Type.Optional(Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' })),
+    title: Type.Optional(
+      Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    ),
+    author: Type.Optional(
+      Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    ),
+    publicationYear: Type.Optional(Type.Number()),
+    publisher: Type.Optional(
+      Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    ),
+    price: Type.Optional(Type.Number()),
+  },
+  { $id: '#/components/schemas/BookUpdateRequest' },
+)
+export type BookUpdateRequest = Static<typeof BookUpdateRequestSchema>
+export const BookUpdateRequestRef = Type.Ref(
+  '#/components/schemas/BookUpdateRequest',
+)
 
 // --------------------------------
 // Response Schemas

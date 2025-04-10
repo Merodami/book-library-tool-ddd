@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler } from 'express'
-import logger from './logger.js'
+
 import { ApplicationError } from './errors.js'
+import logger from './logger.js'
 
 /**
  * This should be the last stop for errors.
@@ -20,16 +21,20 @@ export const errorMiddleware: ErrorRequestHandler = async (
     return next(err)
   }
 
+  // (This will go to metrics like DD, Prometheus, etc.)
   logger.error(err)
-  console.log('🚀 ~ err instanceof ApplicationError:', err)
-
+  console.log(
+    'err instanceof ApplicationError',
+    err instanceof ApplicationError,
+  )
   if (err instanceof ApplicationError) {
     res.status(err.status).json({
+      status: err.status,
       message: err.message,
-      code: err.status,
-      data: err.content,
+      content: err.content,
     })
-    return // ensure nothing is returned
+
+    return
   }
 
   res.status(500).json({

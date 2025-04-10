@@ -1,13 +1,24 @@
 version: '3.5'
 services:
-  books-mongo:
-    container_name: books-mongo
+  library:
+    container_name: library
     image: mongo:6
     restart: always
     ports:
       - '27017:27017'
     environment:
-      MONGO_INITDB_DATABASE: books-dev
+      MONGO_INITDB_DATABASE: library
     volumes:
       - ./mongodata/dev:/data/db
       - ./packages/database/src/mongo/initDatabase.js:/docker-entrypoint-initdb.d/initDatabase.js
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: library
+      RABBITMQ_DEFAULT_PASS: library

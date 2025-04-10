@@ -1,18 +1,18 @@
 import {
+  type IDatabaseService,
+  MongoDatabaseService,
+  type QueryCriteria,
+} from '@book-library-tool/database'
+import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
+import {
   Collection,
   Document,
   Filter,
   FindOptions,
   OptionalUnlessRequiredId,
-  UpdateFilter,
   Sort,
+  UpdateFilter,
 } from 'mongodb'
-import { PaginatedResponse, PaginationParams } from '@book-library-tool/types'
-import {
-  type IDatabaseService,
-  type QueryCriteria,
-  MongoDatabaseService,
-} from '@book-library-tool/database'
 
 /**
  * MongoRepository adapts the low‑level MongoDatabaseService to a generic repository interface.
@@ -152,12 +152,12 @@ export class MongoRepository<T extends Document>
    */
   async paginate(
     criteria: QueryCriteria<T>,
-    pagination: PaginationParams,
+    pagination: PaginatedQuery,
     options?: {
       projection?: Partial<Record<keyof T, 1 | 0>>
       sort?: Partial<Record<keyof T, 1 | -1>>
     },
-  ): Promise<PaginatedResponse<T>> {
+  ): Promise<PaginatedResult<T>> {
     const page = pagination.page ?? 1
     const limit =
       pagination.limit ?? Number(process.env.PAGINATION_DEFAULT_LIMIT || '10')

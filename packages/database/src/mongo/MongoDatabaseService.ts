@@ -1,9 +1,13 @@
+import { logger } from '@book-library-tool/shared'
+import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
 import {
-  MongoClient,
-  Db,
   Collection,
-  MongoClientOptions,
+  Db,
   Document,
+  Filter,
+  MongoClient,
+  MongoClientOptions,
+  WithId,
 } from 'mongodb'
 
 /**
@@ -20,9 +24,18 @@ import {
 export class MongoDatabaseService {
   private client: MongoClient | null = null
   private db: Db | null = null
+  private dbName: string
 
   /**
-   * Connects to MongoDB using the MONGO_URI and MONGO_DB_NAME environment variables.
+   * Constructor for MongoDatabaseService.
+   * Initializes the MongoClient and Db instances to null.
+   */
+  constructor(dbName: string) {
+    this.dbName = dbName
+  }
+
+  /**
+   * Connects to MongoDB using the MONGO_URI and MONGO_DB_NAME_LIBRARY environment variables.
    * If a connection is already established, it reuses the existing connection.
    *
    * @returns A promise that resolves when the connection is successfully established.
@@ -34,6 +47,7 @@ export class MongoDatabaseService {
     }
 
     const uri = process.env.MONGO_URI
+
     if (!uri) {
       throw new Error('MONGO_URI is not defined in the environment variables')
     }
@@ -44,10 +58,25 @@ export class MongoDatabaseService {
     this.client = new MongoClient(uri, options)
     await this.client.connect()
 
-    const dbName = process.env.MONGO_DB_NAME || 'books-dev'
-    this.db = this.client.db(dbName)
+    this.db = this.client.db(
+      this.dbName || process.env.MONGO_DB_NAME_LIBRARY || 'library',
+    )
 
-    console.log(`Connected to MongoDB database: ${dbName}`)
+    logger.info(`Connected to MongoDB database: ${this.dbName}`)
+  }
+
+  /**
+   * Retrieves the connected MongoDB database instance.
+   *
+   * @returns The MongoDB Db instance.
+   * @throws An error if the database connection has not been established.
+   */
+  getDb(): Db {
+    if (!this.db) {
+      throw new Error('Database not connected. Call connect() first.')
+    }
+
+    return this.db
   }
 
   /**
@@ -75,7 +104,60 @@ export class MongoDatabaseService {
       await this.client.close()
       this.client = null
       this.db = null
-      console.log('Disconnected from MongoDB')
+      logger.info('Disconnected from MongoDB')
+    }
+  }
+
+  /**
+   * Generic pagination method for any collection
+   */
+  async paginateCollection<T extends Document = Document>(
+    collection: Collection<T>,
+    query: Filter<T>,
+    pagination: PaginatedQuery,
+    options?: {
+      projection?: Record<string, number>
+      sort?: Record<string, 1 | -1>
+    },
+  ): Promise<PaginatedResult<WithId<T>>> {
+    const { page: possiblePage, limit: possibleLimit } = pagination
+
+    const limit = possibleLimit
+      ? Math.floor(Number(possibleLimit))
+      : Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
+
+    const page = possiblePage ? Math.floor(Number(possiblePage)) : 1
+
+    const totalItems = await collection.countDocuments(query)
+
+    const totalPages = Math.ceil(totalItems / limit)
+
+    const cursor = collection
+      .find(query, {
+        projection: {
+          _id: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          ...options?.projection,
+        },
+      })
+      .sort(options?.sort || {})
+      .skip((page - 1) * limit)
+      .limit(limit)
+
+    const rawData = await cursor.toArray()
+    const data = rawData.map(({ _id, ...rest }) => rest as WithId<T>)
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total: totalItems,
+        pages: totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     }
   }
 }
