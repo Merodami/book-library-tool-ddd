@@ -14,12 +14,12 @@ import gracefulShutdown from 'http-graceful-shutdown'
 
 async function startServer() {
   // Initialize the infrastructure service (database connection)
-  const databaseService = new MongoDatabaseService(
+  const dbService = new MongoDatabaseService(
     process.env.MONGO_DB_NAME_EVENT || 'event',
   )
 
   try {
-    await databaseService.connect()
+    await dbService.connect()
     logger.info('Successfully connected to MongoDB.')
   } catch (error) {
     logger.error(`Error connecting to MongoDB: ${error}`)
@@ -34,16 +34,16 @@ async function startServer() {
   await eventBus.init()
 
   // Instantiate the repository used for command (write) operations
-  const reservationRepository = new ReservationRepository(databaseService)
+  const reservationRepository = new ReservationRepository(dbService)
 
   // Instantiate the repository used for query (read) operations: your projections
   const reservationProjectionRepository = new ReservationProjectionRepository(
-    databaseService,
+    dbService,
   )
 
   // Set up event subscriptions to update read models (via the projection handler)
   const reservationProjectionHandler = new ReservationProjectionHandler(
-    databaseService,
+    dbService,
   )
 
   await setupEventSubscriptions(eventBus, reservationProjectionHandler)
@@ -108,7 +108,7 @@ async function startServer() {
     timeout: 10000,
     onShutdown: async () => {
       logger.info('Closing DB connection...')
-      await databaseService.disconnect()
+      await dbService.disconnect()
       logger.info('DB connection closed.')
     },
     finally: () => {

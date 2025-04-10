@@ -7,6 +7,7 @@ import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
 import { BookController } from '@controllers/books/BookController.js'
 // Unified facade and controller:
 import { BookFacade } from '@controllers/books/BookFacade.js'
+import { GetBookController } from '@controllers/books/GetBookController.js'
 // Query (read) handler:
 import { GetBookHandler } from '@queries/GetBookHandler.js'
 import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
@@ -38,27 +39,35 @@ export function createBookRouter(
   )
 
   // Create a single controller that delegates operations to the facade:
-  const controller = new BookController(facade)
+  // Write
+  const mainBookController = new BookController(facade)
 
   router.post(
     '/',
     validateBody(schemas.BookCreateRequestSchema),
-    controller.createBook,
+    mainBookController.createBook,
   )
 
   router.patch(
     '/:isbn',
     validateParams(schemas.BookIdSchema),
     validateBody(schemas.BookUpdateRequestSchema),
-    controller.updateBook,
+    mainBookController.updateBook,
   )
-
-  router.get('/:isbn', validateParams(schemas.BookIdSchema), controller.getBook)
 
   router.delete(
     '/:isbn',
     validateParams(schemas.BookIdSchema),
-    controller.deleteBook,
+    mainBookController.deleteBook,
+  )
+
+  // Read
+  const getBookController = new GetBookController(facade)
+
+  router.get(
+    '/:isbn',
+    validateParams(schemas.BookIdSchema),
+    getBookController.getBook,
   )
 
   return router

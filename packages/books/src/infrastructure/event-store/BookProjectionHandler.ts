@@ -15,7 +15,6 @@ export class BookProjectionHandler {
       publicationYear: event.payload.publicationYear,
       publisher: event.payload.publisher,
       price: event.payload.price,
-      isDeleted: false,
       version: event.version,
       updatedAt: new Date(event.timestamp),
     })
@@ -59,7 +58,7 @@ export class BookProjectionHandler {
       { id: event.aggregateId },
       {
         $set: {
-          isDeleted: true,
+          deletedAt: new Date(),
           version: event.version,
           updatedAt: new Date(event.timestamp),
         },

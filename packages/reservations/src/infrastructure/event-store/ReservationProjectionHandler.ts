@@ -22,7 +22,6 @@ export class ReservationProjectionHandler {
       dueDate: dueDate,
       returnedAt: null,
       lateFee: 0,
-      isDeleted: false,
       version: event.version,
       updatedAt: new Date(event.timestamp),
     })
@@ -90,8 +89,8 @@ export class ReservationProjectionHandler {
       { id: event.aggregateId },
       {
         $set: {
-          isDeleted: true,
           version: event.version,
+          deletedAt: new Date(),
           updatedAt: new Date(event.timestamp),
         },
       },
@@ -103,7 +102,7 @@ export class ReservationProjectionHandler {
   async handleBookDetailsUpdated(event: DomainEvent): Promise<void> {
     // When a book's details are updated, we need to update all reservations that reference it
     await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateMany(
-      { isbn: event.payload.isbn, isDeleted: false },
+      { isbn: event.payload.isbn, deletedAt: null },
       {
         $set: {
           bookTitle: event.payload.title,
@@ -116,7 +115,7 @@ export class ReservationProjectionHandler {
   async handleBookDeleted(event: DomainEvent): Promise<void> {
     // When a book is deleted, we could mark affected reservations or add a note
     await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateMany(
-      { isbn: event.payload.isbn, status: 'active', isDeleted: false },
+      { isbn: event.payload.isbn, status: 'active', deletedAt: null },
       {
         $set: {
           bookDeleted: true,

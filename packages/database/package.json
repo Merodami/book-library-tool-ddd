@@ -9,6 +9,7 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@book-library-tool/sdk": "workspace:^",
+    "@book-library-tool/shared": "workspace:^",
     "@book-library-tool/types": "workspace:^",
     "he": "^1.2.0",
     "mongodb": "^6.15.0"

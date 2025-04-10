@@ -15,12 +15,12 @@ import gracefulShutdown from 'http-graceful-shutdown'
 
 async function startServer() {
   // Create and connect the database service (write and projection share the same DB context)
-  const databaseService = new MongoDatabaseService(
+  const dbService = new MongoDatabaseService(
     process.env.MONGO_DB_NAME_EVENT || 'events',
   )
 
   try {
-    await databaseService.connect()
+    await dbService.connect()
     logger.info('Successfully connected to MongoDB.')
   } catch (error) {
     logger.error(`Error connecting to MongoDB: ${error}`)
@@ -35,13 +35,13 @@ async function startServer() {
   await eventBus.init()
 
   // Instantiate the repository used for command (write) operations
-  const bookRepository = new BookRepository(databaseService)
+  const bookRepository = new BookRepository(dbService)
 
   // Instantiate the repository used for query (read) operations: your projections
-  const bookProjectionRepository = new BookProjectionRepository(databaseService)
+  const bookProjectionRepository = new BookProjectionRepository(dbService)
 
   // Set up event subscriptions to update read models (via the projection handler)
-  const bookProjectionHandler = new BookProjectionHandler(databaseService)
+  const bookProjectionHandler = new BookProjectionHandler(dbService)
 
   await setupEventSubscriptions(eventBus, bookProjectionHandler)
 
@@ -99,7 +99,7 @@ async function startServer() {
     timeout: 10000,
     onShutdown: async () => {
       logger.info('Closing DB connection...')
-      await databaseService.disconnect()
+      await dbService.disconnect()
       logger.info('DB connection closed.')
     },
     finally: () => {

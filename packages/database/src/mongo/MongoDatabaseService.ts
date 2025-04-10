@@ -1,3 +1,4 @@
+import { logger } from '@book-library-tool/shared'
 import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
 import {
   Collection,
@@ -61,7 +62,7 @@ export class MongoDatabaseService {
       this.dbName || process.env.MONGO_DB_NAME_LIBRARY || 'library',
     )
 
-    console.log(`Connected to MongoDB database: ${this.dbName}`)
+    logger.info(`Connected to MongoDB database: ${this.dbName}`)
   }
 
   /**
@@ -103,7 +104,7 @@ export class MongoDatabaseService {
       await this.client.close()
       this.client = null
       this.db = null
-      console.log('Disconnected from MongoDB')
+      logger.info('Disconnected from MongoDB')
     }
   }
 
@@ -121,8 +122,14 @@ export class MongoDatabaseService {
   ): Promise<PaginatedResult<WithId<T>>> {
     const { page: possiblePage, limit: possibleLimit } = pagination
 
-    const limit = possibleLimit ?? Number(process.env.PAGINATION_DEFAULT_LIMIT)
-    const page = possiblePage ?? 1
+    // Fixed: Ensure limit is properly converted to a number and has proper fallback
+    const limit = possibleLimit
+      ? Math.floor(Number(possibleLimit))
+      : Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
+
+    // Fixed: Use possiblePage instead of possibleLimit for page calculation
+    const page = possiblePage ? Math.floor(Number(possiblePage)) : 1
+
     const totalItems = await collection.countDocuments(query)
 
     const totalPages = Math.ceil(totalItems / limit)

@@ -3,6 +3,7 @@ import {
   MongoDatabaseService,
 } from '@book-library-tool/database'
 import type { Book, PaginatedBookResponse } from '@book-library-tool/sdk'
+import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
 import type { Collection } from 'mongodb'
 
 import { GetAllBooksQuery } from '../../../application/use_cases/queries/GetAllBooksQuery.js'
@@ -24,7 +25,7 @@ function mapProjectionToBook(doc: any): Book {
 export class BookProjectionRepository {
   private readonly collection: Collection<Book>
 
-  constructor(dbService: MongoDatabaseService) {
+  constructor(private dbService: MongoDatabaseService) {
     this.collection = dbService.getCollection('book_projection')
   }
 
@@ -49,6 +50,7 @@ export class BookProjectionRepository {
 
     // Use the pagination helper to get paginated books data
     const paginatedBooks = await getPaginatedData<Book>(
+      this.dbService,
       this.collection,
       filter,
       { limit, page },
@@ -61,7 +63,14 @@ export class BookProjectionRepository {
   async getBookByISBN(isbn: string): Promise<Book | null> {
     const doc = await this.collection.findOne({ isbn })
 
-    console.log('🚀 ~ BookProjectionRepository ~ getBookByISBN ~ doc:', doc)
+    if (doc && doc.deletedAt) {
+      throw new ApplicationError(
+        404,
+        'BOOK_NOT_FOUND',
+        `Book with ISBN ${isbn} not found.`,
+      )
+    }
+
     return doc ? mapProjectionToBook(doc) : null
   }
 }

@@ -5,7 +5,9 @@ import { IBookProjectionRepository } from '@repositories/IBookProjectionReposito
 import { GetAllBooksQuery } from './GetAllBooksQuery.js'
 
 export class GetAllBooksHandler {
-  constructor(private readonly bookRepository: IBookProjectionRepository) {}
+  constructor(
+    private readonly projectionRepository: IBookProjectionRepository,
+  ) {}
 
   /**
    * Retrieves all books from the repository.
@@ -15,7 +17,7 @@ export class GetAllBooksHandler {
    */
   async execute(query: GetAllBooksQuery): Promise<PaginatedBookResponse> {
     // Retrieve all events for the given aggregate ID.
-    const books = await this.bookRepository.getAllBooks(query)
+    const books = await this.projectionRepository.getAllBooks(query)
 
     if (!books || books.data.length === 0) {
       throw new Errors.ApplicationError(

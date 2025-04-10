@@ -31,7 +31,7 @@ export class ReservationProjectionRepository
 {
   private readonly collection: Collection<Reservation>
 
-  constructor(dbService: MongoDatabaseService) {
+  constructor(private dbService: MongoDatabaseService) {
     this.collection = dbService.getCollection('reservation_projection')
   }
 
@@ -44,12 +44,9 @@ export class ReservationProjectionRepository
     // Build the filter based on provided parameters
     const filter: Record<string, unknown> = { userId }
 
-    if (status && status.trim().length > 0) {
-      filter.status = status
-    }
-
     // Use the pagination helper to get paginated reservation data
     const paginatedReservations = await getPaginatedData<Reservation>(
+      this.dbService,
       this.collection,
       filter,
       { limit, page },
@@ -101,6 +98,7 @@ export class ReservationProjectionRepository
 
     // Use the pagination helper to get paginated reservation data
     const paginatedReservations = await getPaginatedData<Reservation>(
+      this.dbService,
       this.collection,
       filter,
       { limit, page },
@@ -136,6 +134,7 @@ export class ReservationProjectionRepository
     const { page = 1, limit = 10 } = pagination
 
     const paginatedReservations = await getPaginatedData<Reservation>(
+      this.dbService,
       this.collection,
       { status },
       { limit, page },

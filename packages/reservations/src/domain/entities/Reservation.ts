@@ -6,7 +6,7 @@ import {
   RESERVATION_CREATED,
   RESERVATION_RETURNED,
 } from '@book-library-tool/event-store'
-import { Errors } from '@book-library-tool/shared'
+import { Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { randomUUID } from 'crypto'
 
@@ -252,7 +252,7 @@ export class Reservation extends AggregateRoot {
         break
       }
       default:
-        console.warn(`Unhandled event type in applyEvent: ${event.eventType}`)
+        logger.warn(`Unhandled event type in applyEvent: ${event.eventType}`)
     }
   }
 

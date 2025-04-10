@@ -6,6 +6,7 @@ import {
   RabbitMQEventBus,
 } from '@book-library-tool/event-store'
 import { Book } from '@book-library-tool/sdk'
+import { logger } from '@book-library-tool/shared'
 import fastcsv from 'fast-csv'
 import fs from 'fs'
 import he from 'he'
@@ -74,7 +75,7 @@ async function seedBooks() {
       processedCount++
 
       if (processedCount <= 3) {
-        console.log(`Record #${processedCount}:`, record)
+        logger.info(`Record #${processedCount}:`, record)
       }
 
       try {
@@ -97,7 +98,7 @@ async function seedBooks() {
 
         // Validate the book command – skip if required fields are missing.
         if (isInvalidBook(command)) {
-          console.log(
+          logger.info(
             `Skipping record #${processedCount} due to missing required fields:`,
             command,
           )
@@ -111,21 +112,21 @@ async function seedBooks() {
         await bookService.execute(command)
       } catch (error) {
         if (error.message === 'BOOK_ALREADY_EXISTS') {
-          console.log('Book already exists, skipping:', error.message)
+          logger.info('Book already exists, skipping:', error.message)
         } else {
-          console.error(`Error processing record #${processedCount}:`, error)
+          logger.error(`Error processing record #${processedCount}:`, error)
         }
 
         skippedCount++
       }
     }
 
-    dbService.disconnect().catch(console.error)
+    dbService.disconnect().catch(logger.error)
     stream.destroy()
 
-    console.log('Disconnected from MongoDB and destroyed stream.')
+    logger.info('Disconnected from MongoDB and destroyed stream.')
 
-    console.log(`
+    logger.info(`
       Import Summary:
       ---------------
       CSV rows read: ${processedCount}
@@ -134,7 +135,7 @@ async function seedBooks() {
 
     return
   } catch (error) {
-    console.error('Fatal error in seeding process:', error)
+    logger.error('Fatal error in seeding process:', error)
   }
 
   return
@@ -168,4 +169,4 @@ async function getBookService(
   return new CreateBookHandler(bookRepository, eventBus)
 }
 
-seedBooks().catch(console.error)
+seedBooks().catch(logger.error)

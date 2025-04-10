@@ -16,11 +16,19 @@ const ajv = new Ajv({
   allErrors: true,
   coerceTypes: false,
 })
-addFormats(ajv)
 
-// Cast ajvErrorsImport as a callable function.
 const ajvErrors = ajvErrorsImport as unknown as (ajv: Ajv) => void
+
+addFormats(ajv)
 ajvErrors(ajv)
+
+// Create a separate instance for query parameter validation
+const queryAjv = new Ajv({
+  allErrors: true,
+  coerceTypes: true, // Enable type coercion for query params
+})
+addFormats(queryAjv)
+ajvErrors(queryAjv)
 
 /**
  * validateBody
@@ -47,7 +55,7 @@ export const validateBody = (schema: object) => {
  * Validates `req.query` against the provided schema.
  */
 export const validateQuery = (schema: object) => {
-  const validate = ajv.compile(schema)
+  const validate = queryAjv.compile(schema)
 
   return (req: Request, res: Response, next: NextFunction) => {
     if (!validate(req.query)) {

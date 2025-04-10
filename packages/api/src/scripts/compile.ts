@@ -1,4 +1,5 @@
 import SwaggerParser from '@apidevtools/swagger-parser'
+import { logger } from '@book-library-tool/shared'
 import fs from 'fs-extra'
 import { cloneDeep } from 'lodash-es'
 import { OpenAPIV3 } from 'openapi-types'
@@ -94,7 +95,7 @@ async function main() {
 
     // Validate the cleaned OpenAPI spec (this also dereferences $refs)
     await SwaggerParser.validate(finalSpec)
-    console.log('OpenAPI spec is valid.')
+    logger.info('OpenAPI spec is valid.')
 
     // Prepare the output directory (e.g. "dist")
     const outputDir = fromRoot('dist')
@@ -114,12 +115,12 @@ async function main() {
     // Write the complete OpenAPI spec JSON (with all routes for API usage)
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     await fs.writeFile(apiJsonFullPath, JSON.stringify(finalSpec, null, 2))
-    console.log(`Complete OpenAPI JSON written to ${apiJsonFullPath}`)
+    logger.info(`Complete OpenAPI JSON written to ${apiJsonFullPath}`)
 
     // Write the filtered documentation OpenAPI spec JSON
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     await fs.writeFile(docsJsonFullPath, JSON.stringify(docsSpec, null, 2))
-    console.log(`Documentation OpenAPI JSON written to ${docsJsonFullPath}`)
+    logger.info(`Documentation OpenAPI JSON written to ${docsJsonFullPath}`)
 
     // Optionally, generate HTML documentation.
 
@@ -134,14 +135,14 @@ async function main() {
 
       // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.writeFile(htmlFullPath, htmlOutput)
-      console.log(`OpenAPI HTML documentation written to ${htmlFullPath}`)
+      logger.info(`OpenAPI HTML documentation written to ${htmlFullPath}`)
     } else {
-      console.warn(
+      logger.warn(
         `Template file not found at ${templateFilename}. Skipping HTML generation.`,
       )
     }
   } catch (error) {
-    console.error('Error compiling OpenAPI spec:', error)
+    logger.error('Error compiling OpenAPI spec:', error)
     process.exit(1)
   }
 }

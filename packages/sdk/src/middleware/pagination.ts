@@ -10,7 +10,7 @@ export const paginationMiddleware = () => {
   return (req: Request, res: Response, next: NextFunction) => {
     // Apply limit constraints
     let limit = Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
-    const maxLimit = Number(process.env.PAGINATION_MAX_LIMIT) || 10
+    const maxLimit = Number(process.env.PAGINATION_MAX_LIMIT) || 100
 
     try {
       // Extract pagination parameters

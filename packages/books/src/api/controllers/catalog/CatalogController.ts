@@ -24,13 +24,21 @@ export class CatalogController {
       const { title, author, publicationYear, page, limit } =
         req.query as CatalogSearchQuery
 
+      // Validate and parse query parameters
+      const newPage = page ? Math.floor(Number(page)) || 1 : 1
+      const newLimit = limit
+        ? Math.floor(Number(limit)) ||
+          Number(process.env.PAGINATION_DEFAULT_LIMIT) ||
+          10
+        : 10
+
       // Delegate to the service; the service will enforce business rules.
       const books = await this.catalogService.execute({
         title,
         author,
         publicationYear,
-        page,
-        limit,
+        page: newPage,
+        limit: newLimit,
       })
 
       res.status(200).json(books)

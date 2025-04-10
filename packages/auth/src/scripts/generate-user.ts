@@ -1,5 +1,6 @@
 import { schemas } from '@book-library-tool/api'
 import { MongoDatabaseService } from '@book-library-tool/database'
+import { logger } from '@book-library-tool/shared'
 import { randomUUID } from 'crypto'
 import { formatISO } from 'date-fns'
 import Jwt from 'jsonwebtoken'
@@ -8,7 +9,7 @@ import Jwt from 'jsonwebtoken'
 const email = process.argv[2]
 
 if (!email) {
-  console.error('Usage: yarn tsx ./src/scripts/create-user.ts <email>')
+  logger.error('Usage: yarn tsx ./src/scripts/create-user.ts <email>')
   process.exit(1)
 }
 
@@ -42,14 +43,14 @@ async function createUserAndGenerateToken() {
   // Validate if the email already exists
   const existingUser = await usersCollection.findOne({ email })
   if (existingUser) {
-    console.error(`User with email ${email} already exists.`)
+    logger.error(`User with email ${email} already exists.`)
     process.exit(1)
   }
 
   // Insert the new user document into the collection
   await usersCollection.insertOne(newUser)
 
-  console.log(`\nUser created successfully with userId:\n\n${newUser.userId}`)
+  logger.info(`\nUser created successfully with userId:\n\n${newUser.userId}`)
 
   // Generate the JWT token using the user's information
   const token = Jwt.sign(
@@ -62,8 +63,8 @@ async function createUserAndGenerateToken() {
     { expiresIn: '24h' },
   )
 
-  console.log('\nGenerated JWT token:\n')
-  console.log(`${token}\n`)
+  logger.info('\nGenerated JWT token:\n')
+  logger.info(`${token}\n`)
 
   // Disconnect from the database
   await dbService.disconnect()
@@ -71,6 +72,6 @@ async function createUserAndGenerateToken() {
 }
 
 createUserAndGenerateToken().catch((error) => {
-  console.error('Error creating user and generating token:', error)
+  logger.error('Error creating user and generating token:', error)
   process.exit(1)
 })

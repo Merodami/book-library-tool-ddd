@@ -1,5 +1,6 @@
 import { makeValidator, schemas } from '@book-library-tool/api'
 import { AggregateRoot, DomainEvent } from '@book-library-tool/event-store'
+import { logger } from '@book-library-tool/shared'
 
 // Book domain event type constants
 export const BOOK_CREATED = 'BookCreated'
@@ -294,7 +295,7 @@ export class Book extends AggregateRoot {
         break
       }
       default:
-        console.warn(`Unhandled event type in applyEvent: ${event.eventType}`)
+        logger.warn(`Unhandled event type in applyEvent: ${event.eventType}`)
     }
   }
 

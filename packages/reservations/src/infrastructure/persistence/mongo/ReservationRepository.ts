@@ -5,7 +5,7 @@ import {
   RESERVATION_UPDATED,
 } from '@book-library-tool/event-store'
 import type { ReservationRequest } from '@book-library-tool/sdk'
-import { Errors } from '@book-library-tool/shared'
+import { Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Reservation } from '@entities/Reservation.js'
 import type { IReservationRepository } from '@repositories/IReservationRepository.js'
@@ -36,7 +36,7 @@ export class ReservationRepository
     try {
       return Reservation.rehydrate(events)
     } catch (error) {
-      console.error('Failed to rehydrate reservation:', error)
+      logger.error('Failed to rehydrate reservation:', error)
       return null
     }
   }

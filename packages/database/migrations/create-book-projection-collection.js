@@ -36,7 +36,7 @@ export async function up(db) {
   })
 
   // Index to efficiently filter out deleted books
-  await targetDb.collection(tableName).createIndex({ isDeleted: 1 })
+  await targetDb.collection(tableName).createIndex({ deletedAt: 1 })
 
   // Create version index for optimistic concurrency
   await targetDb.collection(tableName).createIndex({ id: 1, version: 1 })
@@ -60,7 +60,7 @@ export async function down(db) {
     author: 1,
     publicationYear: 1,
   })
-  await targetDb.collection(tableName).dropIndex({ isDeleted: 1 })
+  await targetDb.collection(tableName).dropIndex({ deletedAt: 1 })
   await targetDb.collection(tableName).dropIndex({ id: 1, version: 1 })
 
   // Drop the collection

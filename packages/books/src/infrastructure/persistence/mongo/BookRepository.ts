@@ -3,7 +3,7 @@ import {
   BOOK_DELETED,
   type DomainEvent,
 } from '@book-library-tool/event-store'
-import { Errors } from '@book-library-tool/shared'
+import { Errors, logger } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
 
@@ -17,7 +17,7 @@ export class BookRepository
     try {
       return Book.rehydrate(events)
     } catch (error) {
-      console.error('Failed to rehydrate book:', error)
+      logger.error('Failed to rehydrate book:', error)
       return null
     }
   }

@@ -8,6 +8,7 @@ import { MongoDatabaseService } from '../mongo/MongoDatabaseService.js'
  * Can be used from any handler
  */
 export async function getPaginatedData<T extends Document = Document>(
+  dbService: MongoDatabaseService,
   collection: Collection<T>,
   query: Filter<T> = {},
   pagination: {
@@ -19,18 +20,5 @@ export async function getPaginatedData<T extends Document = Document>(
     sort?: Record<string, 1 | -1>
   },
 ): Promise<PaginatedResult<WithId<T>>> {
-  const { page, limit } = pagination
-
-  const dbService = new MongoDatabaseService(
-    process.env.MONGO_DB_NAME_EVENT || 'events',
-  )
-
-  await dbService.connect()
-
-  return dbService.paginateCollection(
-    collection,
-    query,
-    { page, limit },
-    options,
-  )
+  return dbService.paginateCollection(collection, query, pagination, options)
 }

@@ -178,6 +178,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@book-library-tool/auth@workspace:packages/auth"
   dependencies:
+    "@book-library-tool/shared": "workspace:^"
     "@types/express": "npm:^5.0.1"
     "@types/jsonwebtoken": "npm:^9.0.9"
     express: "npm:5.1.0"
@@ -195,6 +196,7 @@ __metadata:
     "@book-library-tool/database": "workspace:^"
     "@book-library-tool/event-store": "workspace:^"
     "@book-library-tool/sdk": "workspace:^"
+    "@book-library-tool/shared": "workspace:^"
     "@types/cors": "npm:2.8.17"
     "@types/express": "npm:^5.0.1"
     cors: "npm:^2.8.5"
@@ -212,6 +214,7 @@ __metadata:
   resolution: "@book-library-tool/database@workspace:packages/database"
   dependencies:
     "@book-library-tool/sdk": "workspace:^"
+    "@book-library-tool/shared": "workspace:^"
     "@book-library-tool/types": "workspace:^"
     "@types/he": "npm:^1.2.3"
     "@types/mongodb": "npm:^4.0.7"

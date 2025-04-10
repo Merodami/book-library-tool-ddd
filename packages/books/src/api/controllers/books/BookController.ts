@@ -9,7 +9,6 @@ import { BookFacade } from './BookFacade.js'
 export class BookController {
   constructor(private readonly bookService: BookFacade) {
     this.createBook = this.createBook.bind(this)
-    this.getBook = this.getBook.bind(this)
     this.deleteBook = this.deleteBook.bind(this)
     this.updateBook = this.updateBook.bind(this)
   }
@@ -46,29 +45,6 @@ export class BookController {
       res
         .status(201)
         .json({ message: 'Book created successfully', book: newBook })
-    } catch (error) {
-      next(error)
-    }
-  }
-
-  /**
-   * GET /books/:isbn
-   * Retrieves a book by its ISBN.
-   * This method calls the service which rehydrates the Book aggregate from its events.
-   */
-  async getBook(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    try {
-      const { isbn } = req.params as Pick<BookCreateRequest, 'isbn'>
-
-      // Retrieve the rehydrated Book aggregate via the service.
-      const bookAggregate = await this.bookService.getBook({ isbn })
-
-      // Return the current state of the Book aggregate.
-      res.status(200).json(bookAggregate)
     } catch (error) {
       next(error)
     }

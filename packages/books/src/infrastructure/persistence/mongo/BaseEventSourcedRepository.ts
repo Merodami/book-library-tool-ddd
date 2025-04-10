@@ -3,7 +3,7 @@ import {
   type MongoDatabaseService,
 } from '@book-library-tool/database'
 import type { AggregateRoot, DomainEvent } from '@book-library-tool/event-store'
-import { Errors } from '@book-library-tool/shared'
+import { Errors, logger } from '@book-library-tool/shared'
 import { Collection } from 'mongodb'
 
 export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
@@ -19,7 +19,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
 
     // Initialize necessary indexes for efficient querying and concurrency control.
     this.initializeIndexes().catch((err) =>
-      console.error(
+      logger.error(
         `Failed to initialize indexes for ${this.constructor.name}:`,
         err,
       ),
@@ -57,7 +57,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
       await this.createEntitySpecificIndexes()
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.error(
+      logger.error(
         `Failed to create indexes on ${this.COLLECTION_NAME}:`,
         message,
       )

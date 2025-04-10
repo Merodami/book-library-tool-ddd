@@ -37,7 +37,7 @@ export interface BookProjection {
   publicationYear: number
   publisher: string
   price: number
-  isDeleted: boolean // Flag for soft deletion
-  version: number // For optimistic concurrency
+  version: number
   updatedAt: Date
+  deletedAt?: Date
 }
