@@ -23,7 +23,7 @@ import {
 export class MongoDatabaseService {
   private client: MongoClient | null = null
   private db: Db | null = null
-  private dbName: string | null = null
+  private dbName: string
 
   /**
    * Constructor for MongoDatabaseService.
@@ -34,7 +34,7 @@ export class MongoDatabaseService {
   }
 
   /**
-   * Connects to MongoDB using the MONGO_URI and MONGO_DB_NAME environment variables.
+   * Connects to MongoDB using the MONGO_URI and MONGO_DB_NAME_LIBRARY environment variables.
    * If a connection is already established, it reuses the existing connection.
    *
    * @returns A promise that resolves when the connection is successfully established.
@@ -46,6 +46,7 @@ export class MongoDatabaseService {
     }
 
     const uri = process.env.MONGO_URI
+
     if (!uri) {
       throw new Error('MONGO_URI is not defined in the environment variables')
     }
@@ -56,7 +57,9 @@ export class MongoDatabaseService {
     this.client = new MongoClient(uri, options)
     await this.client.connect()
 
-    this.db = this.client.db(this.dbName || 'books-dev')
+    this.db = this.client.db(
+      this.dbName || process.env.MONGO_DB_NAME_LIBRARY || 'library',
+    )
 
     console.log(`Connected to MongoDB database: ${this.dbName}`)
   }

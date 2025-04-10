@@ -173,6 +173,7 @@ export class Reservation extends AggregateRoot {
     }
 
     updatedReservation.addDomainEvent(event)
+
     return { reservation: updatedReservation, event }
   }
 

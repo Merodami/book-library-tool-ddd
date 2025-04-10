@@ -1,10 +1,16 @@
 import type { DomainEvent } from './domain/DomainEvent.js'
 
 /**
- * EventBus provides an abstraction for publishing domain events
- * and subscribing to specific event types.
+ * EventBus provides an abstraction for publishing domain events,
+ * subscribing to specific event types, and handling initialization.
  */
 export interface EventBus {
+  /**
+   * Initializes the event bus (e.g., creates connections or channels).
+   * Must be called before using publish or subscribe.
+   */
+  init(): Promise<void>
+
   /**
    * Publishes the given event to all subscribers.
    * @param event - The domain event to be published.
@@ -13,7 +19,7 @@ export interface EventBus {
 
   /**
    * Registers a handler for a specific event type.
-   * @param eventType - The type of event to handle, or '*' for all events
+   * @param eventType - The type of event to handle, or '*' for all events.
    * @param handler - A function that handles a domain event.
    */
   subscribe(
@@ -37,4 +43,9 @@ export interface EventBus {
     eventType: string,
     handler: (event: DomainEvent) => Promise<void>,
   ): boolean
+
+  /**
+   * Optionally closes any underlying resources (e.g., connections).
+   */
+  shutdown?(): Promise<void>
 }

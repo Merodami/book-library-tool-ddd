@@ -1,4 +1,4 @@
-export * from './SimpleEventBus.js'
+export * from './RabbitMQEventBus.js'
 export * from './EventBus.js'
 export * from './AggregateRoot.js'
 

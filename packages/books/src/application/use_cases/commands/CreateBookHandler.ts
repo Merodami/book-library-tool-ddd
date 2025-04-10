@@ -36,5 +36,7 @@ export class CreateBookHandler {
 
     // Publish the event so that any subscribers (e.g. projectors, integration handlers) are notified.
     await this.eventBus.publish(event)
+
+    book.clearDomainEvents()
   }
 }

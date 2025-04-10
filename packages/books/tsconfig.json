@@ -19,8 +19,8 @@
       // Application
       "@dto/*": ["src/application/dtos/*"],
       "@use_cases/*": ["src/application/use_cases/*"],
-      "@commands/*": ["src/application/commands/*"],
-      "@handlers/*": ["src/application/handlers/*"],
+      "@commands/*": ["src/application/use_cases/commands/*"],
+      "@queries/*": ["src/application/use_cases/queries/*"],
 
       // Domain
       "@entities/*": ["src/domain/entities/*"],
@@ -33,7 +33,7 @@
       "@event-store/*": ["src/infrastructure/event-store/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "scripts"],
   "exclude": ["dist", "../../node_modules", "node_modules"],
   "references": [
     {

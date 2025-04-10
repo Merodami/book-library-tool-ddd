@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express'
-import { BookService } from '@use_cases/BookService.js'
 import type {
   BookCreateRequest,
   BookUpdateRequest,
 } from '@book-library-tool/sdk'
+import { BookFacade } from './BookFacade.js'
 
 export class BookController {
-  constructor(private readonly bookService: BookService) {
+  constructor(private readonly bookService: BookFacade) {
     this.createBook = this.createBook.bind(this)
     this.getBook = this.getBook.bind(this)
     this.deleteBook = this.deleteBook.bind(this)
@@ -64,7 +64,7 @@ export class BookController {
       const { isbn } = req.params as Pick<BookCreateRequest, 'isbn'>
 
       // Retrieve the rehydrated Book aggregate via the service.
-      const bookAggregate = await this.bookService.getBookByISBN(isbn)
+      const bookAggregate = await this.bookService.getBook({ isbn })
 
       // Return the current state of the Book aggregate.
       res.status(200).json(bookAggregate)
@@ -86,7 +86,7 @@ export class BookController {
     try {
       const { isbn } = req.params as Pick<BookCreateRequest, 'isbn'>
 
-      await this.bookService.deleteBookByISBN(isbn)
+      await this.bookService.deleteBook({ isbn })
 
       res.status(200).json({ message: 'Book deleted successfully' })
     } catch (error) {
@@ -109,7 +109,8 @@ export class BookController {
       const { title, author, publicationYear, publisher, price } =
         req.body as BookUpdateRequest
 
-      await this.bookService.updateBook(isbn, {
+      await this.bookService.updateBook({
+        isbn,
         title,
         author,
         publicationYear,

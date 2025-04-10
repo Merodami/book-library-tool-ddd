@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
 import { CatalogSearchQuery } from '@book-library-tool/sdk'
-import { CatalogService } from '@use_cases/CatalogService.js'
+import { GetAllBooksHandler } from '@use_cases/queries/GetAllBooksHandler.js'
 
 export class CatalogController {
-  constructor(private readonly catalogService: CatalogService) {
-    this.getCatalog = this.getCatalog.bind(this)
+  constructor(private readonly catalogService: GetAllBooksHandler) {
+    this.getAllBooks = this.getAllBooks.bind(this)
   }
 
   /**
@@ -15,7 +15,7 @@ export class CatalogController {
    * - limit: number
    * Returns a paginated list of books.
    */
-  async getCatalog(
+  async getAllBooks(
     req: Request,
     res: Response,
     next: NextFunction,
@@ -25,7 +25,7 @@ export class CatalogController {
         req.query as CatalogSearchQuery
 
       // Delegate to the service; the service will enforce business rules.
-      const books = await this.catalogService.getAllBooks({
+      const books = await this.catalogService.execute({
         title,
         author,
         publicationYear,

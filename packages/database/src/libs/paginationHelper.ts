@@ -20,7 +20,9 @@ export async function getPaginatedData<T extends Document = Document>(
 ): Promise<PaginatedResponse<WithId<T>>> {
   const { page, limit } = pagination
 
-  const dbService = new MongoDatabaseService('event')
+  const dbService = new MongoDatabaseService(
+    process.env.MONGO_DB_NAME_EVENT || 'events',
+  )
 
   await dbService.connect()
 

@@ -206,6 +206,7 @@ export class Book extends AggregateRoot {
     }
 
     deletedBook.addDomainEvent(event)
+
     return { book: deletedBook, event }
   }
 

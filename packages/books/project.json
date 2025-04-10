@@ -38,6 +38,13 @@
         "command": "tsx --watch ./src/api/app.ts",
         "cwd": "{projectRoot}"
       }
+    },
+    "seed-books": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx ./src/scripts/importBooksFromCSV.ts",
+        "cwd": "{projectRoot}"
+      }
     }
   }
 }

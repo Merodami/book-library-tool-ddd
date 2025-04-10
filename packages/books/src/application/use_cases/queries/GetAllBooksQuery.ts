@@ -1,8 +1,7 @@
-export interface ListBookCommand {
-  isbn?: string
+export interface GetAllBooksQuery {
   title?: string
   author?: string
   publicationYear?: number
-  limit?: number
   page?: number
+  limit?: number
 }

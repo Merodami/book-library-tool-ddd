@@ -201,13 +201,14 @@ __metadata:
     cors: "npm:^2.8.5"
     depcheck: "npm:^1.4.7"
     express: "npm:5.1.0"
+    he: "npm:1.2.0"
     http-graceful-shutdown: "npm:^3.1.14"
     typescript: "npm:^5.8.3"
     uuid: "npm:11.1.0"
   languageName: unknown
   linkType: soft
 
-"@book-library-tool/database@workspace:*, @book-library-tool/database@workspace:^, @book-library-tool/database@workspace:packages/database":
+"@book-library-tool/database@workspace:^, @book-library-tool/database@workspace:packages/database":
   version: 0.0.0-use.local
   resolution: "@book-library-tool/database@workspace:packages/database"
   dependencies:
@@ -224,10 +225,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@book-library-tool/event-store@workspace:*, @book-library-tool/event-store@workspace:^, @book-library-tool/event-store@workspace:packages/event-store":
+"@book-library-tool/event-store@workspace:^, @book-library-tool/event-store@workspace:packages/event-store":
   version: 0.0.0-use.local
   resolution: "@book-library-tool/event-store@workspace:packages/event-store"
   dependencies:
+    "@types/amqplib": "npm:^0.10.7"
+    amqplib: "npm:^0.10.7"
     depcheck: "npm:^1.4.7"
     typescript: "npm:^5.8.3"
   languageName: unknown
@@ -268,8 +271,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@book-library-tool/shared@workspace:packages/shared"
   dependencies:
-    "@book-library-tool/database": "workspace:*"
-    "@book-library-tool/event-store": "workspace:*"
     "@sinclair/typebox": "npm:^0.34.33"
     "@types/fs-extra": "npm:11.0.4"
     "@types/lodash-es": "npm:4.17.12"
@@ -1240,6 +1241,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/amqplib@npm:^0.10.7":
+  version: 0.10.7
+  resolution: "@types/amqplib@npm:0.10.7"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10/a16a23283aa167f4d4ab46e5e0653f6009f673bdc39cc18aba8d11a81bac5fc1becc9cd7a6b40191b111d5df59a36e7cb2b07117b7035e8adb7e80a06e4c41dd
+  languageName: node
+  linkType: hard
+
 "@types/body-parser@npm:*":
   version: 1.19.5
   resolution: "@types/body-parser@npm:1.19.5"
@@ -1899,6 +1909,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"amqplib@npm:^0.10.7":
+  version: 0.10.7
+  resolution: "amqplib@npm:0.10.7"
+  dependencies:
+    buffer-more-ints: "npm:~1.0.0"
+    url-parse: "npm:~1.5.10"
+  checksum: 10/d670133a36dcf062636215e3bd23b0631159a9f00c90a50a265a9fe75de713f5f71a4f4d86bcdd30c975bc38e22dbbba60b2f1bd2f44e3328931df6f98662aa6
+  languageName: node
+  linkType: hard
+
 "ansi-colors@npm:^4.1.1":
   version: 4.1.3
   resolution: "ansi-colors@npm:4.1.3"
@@ -2259,6 +2279,13 @@ __metadata:
   version: 1.0.1
   resolution: "buffer-equal-constant-time@npm:1.0.1"
   checksum: 10/80bb945f5d782a56f374b292770901065bad21420e34936ecbe949e57724b4a13874f735850dd1cc61f078773c4fb5493a41391e7bda40d1fa388d6bd80daaab
+  languageName: node
+  linkType: hard
+
+"buffer-more-ints@npm:~1.0.0":
+  version: 1.0.0
+  resolution: "buffer-more-ints@npm:1.0.0"
+  checksum: 10/603a7f35793426c8efd733eb716c2c3bf3e2f5bab95ca13ba31546d89ead3636586479c5a0d8438dd015115361a3b09b1b37ddabc170b6d42bc6c6dc2554dc61
   languageName: node
   linkType: hard
 
@@ -4380,7 +4407,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"he@npm:^1.2.0":
+"he@npm:1.2.0, he@npm:^1.2.0":
   version: 1.2.0
   resolution: "he@npm:1.2.0"
   bin:
@@ -6692,6 +6719,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"querystringify@npm:^2.1.1":
+  version: 2.2.0
+  resolution: "querystringify@npm:2.2.0"
+  checksum: 10/46ab16f252fd892fc29d6af60966d338cdfeea68a231e9457631ffd22d67cec1e00141e0a5236a2eb16c0d7d74175d9ec1d6f963660c6f2b1c2fc85b194c5680
+  languageName: node
+  linkType: hard
+
 "queue-microtask@npm:^1.2.2":
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
@@ -6842,6 +6876,13 @@ __metadata:
   version: 2.0.1
   resolution: "require-package-name@npm:2.0.1"
   checksum: 10/3332d4eec10a730627ca20f37a8a7d57badd9e8953f238472aa457b0084907f86ca5b2af94694a0c8bb2e1101bdb3ed6ddc964d2044b040fe076a9bf5b19755f
+  languageName: node
+  linkType: hard
+
+"requires-port@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "requires-port@npm:1.0.0"
+  checksum: 10/878880ee78ccdce372784f62f52a272048e2d0827c29ae31e7f99da18b62a2b9463ea03a75f277352f4697c100183debb0532371ad515a2d49d4bfe596dd4c20
   languageName: node
   linkType: hard
 
@@ -8087,6 +8128,16 @@ __metadata:
   dependencies:
     punycode: "npm:^2.1.0"
   checksum: 10/b271ca7e3d46b7160222e3afa3e531505161c9a4e097febae9664e4b59912f4cbe94861361a4175edac3a03fee99d91e44b6a58c17a634bc5a664b19fc76fbcb
+  languageName: node
+  linkType: hard
+
+"url-parse@npm:~1.5.10":
+  version: 1.5.10
+  resolution: "url-parse@npm:1.5.10"
+  dependencies:
+    querystringify: "npm:^2.1.1"
+    requires-port: "npm:^1.0.0"
+  checksum: 10/c9e96bc8c5b34e9f05ddfeffc12f6aadecbb0d971b3cc26015b58d5b44676a99f50d5aeb1e5c9e61fa4d49961ae3ab1ae997369ed44da51b2f5ac010d188e6ad
   languageName: node
   linkType: hard
 

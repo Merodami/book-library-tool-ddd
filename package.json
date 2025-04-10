@@ -21,16 +21,17 @@
     "reset:codebase": "yarn clear && yarn && yarn build",
     "kill": "yarn kill:backend",
     "kill:backend": "fkill --force --silent :3000 :3001 :3002 :3003",
+    "seed:books": "nx run @book-library-tool/books:seed-books",
     "db:reset": "yarn docker:local:down && rm -rf mongodata && yarn docker:local -d",
-    "db:seed": "nx run @book-library-tool/database:seed-books",
-    "db:migrate:up": "nx run @book-library-tool/database:migrate:up",
+    "db:migrate": "nx run @book-library-tool/database:migrate:up",
     "db:migrate:down": "nx run @book-library-tool/database:migrate:down",
-    "api:docs": "nx run @book-library-tool/api:open-docs",
     "clear": "find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' + && find . -name \"dist\" -type d -prune -exec rm -rf '{}' +",
     "user:create": "nx run @book-library-tool/auth:generate-user",
     "generate:api": "nx run @book-library-tool/api:build",
     "generate:sdk": "nx run @book-library-tool/sdk:sdk-gen",
-    "git-hooks-prepare": "husky install"
+    "git-hooks-prepare": "husky install",
+    "open:docs": "nx run @book-library-tool/api:open-docs",
+    "open:queue": "open http://localhost:15672"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",

@@ -6,16 +6,19 @@ import { errorMiddleware, logger } from '@book-library-tool/shared'
 
 import { MongoDatabaseService } from '@book-library-tool/database'
 import { ReservationRepository } from '@persistence/mongo/ReservationRepository.js'
-import { SimpleEventBus } from '@book-library-tool/event-store'
+import { RabbitMQEventBus } from '@book-library-tool/event-store'
 
 import { ReservationService } from '@use_cases/ReservationService.js'
 
 import { ReservationController } from '@controllers/reservationController.js'
-import createRouter from './routes/index.js'
+import { createReservationRouter } from './routes/reservations/reservationRoute.js'
 
 async function startServer() {
   // Initialize the infrastructure service (database connection)
-  const databaseService = new MongoDatabaseService('books-dev')
+  const databaseService = new MongoDatabaseService(
+    process.env.MONGO_DB_NAME_LIBRARY || 'library',
+  )
+
   try {
     await databaseService.connect()
     logger.info('Successfully connected to MongoDB.')
@@ -28,16 +31,7 @@ async function startServer() {
   const reservationRepository = new ReservationRepository(databaseService)
 
   // Create the Event Bus (helps publish domain events or integrate event sourcing).
-  const eventBus = new SimpleEventBus()
-
-  // Wire up the application service (use-case).
-  const reservationService = new ReservationService(
-    reservationRepository,
-    eventBus,
-  )
-
-  // Create the API controller by injecting the application service.
-  const reservationController = new ReservationController(reservationService)
+  const eventBus = new RabbitMQEventBus()
 
   // Initialize Express app and configure middleware.
   const app = express()
@@ -51,9 +45,22 @@ async function startServer() {
     // Apply token-based authentication.
     .use(apiTokenAuth({ secret: process.env.JWT_SECRET || 'default-secret' }))
     // Mount the routes that delegate to the reservation controller.
-    .use(createRouter(reservationController))
     // Global error-handling middleware.
     .use(errorMiddleware)
+
+  // Create the API controller by injecting the application service.
+  app.use('/reservations', (req, res, next) => {
+    // Lazy initialization of book service and controller
+    // Wire up the application service (use-case).
+    const reservationService = new ReservationService(
+      reservationRepository,
+      eventBus,
+    )
+    const reservationController = new ReservationController(reservationService)
+
+    // Pass request to book router
+    return createReservationRouter(reservationController)(req, res, next)
+  })
 
   // Start the HTTP server on the specified port.
   const SERVER_PORT = process.env.RESERVATIONS_SERVICE_PORT || 3002

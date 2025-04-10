@@ -29,7 +29,9 @@ const newUser: schemas.UserDTO = {
 
 async function createUserAndGenerateToken() {
   // Instantiate the new MongoDatabaseService
-  const dbService = new MongoDatabaseService('books-dev')
+  const dbService = new MongoDatabaseService(
+    process.env.MONGO_DB_NAME_LIBRARY || 'library',
+  )
 
   // Connect to the database
   await dbService.connect()

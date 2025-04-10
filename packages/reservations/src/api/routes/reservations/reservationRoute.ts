@@ -8,7 +8,9 @@ import { schemas } from '@book-library-tool/api'
 import { paginationMiddleware } from '@book-library-tool/sdk'
 import { ReservationController } from '@controllers/reservationController.js'
 
-export default function (reservationController: ReservationController) {
+export function createReservationRouter(
+  reservationController: ReservationController,
+) {
   const router = Router()
 
   router.post(

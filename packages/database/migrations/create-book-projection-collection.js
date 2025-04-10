@@ -1,13 +1,13 @@
-const tableName = 'book_projections'
+const tableName = 'book_projection'
 
 /**
- * Create a book_projections collection with appropriate indexes for efficient querying
+ * Create a book_projection collection with appropriate indexes for efficient querying
  */
 export async function up(db) {
   const client = db.client
-  const targetDb = client.db('event')
+  const targetDb = client.db(process.env.MONGO_DB_NAME_EVENT || 'events')
 
-  // Check if the book_projections collection already exists
+  // Check if the book_projection collection already exists
   const collections = await targetDb.collections()
   const exists = collections.some((c) => c.collectionName === tableName)
 
@@ -47,7 +47,7 @@ export async function up(db) {
  */
 export async function down(db) {
   const client = db.client
-  const targetDb = client.db('event')
+  const targetDb = client.db(process.env.MONGO_DB_NAME_EVENT || 'events')
 
   // Drop all the indexes
   await targetDb.collection(tableName).dropIndex({ id: 1 })

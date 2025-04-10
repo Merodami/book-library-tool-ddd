@@ -1,22 +1,25 @@
-import { Book } from '@entities/Book.js'
 import { Errors } from '@book-library-tool/shared'
-import type { EventBus } from '@book-library-tool/event-store'
-import type { IBookRepository } from '@repositories/IBookRepository.js'
-import { UpdateBookCommand } from '@commands/UpdateBookCommand.js'
+import { Book } from '@entities/Book.js'
+import { IBookRepository } from '@repositories/IBookRepository.js'
+import { EventBus } from '@book-library-tool/event-store'
+import { UpdateBookCommand } from './UpdateBookCommand.js'
 
-/**
- * UpdateBookHandler
- * 1. Loads the existing book aggregate by ISBN
- * 2. Calls Book.update() to get the updated aggregate + BookUpdated event
- * 3. Persists the new event with optimistic‑concurrency
- * 4. Publishes the event on the EventBus
- */
 export class UpdateBookHandler {
   constructor(
     private readonly repository: IBookRepository,
     private readonly eventBus: EventBus,
   ) {}
 
+  /**
+   * Updates a Book by its unique identifier (ISBN) using the provided patch.
+   * - Loads the existing Book aggregate by ISBN.
+   * - Calls the update() method to get the updated aggregate and event.
+   * - Persists the new event with optimistic concurrency.
+   * - Publishes the event on the EventBus.
+   *
+   * @param command - The Book's unique identifier.
+   * @returns The updated Book aggregate.
+   */
   async execute(command: UpdateBookCommand): Promise<void> {
     const events = await this.repository.getEventsForAggregate(command.isbn)
 
@@ -45,5 +48,7 @@ export class UpdateBookHandler {
     )
 
     await this.eventBus.publish(event)
+
+    currentBook.clearDomainEvents()
   }
 }

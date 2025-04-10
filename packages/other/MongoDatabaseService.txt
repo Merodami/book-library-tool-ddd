@@ -48,7 +48,7 @@ export class MongoDatabaseService implements IDatabaseService {
 
     await this.client.connect()
 
-    const dbName = process.env.MONGO_DB_NAME || 'books-dev'
+    const dbName = process.env.MONGO_DB_NAME_LIBRARY || 'books-dev'
 
     this.db = this.client.db(dbName)
 
