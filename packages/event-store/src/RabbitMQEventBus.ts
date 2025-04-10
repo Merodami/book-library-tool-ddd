@@ -7,35 +7,34 @@ import type { EventBus } from './EventBus.js'
  * RabbitMQEventBus implements the EventBus interface using RabbitMQ.
  */
 export class RabbitMQEventBus implements EventBus {
-  private connection!: any // Use 'any' to bypass TypeScript strict typing
-  private channel!: any // Use 'any' to bypass TypeScript strict typing
-  private readonly exchangeName = 'events'
+  private connection!: any // Bypass TypeScript strict typing for simplicity.
+  private channel!: any
+  // Use environment variable for the exchange name; this is where events are published.
+  private readonly exchangeName = process.env.EVENTS_EXCHANGE || 'events'
   private queueName!: string
-  // Local registry for event handlers
+  // Local registry for event handlers.
   private handlers: Map<string, Array<(event: DomainEvent) => Promise<void>>> =
     new Map()
-  // Pending subscriptions before initialization
+  // Pending subscriptions before initialization.
   private pendingSubscriptions: Array<{
     eventType: string
     handler: (event: DomainEvent) => Promise<void>
   }> = []
-  // Flag to track initialization state
+  // Flags to track initialization.
   private initialized = false
-  // Flag to track initialization in progress
   private initializing = false
 
   constructor(private rabbitMQUrl: string = getRabbitMQUrl()) {}
 
   /**
-   * Initializes the RabbitMQ connection, channel, exchange, and queue.
+   * Initializes the RabbitMQ connection, channel, exchange, and queue without consuming.
    */
   async init(): Promise<void> {
     if (this.initialized) {
-      return // Already initialized
+      return
     }
 
     if (this.initializing) {
-      // Wait for initialization to complete
       while (this.initializing) {
         await new Promise((resolve) => setTimeout(resolve, 100))
       }
@@ -45,45 +44,60 @@ export class RabbitMQEventBus implements EventBus {
     this.initializing = true
 
     try {
-      // Connect to RabbitMQ server
+      // Connect to RabbitMQ
       this.connection = await amqplib.connect(this.rabbitMQUrl)
       this.channel = await this.connection.createChannel()
 
-      // Declare a durable topic exchange named 'events'
+      // Declare exchange
       await this.channel.assertExchange(this.exchangeName, 'topic', {
         durable: true,
       })
 
-      // Declare an exclusive queue (or change to a named persistent queue for production)
-      const { queue } = await this.channel.assertQueue('', {
-        exclusive: false,
+      // Declare queue
+      const queueName = process.env.EVENTS_QUEUE || 'books_service_queue'
+
+      const { queue } = await this.channel.assertQueue(queueName, {
         durable: true,
+        exclusive: false,
+        autoDelete: false,
       })
+
       this.queueName = queue
 
-      // Start consuming messages on the queue
-      await this.channel.consume(
-        this.queueName,
-        this.handleMessage.bind(this),
-        {
-          noAck: false,
-        },
-      )
-
-      // Process any pending subscriptions
+      // Process pending subscriptions
       for (const { eventType, handler } of this.pendingSubscriptions) {
         this.subscribeNow(eventType, handler)
       }
-      this.pendingSubscriptions = []
 
+      this.pendingSubscriptions = []
       this.initialized = true
-      console.log(`RabbitMQEventBus initialized. Queue: ${this.queueName}`)
+
+      console.log(
+        `RabbitMQEventBus initialized. Exchange: ${this.exchangeName}, Queue: ${this.queueName}`,
+      )
     } catch (error) {
       console.error('Failed to initialize RabbitMQEventBus:', error)
       throw error
     } finally {
       this.initializing = false
     }
+  }
+
+  /**
+   * Start consuming messages from the queue.
+   * This should be called explicitly when the application is ready to process messages.
+   */
+  async startConsuming(): Promise<void> {
+    if (!this.initialized) {
+      await this.init()
+    }
+
+    // Start consuming messages
+    await this.channel.consume(this.queueName, this.handleMessage.bind(this), {
+      noAck: false,
+    })
+
+    console.log(`Started consuming messages from queue: ${this.queueName}`)
   }
 
   /**
@@ -97,7 +111,7 @@ export class RabbitMQEventBus implements EventBus {
       const event: DomainEvent = JSON.parse(content)
       const routingKey = msg.fields.routingKey
 
-      // Retrieve both specific handlers and global handlers (registered with '*')
+      // Retrieve both specific handlers and global handlers.
       const specificHandlers = this.handlers.get(routingKey) || []
       const globalHandlers = this.handlers.get('*') || []
       const allHandlers = [...specificHandlers, ...globalHandlers]
@@ -106,20 +120,19 @@ export class RabbitMQEventBus implements EventBus {
         await handler(event)
       }
 
-      // Acknowledge the message as successfully processed
+      // Acknowledge message processing.
       this.channel.ack(msg)
     } catch (error) {
       console.error('Error handling message:', error)
-      // Negatively acknowledge the message so it can be retried or dead-lettered
+      // Nack the message so it can be retried or sent to dead-letter.
       this.channel.nack(msg, false, false)
     }
   }
 
   /**
-   * Publishes a domain event using the event's eventType as routing key.
+   * Publishes a domain event using the event's eventType as the routing key.
    */
   async publish(event: DomainEvent): Promise<void> {
-    // Ensure initialization
     if (!this.initialized) {
       await this.init()
     }
@@ -127,24 +140,21 @@ export class RabbitMQEventBus implements EventBus {
     const routingKey = event.eventType
     const messageBuffer = Buffer.from(JSON.stringify(event))
     this.channel.publish(this.exchangeName, routingKey, messageBuffer, {
-      persistent: true,
+      persistent: true, // Ensure the message is stored on disk.
     })
     console.log(`Published event [${routingKey}]: ${messageBuffer.toString()}`)
   }
 
   /**
    * Registers a handler for a specific event type.
-   * If not initialized, queues the subscription to be processed after initialization.
+   * Queues the subscription if the bus is not initialized.
    */
   subscribe(
     eventType: string,
     handler: (event: DomainEvent) => Promise<void>,
   ): void {
     if (!this.initialized) {
-      // Queue the subscription for later
       this.pendingSubscriptions.push({ eventType, handler })
-
-      // Try to initialize if not already in progress
       if (!this.initializing) {
         this.init().catch((error) => {
           console.error('Failed to initialize during subscribe:', error)
@@ -157,24 +167,22 @@ export class RabbitMQEventBus implements EventBus {
   }
 
   /**
-   * Internal method to subscribe when channel is ready
+   * Internal method to subscribe when the channel is ready.
    */
   private subscribeNow(
     eventType: string,
     handler: (event: DomainEvent) => Promise<void>,
   ): void {
-    // First time a handler is added for an event type, bind the queue
     if (!this.handlers.has(eventType)) {
       this.handlers.set(eventType, [])
-      // Use '#' as binding key for global subscriptions
       const bindingKey = eventType === '*' ? '#' : eventType
       this.channel
         .bindQueue(this.queueName, this.exchangeName, bindingKey)
-        .then(() =>
+        .then(() => {
           console.log(
             `Bound queue ${this.queueName} with binding key '${bindingKey}'`,
-          ),
-        )
+          )
+        })
         .catch((error: Error) => console.error('Error binding queue:', error))
     }
     this.handlers.get(eventType)!.push(handler)
@@ -195,7 +203,6 @@ export class RabbitMQEventBus implements EventBus {
     handler: (event: DomainEvent) => Promise<void>,
   ): boolean {
     if (!this.initialized) {
-      // Remove from pending subscriptions if found
       const index = this.pendingSubscriptions.findIndex(
         (sub) => sub.eventType === eventType && sub.handler === handler,
       )
@@ -213,7 +220,6 @@ export class RabbitMQEventBus implements EventBus {
     if (index === -1) return false
     handlers.splice(index, 1)
 
-    // Optionally, if there are no more handlers for the event type, unbind the queue
     if (handlers.length === 0) {
       const bindingKey = eventType === '*' ? '#' : eventType
       this.channel
@@ -228,7 +234,7 @@ export class RabbitMQEventBus implements EventBus {
    */
   async shutdown(): Promise<void> {
     if (!this.initialized) {
-      return // Nothing to shutdown
+      return
     }
 
     try {
@@ -253,16 +259,12 @@ export class RabbitMQEventBus implements EventBus {
 
 /**
  * Retrieves the RabbitMQ URL from environment variables or uses a default value.
- * @returns {string} The RabbitMQ URL.
  */
 export function getRabbitMQUrl(): string {
-  // Retrieve RabbitMQ URL from environment variables or use a default value
   const rabbitMQUsername = process.env.RABBIT_MQ_USERNAME || 'library'
   const rabbitMQPassword = process.env.RABBIT_MQ_PASSWORD || 'library'
   const rabbitMQHost = process.env.RABBIT_MQ_URL || 'localhost'
   const rabbitMQPort = process.env.RABBIT_MQ_PORT || '5672'
 
-  const rabbitMQUrl = `amqp://${rabbitMQUsername}:${rabbitMQPassword}@${rabbitMQHost}:${rabbitMQPort}`
-
-  return rabbitMQUrl
+  return `amqp://${rabbitMQUsername}:${rabbitMQPassword}@${rabbitMQHost}:${rabbitMQPort}`
 }

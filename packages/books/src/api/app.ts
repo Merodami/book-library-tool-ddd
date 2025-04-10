@@ -30,6 +30,7 @@ async function startServer() {
   // Shared Infrastructure:
   // Create an instance of the EventBus (e.g., RabbitMQ)
   const eventBus = new RabbitMQEventBus()
+  await eventBus.init()
 
   // Instantiate the repository used for command (write) operations
   const bookRepository = new BookRepository(databaseService)
@@ -40,7 +41,9 @@ async function startServer() {
   // Set up event subscriptions to update read models (via the projection handler)
   const bookProjectionHandler = new BookProjectionHandler(databaseService)
 
-  setupEventSubscriptions(eventBus, bookProjectionHandler)
+  await setupEventSubscriptions(eventBus, bookProjectionHandler)
+
+  await eventBus.startConsuming()
 
   logger.info('Event subscriptions registered successfully')
 
