@@ -28,7 +28,9 @@ async function startServer() {
 
   // Shared Infrastructure:
   // Create an instance of the EventBus (e.g., RabbitMQ)
-  const eventBus = new RabbitMQEventBus()
+  const eventBus = new RabbitMQEventBus(
+    process.env.RESERVATION_SERVICE_NAME || 'reservation_service',
+  )
   await eventBus.init()
 
   // Instantiate the repository used for command (write) operations

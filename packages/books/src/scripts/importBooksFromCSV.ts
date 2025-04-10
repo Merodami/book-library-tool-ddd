@@ -1,5 +1,10 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { RabbitMQEventBus } from '@book-library-tool/event-store'
+import {
+  BOOK_CREATED,
+  BOOK_DELETED,
+  BOOK_UPDATED,
+  RabbitMQEventBus,
+} from '@book-library-tool/event-store'
 import { Book } from '@book-library-tool/sdk'
 import fastcsv from 'fast-csv'
 import fs from 'fs'
@@ -146,12 +151,18 @@ async function getBookService(
   await dbService.connect()
 
   const bookRepository = new BookRepository(dbService)
-  const eventBus = new RabbitMQEventBus()
+  const eventBus = new RabbitMQEventBus(
+    process.env.BOOK_SERVICE_NAME || 'book_service',
+  )
 
   // Initialize the event bus if needed.
   if (typeof eventBus.init === 'function') {
     await eventBus.init()
   }
+
+  // Bind the event types to the event bus.
+  // This is necessary to ensure that the event bus can handle the events correctly.
+  await eventBus.bindEventTypes([BOOK_CREATED, BOOK_UPDATED, BOOK_DELETED])
 
   // Create and return the BookService instance.
   return new CreateBookHandler(bookRepository, eventBus)

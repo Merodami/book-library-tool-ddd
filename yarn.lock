@@ -233,6 +233,7 @@ __metadata:
     amqplib: "npm:^0.10.7"
     depcheck: "npm:^1.4.7"
     typescript: "npm:^5.8.3"
+    uuid: "npm:^11.1.0"
   languageName: unknown
   linkType: soft
 
