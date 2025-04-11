@@ -63,16 +63,4 @@ export abstract class AggregateRoot {
 
     return this
   }
-
-  /**
-   * (Optional) Creates a snapshot of the aggregate's state. This can be used to
-   * speed up rehydration if the event history grows large.
-   */
-  public createSnapshot(): object {
-    return {
-      id: this.id,
-      version: this.version,
-      // Additional aggregate-specific state should be added here.
-    }
-  }
 }

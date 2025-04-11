@@ -2,6 +2,7 @@ import { makeValidator, schemas } from '@book-library-tool/api'
 import {
   AggregateRoot,
   DomainEvent,
+  RESERVATION_BOOK_VALIDATION,
   RESERVATION_CANCELLED,
   RESERVATION_CONFIRMED,
   RESERVATION_CREATED,
@@ -203,6 +204,8 @@ export class Reservation extends AggregateRoot {
       case RESERVATION_RETURNED:
       case RESERVATION_CANCELLED:
       case RESERVATION_CONFIRMED:
+      case RESERVATION_PENDING_PAYMENT:
+      case RESERVATION_BOOK_VALIDATION:
       case RESERVATION_REJECTED: {
         // All state transitions update status and timestamp
         this.status =
@@ -229,6 +232,10 @@ export class Reservation extends AggregateRoot {
         return RESERVATION_STATUS.CONFIRMED
       case RESERVATION_REJECTED:
         return RESERVATION_STATUS.REJECTED
+      case RESERVATION_PENDING_PAYMENT:
+        return RESERVATION_STATUS.PENDING_PAYMENT
+      case RESERVATION_BOOK_VALIDATION:
+        return RESERVATION_STATUS.PENDING_PAYMENT
       default:
         return this.status
     }
@@ -289,6 +296,7 @@ export class Reservation extends AggregateRoot {
     }
 
     updatedReservation.addDomainEvent(event)
+
     return { reservation: updatedReservation, event }
   }
 
@@ -318,7 +326,7 @@ export class Reservation extends AggregateRoot {
         RESERVATION_STATUS.BORROWED,
         RESERVATION_STATUS.LATE,
       ],
-      'returned',
+      RESERVATION_STATUS.RETURNED,
     )
 
     return this.createStateTransition(
@@ -340,7 +348,7 @@ export class Reservation extends AggregateRoot {
         RESERVATION_STATUS.BORROWED,
         RESERVATION_STATUS.LATE,
       ],
-      'cancelled',
+      RESERVATION_STATUS.CANCELLED,
     )
 
     return this.createStateTransition(
@@ -354,14 +362,41 @@ export class Reservation extends AggregateRoot {
    * Domain method to set pending payment a reservation after book validation.
    */
   public setPaymentPending(): { reservation: Reservation; event: DomainEvent } {
+    logger.debug(`Setting reservation ${this.reservationId} to pending payment`)
     this.validateStateTransition(
-      [RESERVATION_STATUS.RESERVED],
+      [RESERVATION_STATUS.CREATED],
       RESERVATION_STATUS.PENDING_PAYMENT,
     )
 
     return this.createStateTransition(
       RESERVATION_STATUS.PENDING_PAYMENT,
       RESERVATION_PENDING_PAYMENT,
+    )
+  }
+  /**
+   * Domain method to confirm a reservation after successful payment.
+   */
+  public confirm(
+    paymentReference: string,
+    paymentMethod: string,
+    amount: number,
+  ): { reservation: Reservation; event: DomainEvent } {
+    logger.debug(`Confirming reservation ${this.reservationId} after payment`)
+
+    this.validateStateTransition(
+      [RESERVATION_STATUS.PENDING_PAYMENT],
+      RESERVATION_STATUS.CONFIRMED,
+    )
+
+    return this.createStateTransition(
+      RESERVATION_STATUS.CONFIRMED,
+      RESERVATION_CONFIRMED,
+      {
+        paymentReference,
+        paymentMethod,
+        amount,
+        paymentDate: new Date().toISOString(),
+      },
     )
   }
 
@@ -372,11 +407,15 @@ export class Reservation extends AggregateRoot {
     reservation: Reservation
     event: DomainEvent
   } {
+    logger.debug(
+      `Rejecting reservation ${this.reservationId} with reason: ${reason}`,
+    )
     this.validateStateTransition(
       [
         RESERVATION_STATUS.CONFIRMED,
         RESERVATION_STATUS.RESERVED,
         RESERVATION_STATUS.PENDING_PAYMENT,
+        RESERVATION_STATUS.RESERVATION_BOOK_LIMIT_REACH,
       ],
       RESERVATION_STATUS.REJECTED,
     )

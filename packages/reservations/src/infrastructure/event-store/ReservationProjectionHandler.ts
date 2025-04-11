@@ -28,7 +28,7 @@ export class ReservationProjectionHandler {
       id: event.aggregateId,
       userId: event.payload.userId,
       isbn: event.payload.isbn,
-      status: RESERVATION_STATUS.PENDING_PAYMENT,
+      status: RESERVATION_STATUS.CREATED,
       createdAt: createdDate,
       dueDate: dueDate,
       returnedAt: null,
@@ -188,7 +188,7 @@ export class ReservationProjectionHandler {
       {
         $set: {
           status: isValid
-            ? RESERVATION_STATUS.CONFIRMED
+            ? RESERVATION_STATUS.PENDING_PAYMENT
             : RESERVATION_STATUS.REJECTED,
           statusReason: isValid ? null : reason,
           updatedAt: new Date(),

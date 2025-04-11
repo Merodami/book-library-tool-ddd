@@ -14,14 +14,13 @@ import {
 import { logger } from '@book-library-tool/shared'
 import { ValidateReservationHandler } from '@commands/ValidateReservationHandler.js'
 import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
-import { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
-import { IReservationRepository } from '@repositories/IReservationRepository.js'
+import { PaymentHandler } from '@use_cases/commands/PaymentHandler.js'
 
 export function SetupEventSubscriptions(
   eventBus: EventBus,
   projectionHandler: ReservationProjectionHandler,
-  reservationRepository: IReservationRepository,
-  reservationProjectionRepository: IReservationProjectionRepository,
+  validateReservationHandler: ValidateReservationHandler,
+  paymentHandler: PaymentHandler,
 ): void {
   // Internal domain events for reservations
   eventBus.subscribe(RESERVATION_CREATED, async (event) => {
@@ -64,15 +63,12 @@ export function SetupEventSubscriptions(
     }
   })
 
-  const validateReservationHandler = new ValidateReservationHandler(
-    reservationRepository,
-    reservationProjectionRepository,
-    projectionHandler,
-    eventBus,
-  )
-
   eventBus.subscribe(BOOK_VALIDATION_RESULT, async (event) => {
     try {
+      logger.debug(
+        `Processing BookValidationResult event for reservation ${event.payload.reservationId}`,
+      )
+
       // Also update the write model (reservation aggregate)
       await validateReservationHandler.execute(event, {
         reservationId: event.payload.reservationId,
@@ -106,18 +102,17 @@ export function SetupEventSubscriptions(
 
   eventBus.subscribe(WALLET_PAYMENT_DECLINED, async (event) => {
     try {
-      console.log('WATT')
-      await projectionHandler.handlePaymentDeclined(event)
+      await paymentHandler.handlePaymentDeclined(event)
     } catch (error) {
-      logger.error(`Error handling BookDeleted event: ${error}`)
+      logger.error(`Error handling payment declined event: ${error}`, error)
     }
   })
 
   eventBus.subscribe(WALLET_PAYMENT_SUCCESS, async (event) => {
     try {
-      await projectionHandler.handlePaymentSuccess(event)
+      await paymentHandler.handlePaymentSuccess(event)
     } catch (error) {
-      logger.error(`Error handling PaymentReceived event: ${error}`)
+      logger.error(`Error handling payment success event: ${error}`, error)
     }
   })
 

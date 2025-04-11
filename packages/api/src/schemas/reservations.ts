@@ -99,6 +99,7 @@ export const ReservationSchema = Type.Object(
     dueDate: Type.String({ format: 'date-time' }),
     status: Type.String({
       enum: [
+        RESERVATION_STATUS.CREATED,
         RESERVATION_STATUS.RESERVED,
         RESERVATION_STATUS.BORROWED,
         RESERVATION_STATUS.RETURNED,

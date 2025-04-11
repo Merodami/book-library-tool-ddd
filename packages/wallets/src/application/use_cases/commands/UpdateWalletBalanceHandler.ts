@@ -1,6 +1,7 @@
 import { WalletDTO } from '@book-library-tool/api/src/schemas/wallets.js'
 import { EventBus } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
+import { UpdateWalletBalanceCommand } from '@commands/UpdateWalletBalanceCommand.js'
 import { Wallet } from '@entities/Wallet.js'
 import { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepository.js'
 import { IWalletRepository } from '@repositories/IWalletRepository.js'
@@ -18,10 +19,7 @@ export class UpdateWalletBalanceHandler {
   /**
    * Updates a wallet's balance or creates a new wallet
    */
-  async execute(command: {
-    userId: string
-    amount: number
-  }): Promise<WalletDTO> {
+  async execute(command: UpdateWalletBalanceCommand): Promise<WalletDTO> {
     try {
       logger.info(
         `Updating wallet balance for user ${command.userId} with amount ${command.amount}`,

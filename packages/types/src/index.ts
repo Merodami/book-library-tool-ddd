@@ -1,4 +1,5 @@
 export enum RESERVATION_STATUS {
+  CREATED = 'created',
   RESERVED = 'reserved',
   BORROWED = 'borrowed',
   RETURNED = 'returned',
@@ -8,6 +9,7 @@ export enum RESERVATION_STATUS {
   PENDING_PAYMENT = 'pending_payment',
   CONFIRMED = 'confirmed',
   REJECTED = 'rejected',
+  RESERVATION_BOOK_LIMIT_REACH = 'reservation_book_limit_reach',
 }
 
 export type PaginationMetadata = {

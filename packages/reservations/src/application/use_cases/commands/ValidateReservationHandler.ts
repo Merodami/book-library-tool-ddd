@@ -140,7 +140,7 @@ export class ValidateReservationHandler {
 
     const maxReservations = Number(process.env.BOOK_MAX_RESERVATION_USER) || 3
 
-    if (activeReservationsCount >= maxReservations) {
+    if (activeReservationsCount > maxReservations) {
       return reservation.reject(RESERVATION_BOOK_LIMIT_REACH)
     }
 

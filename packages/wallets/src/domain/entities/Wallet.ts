@@ -39,7 +39,11 @@ export class Wallet extends AggregateRoot {
   /**
    * Factory method to create a new wallet
    */
-  public static create(props: { userId: string; initialBalance?: number }): {
+  public static create(props: {
+    userId: string
+    initialBalance?: number
+    existingWalletId?: string
+  }): {
     wallet: Wallet
     event: DomainEvent
   } {
@@ -54,7 +58,7 @@ export class Wallet extends AggregateRoot {
     )
 
     const event: DomainEvent = {
-      aggregateId: wallet.id,
+      aggregateId: props.existingWalletId ? props.existingWalletId : wallet.id,
       eventType: WALLET_CREATED,
       payload: {
         userId: props.userId,

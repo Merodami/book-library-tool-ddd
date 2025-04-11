@@ -72,24 +72,34 @@ export class RabbitMQEventBus implements EventBus {
       // Register the return handler once during initialization
       this.channel.on('return', this.returnHandler)
 
-      // Declare exchanges
-      await this.channel.assertExchange(this.exchangeName, 'topic', {
-        durable: true,
-        autoDelete: false,
-      })
-
+      // Set up the dead letter exchange for failed message processing
       const deadLetterExchange = `${this.exchangeName}.deadletter`
       await this.channel.assertExchange(deadLetterExchange, 'topic', {
         durable: true,
         autoDelete: false,
       })
 
+      // Set up the alternate exchange for unroutable messages
+      const alternateExchange = `${this.exchangeName}.alternate`
+      await this.channel.assertExchange(alternateExchange, 'fanout', {
+        durable: true,
+        autoDelete: false,
+      })
+
+      // Declare main exchange with alternate exchange for handling unroutable messages
+      await this.channel.assertExchange(this.exchangeName, 'topic', {
+        durable: true,
+        autoDelete: false,
+        arguments: {
+          'alternate-exchange': alternateExchange,
+        },
+      })
+
       // Generate a service-specific queue name
       const environment = process.env.ENVIRONMENT || 'development'
       const queueName = `${this.serviceName}.${environment}.queue`
 
-      // ***** IMPORTANT CHANGE: Don't try to check the queue *****
-      // Instead, directly create the queue with all needed parameters
+      // Create the main queue with dead letter configuration
       const { queue } = await this.channel.assertQueue(queueName, {
         durable: true,
         exclusive: false,
@@ -104,7 +114,7 @@ export class RabbitMQEventBus implements EventBus {
 
       this.queueName = queue
 
-      // Create and bind dead letter queue
+      // Create and bind dead letter queue for failed processing
       const dlqName = `${this.queueName}.deadletter`
       await this.channel.assertQueue(dlqName, {
         durable: true,
@@ -113,6 +123,18 @@ export class RabbitMQEventBus implements EventBus {
       })
 
       await this.channel.bindQueue(dlqName, deadLetterExchange, '#')
+
+      // Create and bind the unroutable messages queue for when services are down
+      const unroutableQueueName = `${this.serviceName}.unroutable`
+      await this.channel.assertQueue(unroutableQueueName, {
+        durable: true,
+        exclusive: false,
+        autoDelete: false,
+      })
+
+      await this.channel.bindQueue(unroutableQueueName, alternateExchange, '')
+
+      logger.info(`Created unroutable messages queue: ${unroutableQueueName}`)
 
       // Process pending subscriptions
       for (const { eventType, handler } of this.pendingSubscriptions) {
@@ -231,6 +253,113 @@ export class RabbitMQEventBus implements EventBus {
     )
 
     logger.info(`Started consuming messages from queue: ${this.queueName}`)
+
+    // Start consuming from the unroutable messages queue to reprocess them
+    await this.consumeUnroutableMessages()
+  }
+
+  private consumeUnroutableMessages(): void {
+    const unroutableQueueName = `${this.serviceName}.unroutable`
+    let processingInterval = 3000 // Start with 3 seconds
+    let consecutiveEmpty = 0
+    let processing = false
+
+    const processUnroutable = async () => {
+      // Prevent concurrent processing
+      if (processing) return
+
+      processing = true
+      let processedCount = 0
+
+      try {
+        // Process up to 10 messages per batch
+        for (let i = 0; i < 10; i++) {
+          const msg = await this.channel.get(unroutableQueueName, {
+            noAck: false,
+          })
+
+          if (!msg) {
+            break
+          }
+
+          // Process the message
+          try {
+            const content = msg.content.toString()
+            const event: DomainEvent = JSON.parse(content)
+            const routingKey = event.eventType
+
+            // Attempt to republish
+            this.channel.publish(this.exchangeName, routingKey, msg.content, {
+              ...msg.properties,
+              mandatory: true,
+            })
+
+            this.channel.ack(msg)
+            processedCount++
+          } catch (error) {
+            logger.error(`Error republishing message: ${error.message}`)
+            this.channel.nack(msg, false, true)
+          }
+        }
+
+        // Adjust the interval based on results
+        if (processedCount > 0) {
+          // Messages found and processed, speed up
+          consecutiveEmpty = 0
+          processingInterval = 1000 // Check every second when active
+        } else {
+          // No messages, gradually slow down
+          consecutiveEmpty++
+          processingInterval = Math.min(
+            30000,
+            1000 * Math.pow(1.5, Math.min(5, consecutiveEmpty)),
+          )
+        }
+      } catch (error) {
+        logger.error(`Error in unroutable message processor: ${error.message}`)
+      } finally {
+        processing = false
+      }
+    }
+
+    // Schedule recurring checks with the current interval
+    const scheduleNext = () => {
+      setTimeout(() => {
+        processUnroutable().finally(() => {
+          scheduleNext()
+        })
+      }, processingInterval)
+    }
+
+    // Start the processor
+    scheduleNext()
+
+    logger.info(
+      `Started unroutable message processor with adaptive timing for queue: ${unroutableQueueName}`,
+    )
+  }
+
+  /**
+   * Checks if any bindings exist for a given routing key
+   */
+  private async checkBindingsExist(routingKey: string): Promise<boolean> {
+    try {
+      // First check local handlers (faster)
+      if (this.handlers.has(routingKey) || this.handlers.has('*')) {
+        return true
+      }
+
+      // If no local handlers, just assume bindings might exist elsewhere in the system
+      // and try republishing after some delay/retries
+
+      // Alternative: Query RabbitMQ Management API if you have access
+      // This would require setting up an HTTP client and authentication
+
+      return false
+    } catch (error) {
+      logger.error(`Error checking bindings: ${error}`)
+      return false
+    }
   }
 
   private setupConnectionHandlers(): void {
@@ -344,12 +473,6 @@ export class RabbitMQEventBus implements EventBus {
       messageBuffer,
       properties,
     )
-
-    // Set up a return handler
-    this.channel.on('return', (msg: any) => {
-      logger.error(`Message was returned from server: ${msg.fields.routingKey}`)
-      logger.error('This means no queue was bound to receive it!')
-    })
 
     // Implement back pressure if channel buffer is full
     if (!published) {
@@ -484,7 +607,46 @@ export class RabbitMQEventBus implements EventBus {
         content.substring(0, 200) + (content.length > 200 ? '...' : ''),
     })
 
-    // ToDo Store returned messages for later analysis or retry
+    // With alternate exchange, these should be automatically routed to the unroutable queue
+    // so we don't need to handle them manually here
+  }
+
+  /**
+   * Republishes messages from the unroutable queue
+   * Call this method when you want to retry sending unroutable messages
+   */
+  async republishUnroutableMessages(): Promise<void> {
+    const unroutableQueueName = `${this.serviceName}.unroutable`
+    let processed = 0
+
+    // Process up to 100 messages at a time
+    for (let i = 0; i < 100; i++) {
+      const msg = await this.channel.get(unroutableQueueName, { noAck: false })
+
+      if (!msg) {
+        break // No more messages
+      }
+
+      try {
+        const content = msg.content.toString()
+        const event: DomainEvent = JSON.parse(content)
+
+        // Try to republish to the main exchange
+        await this.publish(event)
+
+        // Acknowledge the message
+        this.channel.ack(msg)
+        processed++
+      } catch (error) {
+        logger.error(`Error republishing unroutable message: ${error}`)
+        // Nack and requeue for later
+        this.channel.nack(msg, false, true)
+      }
+    }
+
+    if (processed > 0) {
+      logger.info(`Republished ${processed} unroutable messages`)
+    }
   }
 
   /**

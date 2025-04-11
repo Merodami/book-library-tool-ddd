@@ -58,7 +58,7 @@ export class CreateReservationHandler {
       userId: command.userId.trim(),
       isbn: command.isbn.trim(),
       reservedAt: new Date().toISOString(),
-      status: RESERVATION_STATUS.RESERVED,
+      status: RESERVATION_STATUS.CREATED,
     })
 
     // Persist the new event with the expected aggregate version (0 for new aggregates)

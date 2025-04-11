@@ -231,12 +231,34 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@book-library-tool/event-store@workspace:packages/event-store"
   dependencies:
+    "@book-library-tool/database": "workspace:^"
     "@book-library-tool/shared": "workspace:^"
     "@types/amqplib": "npm:^0.10.7"
     amqplib: "npm:^0.10.7"
     depcheck: "npm:^1.4.7"
     typescript: "npm:^5.8.3"
     uuid: "npm:^11.1.0"
+  languageName: unknown
+  linkType: soft
+
+"@book-library-tool/orchestrator@workspace:packages/orchestrator":
+  version: 0.0.0-use.local
+  resolution: "@book-library-tool/orchestrator@workspace:packages/orchestrator"
+  dependencies:
+    "@book-library-tool/api": "workspace:^"
+    "@book-library-tool/auth": "workspace:^"
+    "@book-library-tool/database": "workspace:^"
+    "@book-library-tool/event-store": "workspace:^"
+    "@book-library-tool/sdk": "workspace:^"
+    "@book-library-tool/shared": "workspace:^"
+    "@book-library-tool/types": "workspace:^"
+    "@types/cors": "npm:2.8.17"
+    "@types/express": "npm:^5.0.1"
+    cors: "npm:^2.8.5"
+    depcheck: "npm:^1.4.7"
+    express: "npm:5.1.0"
+    http-graceful-shutdown: "npm:^3.1.14"
+    typescript: "npm:^5.8.3"
   languageName: unknown
   linkType: soft
 

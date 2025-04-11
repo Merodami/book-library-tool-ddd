@@ -1,10 +1,6 @@
 import { apiTokenAuth } from '@book-library-tool/auth'
 import { MongoDatabaseService } from '@book-library-tool/database'
-import {
-  RabbitMQEventBus,
-  WALLET_PAYMENT_DECLINED,
-  WALLET_PAYMENT_SUCCESS,
-} from '@book-library-tool/event-store'
+import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
 import { SetupEventSubscriptions } from '@event-store/SetupEventSubscriptions.js'
@@ -15,6 +11,9 @@ import { createReservationStatusRouter } from '@routes/reservations/createReserv
 import cors from 'cors'
 import express from 'express'
 import gracefulShutdown from 'http-graceful-shutdown'
+
+import { PaymentHandler } from '../application/use_cases/commands/PaymentHandler.js'
+import { ValidateReservationHandler } from '../application/use_cases/commands/ValidateReservationHandler.js'
 
 async function startServer() {
   // Initialize the infrastructure service (database connection)
@@ -35,6 +34,7 @@ async function startServer() {
   const eventBus = new RabbitMQEventBus(
     process.env.RESERVATION_SERVICE_NAME || 'reservation_service',
   )
+
   await eventBus.init()
 
   // Instantiate the repository used for command (write) operations
@@ -49,18 +49,26 @@ async function startServer() {
   const reservationProjectionHandler = new ReservationProjectionHandler(
     dbService,
   )
-  // Subscribe to wallet events for payment processing
-  await eventBus.bindEventTypes([
-    WALLET_PAYMENT_SUCCESS,
-    WALLET_PAYMENT_DECLINED,
-  ])
+
+  const validateReservationHandler = new ValidateReservationHandler(
+    reservationRepository,
+    reservationProjectionRepository,
+    reservationProjectionHandler,
+    eventBus,
+  )
+
+  const paymentHandler = new PaymentHandler(
+    reservationRepository,
+    reservationProjectionHandler,
+    eventBus,
+  )
 
   // Subscribe to internal domain events for reservations
   await SetupEventSubscriptions(
     eventBus,
     reservationProjectionHandler,
-    reservationRepository,
-    reservationProjectionRepository,
+    validateReservationHandler,
+    paymentHandler,
   )
 
   await eventBus.startConsuming()
