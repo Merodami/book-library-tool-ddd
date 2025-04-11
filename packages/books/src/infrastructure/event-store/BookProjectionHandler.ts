@@ -84,13 +84,14 @@ export class BookProjectionHandler {
 
     // Create the validation result event
     const validationResultEvent: DomainEvent = {
-      eventType: book ? BOOK_VALIDATION_RESULT : BOOK_VALIDATION_FAILED,
+      eventType: BOOK_VALIDATION_RESULT,
       aggregateId: isbn,
       payload: {
         reservationId: reservationId,
         isbn: isbn,
         isValid: !!book,
         reason: book ? null : ErrorCode.BOOK_NOT_FOUND,
+        retailPrice: book ? book.price : null,
       },
       timestamp: new Date(),
       version: 1,

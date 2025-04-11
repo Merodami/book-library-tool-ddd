@@ -25,7 +25,7 @@ This system is built using several modern architectural patterns to ensure scala
 
 ### CQRS (Command Query Responsibility Segregation)
 
-- **Command Handlers**: Dedicated handlers for state-changing operations (CreateBookHandler, ReturnReservationHandler)
+- **Command Handlers**: Dedicated handlers for state-changing operations (CreateBookHandler, BookReturnHandler)
 - **Query Handlers**: Separate handlers for read operations (GetBookHandler, GetReservationHistoryHandler)
 - **Separate Data Models**: Write models are event-sourced, read models are denormalized projections
 

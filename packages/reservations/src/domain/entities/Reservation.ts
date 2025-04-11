@@ -2,12 +2,14 @@ import { makeValidator, schemas } from '@book-library-tool/api'
 import {
   AggregateRoot,
   DomainEvent,
+  RESERVATION_BOOK_LIMIT_REACH,
   RESERVATION_BOOK_VALIDATION,
   RESERVATION_CANCELLED,
   RESERVATION_CONFIRMED,
   RESERVATION_CREATED,
   RESERVATION_PENDING_PAYMENT,
   RESERVATION_REJECTED,
+  RESERVATION_RETAIL_PRICE_UPDATED,
   RESERVATION_RETURNED,
 } from '@book-library-tool/event-store'
 import { Errors, logger } from '@book-library-tool/shared'
@@ -23,6 +25,7 @@ export interface ReservationProps {
   dueDate: Date
   status: RESERVATION_STATUS
   feeCharged: number
+  retailPrice: number
 }
 
 /**
@@ -38,6 +41,7 @@ export class Reservation extends AggregateRoot {
   public dueDate: Date
   public status: RESERVATION_STATUS
   public feeCharged: number
+  public retailPrice: number | null
   public createdAt: Date
   public updatedAt: Date
   public deletedAt?: Date
@@ -62,6 +66,7 @@ export class Reservation extends AggregateRoot {
     this.dueDate = props.dueDate
     this.status = props.status
     this.feeCharged = props.feeCharged
+    this.retailPrice = props.retailPrice || null
     this.createdAt = createdAt
     this.updatedAt = updatedAt
     this.deletedAt = deletedAt
@@ -112,6 +117,7 @@ export class Reservation extends AggregateRoot {
       isbn: props.isbn.trim(),
       reservedAt: props.reservedAt ? new Date(props.reservedAt) : now,
       dueDate,
+      retailPrice: Number(props.retailPrice),
       status:
         (props.status as RESERVATION_STATUS) || RESERVATION_STATUS.RESERVED,
       feeCharged,
@@ -201,6 +207,12 @@ export class Reservation extends AggregateRoot {
         this.updatedAt = new Date(event.timestamp)
         break
       }
+      case RESERVATION_RETAIL_PRICE_UPDATED: {
+        // Update retail price
+        this.retailPrice = Number(event.payload.newRetailPrice)
+        this.updatedAt = new Date(event.timestamp)
+        break
+      }
       case RESERVATION_RETURNED:
       case RESERVATION_CANCELLED:
       case RESERVATION_CONFIRMED:
@@ -229,13 +241,19 @@ export class Reservation extends AggregateRoot {
       case RESERVATION_CANCELLED:
         return RESERVATION_STATUS.CANCELLED
       case RESERVATION_CONFIRMED:
-        return RESERVATION_STATUS.CONFIRMED
+        return RESERVATION_STATUS.RESERVED
       case RESERVATION_REJECTED:
         return RESERVATION_STATUS.REJECTED
       case RESERVATION_PENDING_PAYMENT:
         return RESERVATION_STATUS.PENDING_PAYMENT
       case RESERVATION_BOOK_VALIDATION:
         return RESERVATION_STATUS.PENDING_PAYMENT
+      case RESERVATION_RETAIL_PRICE_UPDATED:
+        return RESERVATION_STATUS.RESERVED
+      case RESERVATION_BOOK_LIMIT_REACH:
+        return RESERVATION_STATUS.RESERVATION_BOOK_LIMIT_REACH
+      case RESERVATION_CREATED:
+        return RESERVATION_STATUS.CREATED
       default:
         return this.status
     }
@@ -260,7 +278,8 @@ export class Reservation extends AggregateRoot {
       reservedAt: this.reservedAt,
       dueDate: this.dueDate,
       status: newStatus,
-      feeCharged: this.feeCharged,
+      feeCharged: Number(this.feeCharged),
+      retailPrice: Number(this.retailPrice),
     }
 
     // Create a new reservation instance with updated properties
@@ -317,9 +336,51 @@ export class Reservation extends AggregateRoot {
   }
 
   /**
-   * Domain method to mark the reservation as returned.
+   * Calculates late return data including days late, fee per day,
+   * and whether the fee has reached the retail price.
+   * @returns Object with late return information
    */
-  public markAsReturned(): { reservation: Reservation; event: DomainEvent } {
+  private calculateLateReturnData(): {
+    userId: string
+    daysLate: number
+    retailPrice: number
+  } {
+    const now = new Date()
+    const dueDate = new Date(this.dueDate)
+
+    // Calculate days late, if not late, set to 0
+    let daysLate = 0
+
+    if (now > dueDate) {
+      daysLate = Math.floor(
+        (now.getTime() - dueDate.getTime()) / (24 * 60 * 60 * 1000),
+      )
+    }
+
+    // Ensure the retailPrice is a valid number
+    // If it's NaN, undefined, or otherwise invalid, default to 0
+    const retailPrice = Number(this.retailPrice)
+    const validRetailPrice = isNaN(retailPrice) ? 0 : retailPrice
+
+    logger.debug(
+      `Calculated late return data: days late=${daysLate}, retailPrice=${validRetailPrice}`,
+    )
+
+    return {
+      userId: this.userId,
+      daysLate,
+      retailPrice: validRetailPrice,
+    }
+  }
+
+  /**
+   * Domain method to mark the reservation as returned.
+   * Calculates late fees if applicable.
+   */
+  public markAsReturned(): {
+    reservation: Reservation
+    event: DomainEvent
+  } {
     this.validateStateTransition(
       [
         RESERVATION_STATUS.RESERVED,
@@ -329,9 +390,17 @@ export class Reservation extends AggregateRoot {
       RESERVATION_STATUS.RETURNED,
     )
 
+    // Calculate late return data
+    const lateReturnData = this.calculateLateReturnData()
+    const now = new Date()
+
     return this.createStateTransition(
       RESERVATION_STATUS.RETURNED,
       RESERVATION_RETURNED,
+      {
+        ...lateReturnData,
+        returnedAt: now.toISOString(),
+      },
     )
   }
 
@@ -359,10 +428,12 @@ export class Reservation extends AggregateRoot {
   }
 
   /**
-   * Domain method to set pending payment a reservation after book validation.
+   * Domain method to set retail price and payment pending in a single operation.
+   * This reduces complexity in handlers that need to perform both operations.
    */
   public setPaymentPending(): { reservation: Reservation; event: DomainEvent } {
     logger.debug(`Setting reservation ${this.reservationId} to pending payment`)
+
     this.validateStateTransition(
       [RESERVATION_STATUS.CREATED],
       RESERVATION_STATUS.PENDING_PAYMENT,
@@ -385,11 +456,11 @@ export class Reservation extends AggregateRoot {
 
     this.validateStateTransition(
       [RESERVATION_STATUS.PENDING_PAYMENT],
-      RESERVATION_STATUS.CONFIRMED,
+      RESERVATION_STATUS.RESERVED,
     )
 
     return this.createStateTransition(
-      RESERVATION_STATUS.CONFIRMED,
+      RESERVATION_STATUS.RESERVED,
       RESERVATION_CONFIRMED,
       {
         paymentReference,
@@ -410,10 +481,10 @@ export class Reservation extends AggregateRoot {
     logger.debug(
       `Rejecting reservation ${this.reservationId} with reason: ${reason}`,
     )
+
     this.validateStateTransition(
       [
-        RESERVATION_STATUS.CONFIRMED,
-        RESERVATION_STATUS.RESERVED,
+        RESERVATION_STATUS.CREATED,
         RESERVATION_STATUS.PENDING_PAYMENT,
         RESERVATION_STATUS.RESERVATION_BOOK_LIMIT_REACH,
       ],
@@ -425,5 +496,61 @@ export class Reservation extends AggregateRoot {
       RESERVATION_REJECTED,
       { reason },
     )
+  }
+
+  public setRetailPrice(retailPrice: number): {
+    reservation: Reservation
+    event: DomainEvent
+  } {
+    // Validation
+    if (retailPrice <= 0) {
+      throw new Errors.ApplicationError(
+        400,
+        'INVALID_RETAIL_PRICE',
+        'Retail price must be greater than zero.',
+      )
+    }
+
+    const now = new Date()
+    const newVersion = this.version + 1
+
+    // Create event
+    const event: DomainEvent = {
+      aggregateId: this.id,
+      eventType: RESERVATION_RETAIL_PRICE_UPDATED,
+      payload: {
+        reservationId: this.reservationId,
+        userId: this.userId,
+        previousRetailPrice: this.retailPrice,
+        newRetailPrice: retailPrice,
+        updatedAt: now.toISOString(),
+      },
+      timestamp: now,
+      version: newVersion,
+      schemaVersion: 1,
+    }
+
+    // Create new reservation with updated price - use the actual properties
+    const updatedProps: ReservationProps = {
+      userId: this.userId,
+      isbn: this.isbn,
+      reservedAt: this.reservedAt,
+      dueDate: this.dueDate,
+      status: this.status,
+      feeCharged: this.feeCharged,
+      retailPrice: retailPrice,
+    }
+
+    const updatedReservation = new Reservation(
+      this.id,
+      updatedProps,
+      this.createdAt,
+      now,
+      this.deletedAt,
+    )
+
+    updatedReservation.addDomainEvent(event)
+
+    return { reservation: updatedReservation, event }
   }
 }

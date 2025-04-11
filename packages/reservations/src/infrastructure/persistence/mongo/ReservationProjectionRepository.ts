@@ -126,7 +126,7 @@ export class ReservationProjectionRepository
       filter.status = {
         $in: [
           RESERVATION_STATUS.RESERVED,
-          RESERVATION_STATUS.CONFIRMED,
+          RESERVATION_STATUS.RESERVED,
           RESERVATION_STATUS.BORROWED,
         ],
       }
@@ -164,7 +164,7 @@ export class ReservationProjectionRepository
       .find({
         isbn,
         status: {
-          $in: [RESERVATION_STATUS.RESERVED, RESERVATION_STATUS.CONFIRMED],
+          $in: [RESERVATION_STATUS.RESERVED, RESERVATION_STATUS.RESERVED],
         },
         deletedAt: { $exists: false },
       })
@@ -215,7 +215,7 @@ export class ReservationProjectionRepository
       status: {
         $in: [
           RESERVATION_STATUS.RESERVED,
-          RESERVATION_STATUS.CONFIRMED,
+          RESERVATION_STATUS.RESERVED,
           RESERVATION_STATUS.BORROWED,
           RESERVATION_STATUS.PENDING_PAYMENT,
         ],

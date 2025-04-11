@@ -160,6 +160,7 @@ export class Wallet extends AggregateRoot {
     }
 
     updatedWallet.addDomainEvent(event)
+
     return { wallet: updatedWallet, event, bookPurchased }
   }
 

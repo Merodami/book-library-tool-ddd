@@ -1,6 +1,7 @@
 import {
   EventBus,
   RESERVATION_PENDING_PAYMENT,
+  RESERVATION_RETURNED,
   WALLET_BALANCE_UPDATED,
   WALLET_CREATED,
   WALLET_LATE_FEE_APPLIED,
@@ -8,6 +9,7 @@ import {
 import { logger } from '@book-library-tool/shared'
 import { ProcessWalletPaymentHandler } from '@commands/ProcessWalletPaymentHandler.js'
 import { WalletProjectionHandler } from '@event-store/WalletProjectionHandler.js'
+import { BookReturnHandler } from '@use_cases/commands/BookReturnHandler.js'
 
 /**
  * Sets up event subscriptions for wallet-related events
@@ -16,6 +18,7 @@ export function SetupEventSubscriptions(
   eventBus: EventBus,
   projectionHandler: WalletProjectionHandler,
   paymentHandler: ProcessWalletPaymentHandler,
+  bookReturnHandler: BookReturnHandler,
 ): void {
   // Subscribe to WALLET_CREATED events
   eventBus.subscribe(WALLET_CREATED, async (event) => {
@@ -35,12 +38,16 @@ export function SetupEventSubscriptions(
     }
   })
 
-  // Subscribe to WALLET_LATE_FEE_APPLIED events
-  eventBus.subscribe(WALLET_LATE_FEE_APPLIED, async (event) => {
+  // Subscribe to RESERVATION_RETURNED events
+  eventBus.subscribe(RESERVATION_RETURNED, async (event) => {
     try {
-      await projectionHandler.handleWalletLateFeeApplied(event)
+      await bookReturnHandler.execute({
+        userId: event.payload.userId,
+        daysLate: Number(event.payload.daysLate),
+        retailPrice: Number(event.payload.retailPrice),
+      })
     } catch (error) {
-      logger.error(`Error handling WALLET_LATE_FEE_APPLIED event: ${error}`)
+      logger.error(`Error handling RESERVATION_RETURNED event: ${error}`)
     }
   })
 
@@ -60,6 +67,14 @@ export function SetupEventSubscriptions(
       logger.error(`Error handling RESERVATION_PENDING_PAYMENT event: ${error}`)
       // Error is already handled within the payment handler,
       // which publishes the appropriate declined event
+    }
+  })
+
+  eventBus.subscribe(WALLET_LATE_FEE_APPLIED, async (event) => {
+    try {
+      await projectionHandler.handleWalletLateFeeApplied(event)
+    } catch (error) {
+      logger.error(`Error handling WALLET_LATE_FEE_APPLIED event: ${error}`)
     }
   })
 

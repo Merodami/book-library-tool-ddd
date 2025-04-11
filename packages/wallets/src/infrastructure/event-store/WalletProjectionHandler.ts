@@ -58,7 +58,7 @@ export class WalletProjectionHandler {
       },
       {
         $set: {
-          balance: event.payload.newBalance,
+          balance: Number(event.payload.newBalance),
           version: event.version,
           updatedAt: new Date(event.timestamp),
         },

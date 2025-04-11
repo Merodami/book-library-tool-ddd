@@ -7,6 +7,7 @@ import {
   RESERVATION_CREATED,
   RESERVATION_DELETED,
   RESERVATION_OVERDUE,
+  RESERVATION_RETAIL_PRICE_UPDATED,
   RESERVATION_RETURNED,
   WALLET_PAYMENT_DECLINED,
   WALLET_PAYMENT_SUCCESS,
@@ -74,6 +75,7 @@ export function SetupEventSubscriptions(
         reservationId: event.payload.reservationId,
         isValid: event.payload.isValid,
         reason: event.payload.reason,
+        retailPrice: event.payload.retailPrice,
       })
     } catch (error) {
       logger.error(`Error handling BookValidationResult event: ${error}`)
@@ -113,6 +115,16 @@ export function SetupEventSubscriptions(
       await paymentHandler.handlePaymentSuccess(event)
     } catch (error) {
       logger.error(`Error handling payment success event: ${error}`, error)
+    }
+  })
+
+  eventBus.subscribe(RESERVATION_RETAIL_PRICE_UPDATED, async (event) => {
+    try {
+      await projectionHandler.handleRetailPriceUpdated(event)
+    } catch (error) {
+      logger.error(
+        `Error handling RESERVATION_RETAIL_PRICE_UPDATED event: ${error}`,
+      )
     }
   })
 

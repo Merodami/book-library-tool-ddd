@@ -7,7 +7,7 @@ import type { IReservationRepository } from '@repositories/IReservationRepositor
  * Handles the return of reserved books.
  * This is a command handler that performs write operations and emits events.
  */
-export class ReturnReservationHandler {
+export class BookReturnHandler {
   constructor(
     private readonly reservationRepository: IReservationRepository,
     private readonly eventBus: EventBus,
@@ -42,7 +42,7 @@ export class ReturnReservationHandler {
       )
     }
 
-    // Process the return in the domain entity, which will create the appropriate event
+    // Process the return in the domain entity, which will calculate late fees and create the appropriate event
     const { reservation: updatedReservation, event } =
       reservation.markAsReturned()
 
