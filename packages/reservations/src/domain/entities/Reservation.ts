@@ -352,7 +352,10 @@ export class Reservation extends AggregateRoot {
    * Domain method to confirm a reservation after book validation.
    */
   public confirm(): { reservation: Reservation; event: DomainEvent } {
-    this.validateStateTransition([RESERVATION_STATUS.RESERVED], 'confirmed')
+    this.validateStateTransition(
+      [RESERVATION_STATUS.RESERVED, RESERVATION_STATUS.PENDING],
+      RESERVATION_STATUS.CONFIRMED,
+    )
 
     return this.createStateTransition(
       RESERVATION_STATUS.CONFIRMED,
@@ -367,7 +370,14 @@ export class Reservation extends AggregateRoot {
     reservation: Reservation
     event: DomainEvent
   } {
-    this.validateStateTransition([RESERVATION_STATUS.RESERVED], 'rejected')
+    this.validateStateTransition(
+      [
+        RESERVATION_STATUS.CONFIRMED,
+        RESERVATION_STATUS.RESERVED,
+        RESERVATION_STATUS.PENDING,
+      ],
+      RESERVATION_STATUS.REJECTED,
+    )
 
     return this.createStateTransition(
       RESERVATION_STATUS.REJECTED,

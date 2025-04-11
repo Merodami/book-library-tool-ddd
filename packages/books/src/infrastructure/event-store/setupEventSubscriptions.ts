@@ -17,7 +17,7 @@ import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
  * Using async callbacks with try/catch ensures that errors are caught and logged,
  * preventing unhandled promise rejections.
  */
-export function setupEventSubscriptions(
+export function SetupEventSubscriptions(
   eventBus: EventBus,
   projectionHandler: BookProjectionHandler,
 ): void {

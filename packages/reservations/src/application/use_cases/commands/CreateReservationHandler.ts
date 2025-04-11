@@ -40,11 +40,11 @@ export class CreateReservationHandler {
     // Check if user already has an active reservation for this book
     const existingReservation =
       await this.reservationProjectionRepository.getBookReservations(
-        command.userId,
         command.isbn,
+        command.userId,
       )
 
-    if (existingReservation) {
+    if (existingReservation.data.length > 0) {
       throw new Errors.ApplicationError(
         409,
         ErrorCode.RESERVATION_ALREADY_EXISTS,

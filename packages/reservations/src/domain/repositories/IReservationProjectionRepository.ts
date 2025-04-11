@@ -67,4 +67,14 @@ export interface IReservationProjectionRepository {
     status: RESERVATION_STATUS,
     pagination?: PaginatedQuery,
   ): Promise<PaginatedResult<Reservation>>
+
+  /**
+   * Counts the number of active reservations for a specific user.
+   * Active reservations are those with status RESERVED, CONFIRMED, or BORROWED.
+   * Used to enforce business rules like maximum number of active reservations per user.
+   *
+   * @param userId - The ID of the user
+   * @returns The count of active reservations
+   */
+  countActiveReservationsByUser(userId: string): Promise<number>
 }

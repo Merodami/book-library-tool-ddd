@@ -3,7 +3,7 @@ import { MongoDatabaseService } from '@book-library-tool/database'
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
-import { setupEventSubscriptions } from '@event-store/setupEventSubscriptions.js'
+import { SetupEventSubscriptions } from '@event-store/SetupEventSubscriptions.js'
 import { ReservationProjectionRepository } from '@persistence/mongo/ReservationProjectionRepository.js'
 import { ReservationRepository } from '@persistence/mongo/ReservationRepository.js'
 import { createReservationRouter } from '@routes/reservations/createReservationRouter.js'
@@ -46,7 +46,7 @@ async function startServer() {
     dbService,
   )
 
-  await setupEventSubscriptions(
+  await SetupEventSubscriptions(
     eventBus,
     reservationProjectionHandler,
     reservationRepository,
