@@ -3,18 +3,21 @@ import {
   BOOK_UPDATED,
   BOOK_VALIDATION_RESULT,
   EventBus,
+  RESERVATION_BOOK_BROUGHT,
   RESERVATION_CANCELLED,
   RESERVATION_CREATED,
   RESERVATION_DELETED,
   RESERVATION_OVERDUE,
   RESERVATION_RETAIL_PRICE_UPDATED,
   RESERVATION_RETURNED,
+  WALLET_LATE_FEE_APPLIED,
   WALLET_PAYMENT_DECLINED,
   WALLET_PAYMENT_SUCCESS,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 import { ValidateReservationHandler } from '@commands/ValidateReservationHandler.js'
 import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
+import { BookBroughtHandler } from '@use_cases/commands/BookBroughtHandler.js'
 import { PaymentHandler } from '@use_cases/commands/PaymentHandler.js'
 
 export function SetupEventSubscriptions(
@@ -22,6 +25,7 @@ export function SetupEventSubscriptions(
   projectionHandler: ReservationProjectionHandler,
   validateReservationHandler: ValidateReservationHandler,
   paymentHandler: PaymentHandler,
+  bookBroughtHandler: BookBroughtHandler,
 ): void {
   // Internal domain events for reservations
   eventBus.subscribe(RESERVATION_CREATED, async (event) => {
@@ -125,6 +129,28 @@ export function SetupEventSubscriptions(
       logger.error(
         `Error handling RESERVATION_RETAIL_PRICE_UPDATED event: ${error}`,
       )
+    }
+  })
+
+  eventBus.subscribe(RESERVATION_BOOK_BROUGHT, async (event) => {
+    try {
+      await projectionHandler.handleReservationBookBrought(event)
+    } catch (error) {
+      logger.error(`Error handling RESERVATION_BOOK_BROUGHT event: ${error}`)
+    }
+  })
+
+  eventBus.subscribe(WALLET_LATE_FEE_APPLIED, async (event) => {
+    try {
+      // Check if the book was purchased based on late fees
+      if (event.payload.bookPurchased) {
+        await bookBroughtHandler.handleBookPurchasedViaLateFee(
+          event.payload.userId,
+          event.payload.reservationId,
+        )
+      }
+    } catch (error) {
+      logger.error(`Error handling WALLET_LATE_FEE_APPLIED event: ${error}`)
     }
   })
 

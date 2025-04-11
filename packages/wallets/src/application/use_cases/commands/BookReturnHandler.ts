@@ -46,6 +46,7 @@ export class BookReturnHandler {
 
       // Apply late fee to existing wallet
       const result = existingWallet.applyLateFee(
+        command.reservationId,
         command.daysLate,
         command.retailPrice,
         feePerDay,

@@ -2,6 +2,7 @@ import { makeValidator, schemas } from '@book-library-tool/api'
 import {
   AggregateRoot,
   DomainEvent,
+  RESERVATION_BOOK_BROUGHT,
   RESERVATION_BOOK_LIMIT_REACH,
   RESERVATION_BOOK_VALIDATION,
   RESERVATION_CANCELLED,
@@ -26,6 +27,7 @@ export interface ReservationProps {
   status: RESERVATION_STATUS
   feeCharged: number
   retailPrice: number
+  bookBrought: boolean
 }
 
 /**
@@ -42,6 +44,7 @@ export class Reservation extends AggregateRoot {
   public status: RESERVATION_STATUS
   public feeCharged: number
   public retailPrice: number | null
+  public bookBrought: boolean
   public createdAt: Date
   public updatedAt: Date
   public deletedAt?: Date
@@ -67,6 +70,7 @@ export class Reservation extends AggregateRoot {
     this.status = props.status
     this.feeCharged = props.feeCharged
     this.retailPrice = props.retailPrice || null
+    this.bookBrought = props.bookBrought || false
     this.createdAt = createdAt
     this.updatedAt = updatedAt
     this.deletedAt = deletedAt
@@ -121,6 +125,7 @@ export class Reservation extends AggregateRoot {
       status:
         (props.status as RESERVATION_STATUS) || RESERVATION_STATUS.RESERVED,
       feeCharged,
+      bookBrought: false,
     }
 
     // Create a new reservation instance
@@ -280,6 +285,7 @@ export class Reservation extends AggregateRoot {
       status: newStatus,
       feeCharged: Number(this.feeCharged),
       retailPrice: Number(this.retailPrice),
+      bookBrought: this.bookBrought,
     }
 
     // Create a new reservation instance with updated properties
@@ -327,6 +333,7 @@ export class Reservation extends AggregateRoot {
     allowedStates: RESERVATION_STATUS[],
     actionName: string,
   ): void {
+    console.log('this.status', this.status)
     if (!allowedStates.includes(this.status)) {
       const errorCode = `RESERVATION_CANNOT_BE_${actionName.toUpperCase()}`
       const errorMessage = `Reservation with id ${this.reservationId} cannot be ${actionName.toLowerCase()} in its current status.`
@@ -539,6 +546,7 @@ export class Reservation extends AggregateRoot {
       status: this.status,
       feeCharged: this.feeCharged,
       retailPrice: retailPrice,
+      bookBrought: this.bookBrought,
     }
 
     const updatedReservation = new Reservation(
@@ -552,5 +560,32 @@ export class Reservation extends AggregateRoot {
     updatedReservation.addDomainEvent(event)
 
     return { reservation: updatedReservation, event }
+  }
+
+  /**
+   * Domain method to mark a book as brought due to purchase via late fees.
+   */
+  public markAsBroughtViaPurchase(): {
+    reservation: Reservation
+    event: DomainEvent
+  } {
+    logger.debug(
+      `Marking reservation ${this.reservationId} as brought via purchase due to late fees`,
+    )
+
+    // We allow transitions from various states in this case
+    const allowedStates = [
+      RESERVATION_STATUS.RESERVED,
+      RESERVATION_STATUS.BORROWED,
+      RESERVATION_STATUS.LATE,
+      RESERVATION_STATUS.RETURNED,
+    ]
+
+    this.validateStateTransition(allowedStates, RESERVATION_STATUS.BROUGHT)
+
+    return this.createStateTransition(
+      RESERVATION_STATUS.BROUGHT,
+      RESERVATION_BOOK_BROUGHT,
+    )
   }
 }

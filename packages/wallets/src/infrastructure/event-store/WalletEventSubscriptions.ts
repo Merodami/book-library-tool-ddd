@@ -42,6 +42,7 @@ export function SetupEventSubscriptions(
   eventBus.subscribe(RESERVATION_RETURNED, async (event) => {
     try {
       await bookReturnHandler.execute({
+        reservationId: event.payload.reservationId,
         userId: event.payload.userId,
         daysLate: Number(event.payload.daysLate),
         retailPrice: Number(event.payload.retailPrice),
