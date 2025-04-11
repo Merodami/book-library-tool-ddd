@@ -10,7 +10,34 @@
     "baseUrl": ".",
     "paths": {
       // Main
-      "@event-store/*": ["src/*"]
+      "@reservations/*": ["src/*"],
+
+      // API
+      "@controllers/*": ["src/api/controllers/*"],
+      "@routes/*": ["src/api/routes/*"],
+
+      // Application
+      "@dto/*": ["src/application/dtos/*"],
+      "@use_cases/*": ["src/application/use_cases/*"],
+      "@commands/*": ["src/application/use_cases/commands/*"],
+      "@queries/*": ["src/application/use_cases/queries/*"],
+
+      // Domain
+      "@entities/*": ["src/domain/entities/*"],
+      "@repositories/*": ["src/domain/repositories/*"],
+      "@value_objects/*": ["src/domain/value_objects/*"],
+      "@model/*": ["src/domain/model/*"],
+      "@events/*": ["src/domain/events/*"],
+
+      // Infrastructure
+      "@database/*": ["src/infrastructure/database/*"],
+      "@persistence/*": ["src/infrastructure/persistence/*"],
+      "@event-store/*": ["src/infrastructure/event-store/*"],
+      "@messaging/*": ["src/infrastructure/messaging/*"],
+
+      // Misc
+      "@shared/*": ["src/shared/*"],
+      "@error/*": ["src/error/*"]
     }
   },
   "include": ["src"],

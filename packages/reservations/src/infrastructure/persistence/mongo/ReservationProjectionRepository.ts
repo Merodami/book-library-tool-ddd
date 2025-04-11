@@ -1,7 +1,4 @@
-import {
-  getPaginatedData,
-  MongoDatabaseService,
-} from '@book-library-tool/database'
+import { MongoDatabaseService } from '@book-library-tool/database'
 import { Reservation } from '@book-library-tool/sdk'
 import {
   PaginatedQuery,
@@ -68,13 +65,13 @@ export class ReservationProjectionRepository
     const filter: Record<string, unknown> = { userId }
 
     // Use the pagination helper to get paginated reservation data
-    const paginatedReservations = await getPaginatedData<Reservation>(
-      this.dbService,
-      this.collection,
-      filter,
-      { limit, page },
-      { projection: { _id: 0 }, sort: { createdAt: -1 } }, // Sort by creation date, most recent first
-    )
+    const paginatedReservations =
+      await this.dbService.paginateCollection<Reservation>(
+        this.collection,
+        filter,
+        { limit, page },
+        { projection: { _id: 0 }, sort: { createdAt: -1 } }, // Sort by creation date, most recent first
+      )
 
     // Map the results to ensure they match the expected format
     return {
@@ -137,13 +134,13 @@ export class ReservationProjectionRepository
     }
 
     // Use the pagination helper to get paginated reservation data
-    const paginatedReservations = await getPaginatedData<Reservation>(
-      this.dbService,
-      this.collection,
-      filter,
-      { limit: Math.floor(Number(limit)), page: Math.floor(Number(page)) },
-      { projection: { _id: 0 }, sort: { createdAt: -1 } },
-    )
+    const paginatedReservations =
+      await this.dbService.paginateCollection<Reservation>(
+        this.collection,
+        filter,
+        { limit: Math.floor(Number(limit)), page: Math.floor(Number(page)) },
+        { projection: { _id: 0 }, sort: { createdAt: -1 } },
+      )
 
     // Map the results to ensure they match the expected format
     return {
@@ -188,13 +185,13 @@ export class ReservationProjectionRepository
   ): Promise<PaginatedResult<Reservation>> {
     const { page = 1, limit = 10 } = pagination
 
-    const paginatedReservations = await getPaginatedData<Reservation>(
-      this.dbService,
-      this.collection,
-      { status, deletedAt: { $exists: false } },
-      { limit, page },
-      { projection: { _id: 0 }, sort: { createdAt: -1 } },
-    )
+    const paginatedReservations =
+      await this.dbService.paginateCollection<Reservation>(
+        this.collection,
+        { status, deletedAt: { $exists: false } },
+        { limit, page },
+        { projection: { _id: 0 }, sort: { createdAt: -1 } },
+      )
 
     return {
       ...paginatedReservations,

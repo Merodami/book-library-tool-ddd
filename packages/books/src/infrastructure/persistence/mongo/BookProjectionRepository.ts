@@ -1,7 +1,4 @@
-import {
-  getPaginatedData,
-  MongoDatabaseService,
-} from '@book-library-tool/database'
+import { MongoDatabaseService } from '@book-library-tool/database'
 import type { Book, PaginatedBookResponse } from '@book-library-tool/sdk'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
 import type { Collection } from 'mongodb'
@@ -49,8 +46,7 @@ export class BookProjectionRepository {
     }
 
     // Use the pagination helper to get paginated books data
-    const paginatedBooks = await getPaginatedData<Book>(
-      this.dbService,
+    const paginatedBooks = await this.dbService.paginateCollection<Book>(
       this.collection,
       filter,
       { limit, page },

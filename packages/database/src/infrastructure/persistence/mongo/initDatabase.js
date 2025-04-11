@@ -1,5 +1,14 @@
 import { MongoClient } from 'mongodb'
 
+/**
+ * Initializes the MongoDB database for the library system.
+ * This function connects to the MongoDB server, creates a database,
+ * and sets up the necessary collections with indexes.
+ * It ensures that the database is ready for use by creating
+ * the required collections and indexes.
+ * @throws Will throw an error if the database connection fails or if
+ * the collection creation fails.
+ */
 async function initDatabase() {
   const uri = process.env.MONGO_URI || 'mongodb://localhost:27017'
 
@@ -22,14 +31,6 @@ async function initDatabase() {
     const usersCollection = db.collection('users')
     await usersCollection.createIndex({ email: 1 }, { unique: true })
     await usersCollection.createIndex({ userId: 1 }, { unique: true })
-
-    // ------------------------------
-    // Wallets Collection
-    // ------------------------------
-    // This collection stores user balances and fee-related transactions.
-    // A unique index on userId ensures each user has only one wallet.
-    const walletsCollection = db.collection('wallets')
-    await walletsCollection.createIndex({ userId: 1 }, { unique: true })
   } catch (err) {
     throw new Error(`Failed to initialize database: ${err.message}`)
   } finally {

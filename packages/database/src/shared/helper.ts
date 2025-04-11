@@ -17,6 +17,10 @@ export function decodeHTMLEntities(text: string): string {
   return he.decode(text)
 }
 
+/**
+ * Decode a string from latin1 to utf8 and then decode HTML entities.
+ * This function is useful for fixing mis‐encoded text and decoding HTML entities.
+ */
 export const isInvalidBook = (book: Book) => {
   return (
     book.isbn === undefined ||

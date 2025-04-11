@@ -4,7 +4,32 @@
     "outDir": "dist",
     "rootDir": "src",
     "composite": true,
-    "tsBuildInfoFile": "dist/.tsbuildinfo"
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      // Main
+      "@reservations/*": ["src/*"],
+
+      // API
+      "@controllers/*": ["src/api/controllers/*"],
+      "@routes/*": ["src/api/routes/*"],
+
+      // Application
+      "@dto/*": ["src/application/dtos/*"],
+      "@use_cases/*": ["src/application/use_cases/*"],
+      "@commands/*": ["src/application/use_cases/commands/*"],
+      "@queries/*": ["src/application/use_cases/queries/*"],
+
+      // Domain
+      "@entities/*": ["src/domain/entities/*"],
+      "@repositories/*": ["src/domain/repositories/*"],
+      "@value_objects/*": ["src/domain/value_objects/*"],
+
+      // Infrastructure
+      "@database/*": ["src/infrastructure/database/*"],
+      "@persistence/*": ["src/infrastructure/persistence/*"],
+      "@event-store/*": ["src/infrastructure/event-store/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "../../node_modules", "node_modules"],

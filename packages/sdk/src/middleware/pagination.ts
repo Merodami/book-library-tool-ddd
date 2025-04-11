@@ -1,53 +1,64 @@
-import { NextFunction, Request, Response } from 'express'
-
-import { PaginationQuery } from '../openapi/index.js'
+import { NextFunction, Request as ExpressRequest, Response } from 'express'
 
 /**
- * Middleware that extracts and normalizes pagination parameters from query params
- * This adds a standardized pagination object to the request
+ * Express middleware to extract and normalize pagination parameters from query parameters.
+ * It adds a standardized `pagination` object to the request that contains `page` and `limit` values.
+ *
+ * @returns { (req: Request, res: Response, next: NextFunction) => void } Middleware function.
  */
 export const paginationMiddleware = () => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    // Apply limit constraints
-    let limit = Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
-    const maxLimit = Number(process.env.PAGINATION_MAX_LIMIT) || 100
+  return (req: ExpressRequest, res: Response, next: NextFunction): void => {
+    // Apply limit constraints from environment variables or default values.
+    let limit: number = Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
+    const maxLimit: number = Number(process.env.PAGINATION_MAX_LIMIT) || 100
 
     try {
-      // Extract pagination parameters
-      const page = Math.max(
+      // Extract and compute the page number. Ensure it is at least 1.
+      const page: number = Math.max(
         1,
         req.query.page ? parseInt(req.query.page as string, 10) : 1,
       )
 
       if (req.query.limit) {
         limit = parseInt(req.query.limit as string, 10)
+
+        // Ensure the limit is within the allowed range.
         limit = Math.max(1, Math.min(maxLimit, limit))
       }
 
-      // Add pagination to request object for use in handlers
+      // Assign the computed pagination values to the request object.
       req.pagination = {
         page,
         limit,
       }
 
       next()
-    } catch (error) {
-      // If parsing fails, use default values
+    } catch (error: unknown) {
+      // If any error occurs, default to the initial pagination values.
       req.pagination = {
         page: 1,
         limit,
       }
+
+      // Log the error for debugging purposes.
+      console.error('Error in pagination middleware:', error)
 
       next()
     }
   }
 }
 
-// Add to Request interface to make TypeScript aware of the pagination property
+/**
+ * Augments the Express Request interface to include a `pagination` property.
+ * This allows TypeScript to recognize that the middleware adds a `pagination` object to the request.
+ */
 declare global {
   namespace Express {
     interface Request {
-      pagination: PaginationQuery
+      pagination: {
+        page: number
+        limit: number
+      }
     }
   }
 }
