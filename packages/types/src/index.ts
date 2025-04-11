@@ -1,12 +1,16 @@
 export enum RESERVATION_STATUS {
+  // Reservation has been approved and paid
   RESERVED = 'reserved',
   BORROWED = 'borrowed',
   RETURNED = 'returned',
   LATE = 'late',
   BOUGHT = 'bought',
   CANCELLED = 'cancelled',
+
+  // Reservation is in process
+  CREATED = 'created',
   PENDING_PAYMENT = 'pending_payment',
-  CONFIRMED = 'confirmed',
+  RESERVATION_BOOK_LIMIT_REACH = 'reservation_book_limit_reach',
   REJECTED = 'rejected',
 }
 

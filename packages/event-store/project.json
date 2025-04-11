@@ -1,7 +1,10 @@
 {
   "name": "@book-library-tool/event-store",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [],
+  "implicitDependencies": [
+    "@book-library-tool/shared",
+    "@book-library-tool/database"
+  ],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

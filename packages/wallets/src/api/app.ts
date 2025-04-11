@@ -3,6 +3,7 @@ import { MongoDatabaseService } from '@book-library-tool/database'
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { ProcessWalletPaymentHandler } from '@commands/ProcessWalletPaymentHandler.js'
+import { SetupEventSubscriptions } from '@event-store/WalletEventSubscriptions.js'
 import { WalletProjectionHandler } from '@event-store/WalletProjectionHandler.js'
 import { WalletProjectionRepository } from '@persistence/mongo/WalletProjectionRepository.js'
 import { WalletRepository } from '@persistence/mongo/WalletRepository.js'
@@ -11,7 +12,7 @@ import cors from 'cors'
 import express from 'express'
 import gracefulShutdown from 'http-graceful-shutdown'
 
-import { SetupEventSubscriptions } from '../infrastructure/event-store/SetupEventSubscriptions.js'
+import { BookReturnHandler } from '../application/use_cases/commands/BookReturnHandler.js'
 
 async function startServer() {
   // Initialize the infrastructure service (database connection)
@@ -51,10 +52,13 @@ async function startServer() {
     eventBus,
   )
 
+  const bookReturnHandler = new BookReturnHandler(walletRepository, eventBus)
+
   await SetupEventSubscriptions(
     eventBus,
     walletProjectionHandler,
     paymentHandler,
+    bookReturnHandler,
   )
 
   await eventBus.startConsuming()

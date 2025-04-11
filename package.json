@@ -31,7 +31,11 @@
     "generate:sdk": "nx run @book-library-tool/sdk:sdk-gen",
     "git-hooks-prepare": "husky install",
     "open:docs": "nx run @book-library-tool/api:open-docs",
-    "open:queue": "open http://localhost:15672"
+    "rabbit:ui": "open http://localhost:15672",
+    "rabbit:reset": "docker exec -it rabbitmq rabbitmqctl stop_app && docker exec -it rabbitmq rabbitmqctl reset && docker exec -it rabbitmq rabbitmqctl start_app",
+    "rabbit:purge": "docker exec rabbitmq rabbitmqadmin purge queue name=reservation_service.development.queue && docker exec rabbitmq rabbitmqadmin purge queue name=wallet_service.development.queue && docker exec rabbitmq rabbitmqadmin purge queue name=book_service.development.queue",
+    "rabbit:delete": "docker exec rabbitmq rabbitmqadmin delete queue name=reservation_service.development.queue && docker exec rabbitmq rabbitmqadmin delete queue name=wallet_service.development.queue && docker exec rabbitmq rabbitmqadmin delete queue name=book_service.development.queue",
+    "rabbit:list": "docker exec rabbitmq rabbitmqadmin list queues name messages_ready messages_unacknowledged"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",

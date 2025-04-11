@@ -1,17 +1,19 @@
 /**
  * Domain event types for the Reservation aggregate.
  */
-export const RESERVATION_CREATED = 'ReservationCreated'
-export const RESERVATION_UPDATED = 'ReservationUpdated'
-export const RESERVATION_CANCELLED = 'ReservationCancelled'
-export const RESERVATION_RETURNED = 'ReservationReturned'
-export const RESERVATION_DELETED = 'ReservationDeleted'
-export const RESERVATION_OVERDUE = 'ReservationOverdue'
-export const RESERVATION_PENDING_PAYMENT = 'ReservationPendingPayment'
-export const RESERVATION_CONFIRMED = 'ReservationConfirmed'
-export const RESERVATION_REJECTED = 'ReservationRejected'
-export const RESERVATION_BOOK_VALIDATION = 'ReservationValidateBook'
-export const RESERVATION_BOOK_LIMIT_REACH = 'ReservationBookLimitReach'
+export const RESERVATION_CREATED = 'RESERVATION_CREATED'
+export const RESERVATION_UPDATED = 'RESERVATION_UPDATED'
+export const RESERVATION_CANCELLED = 'RESERVATION_CANCELLED'
+export const RESERVATION_RETURNED = 'RESERVATION_RETURNED'
+export const RESERVATION_DELETED = 'RESERVATION_DELETED'
+export const RESERVATION_OVERDUE = 'RESERVATION_OVERDUE'
+export const RESERVATION_PENDING_PAYMENT = 'RESERVATION_PENDING_PAYMENT'
+export const RESERVATION_CONFIRMED = 'RESERVATION_CONFIRMED'
+export const RESERVATION_REJECTED = 'RESERVATION_REJECTED'
+export const RESERVATION_BOOK_VALIDATION = 'RESERVATION_VALIDATE_BOOK'
+export const RESERVATION_BOOK_LIMIT_REACH = 'RESERVATION_BOOK_LIMIT_REACH'
+export const RESERVATION_RETAIL_PRICE_UPDATED =
+  'RESERVATION_RETAIL_PRICE_UPDATED'
 
 /**
  * TypeScript type for the Reservation event types.
@@ -27,4 +29,4 @@ export type ReservationEventType =
   | typeof RESERVATION_CONFIRMED
   | typeof RESERVATION_REJECTED
   | typeof RESERVATION_BOOK_VALIDATION
-  | typeof RESERVATION_BOOK_LIMIT_REACH
+  | typeof RESERVATION_RETAIL_PRICE_UPDATED

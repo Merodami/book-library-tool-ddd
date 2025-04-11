@@ -4,18 +4,18 @@ import {
   type EventBus,
   RESERVATION_BOOK_LIMIT_REACH,
 } from '@book-library-tool/event-store'
-import { ErrorCode, Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
+import { RESERVATION_STATUS } from '@book-library-tool/types'
+import { ValidateReservationCommand } from '@commands/ValidateReservationCommand.js'
 import { Reservation } from '@entities/Reservation.js'
+import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
+import type { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
 import type { IReservationRepository } from '@repositories/IReservationRepository.js'
-
-import type { IReservationProjectionRepository } from '../../../domain/repositories/IReservationProjectionRepository.js'
-import { ReservationProjectionHandler } from '../../../infrastructure/event-store/ReservationProjectionHandler.js'
 
 /**
  * Handler responsible for validating reservations based on book availability
  * and user reservation limits. It processes BookValidationResult events and
  * applies domain-specific business rules before confirming or rejecting reservations.
- * Part of the command-side in the CQRS pattern.
  */
 export class ValidateReservationHandler {
   constructor(
@@ -35,52 +35,65 @@ export class ValidateReservationHandler {
    */
   async execute(
     event: DomainEvent,
-    command: {
-      reservationId: string
-      isValid: boolean
-      reason?: string
-    },
+    command: ValidateReservationCommand,
   ): Promise<void> {
-    // Load the reservation aggregate from event store
-    const reservationEvents =
-      await this.reservationRepository.getEventsForAggregate(
-        command.reservationId,
+    try {
+      logger.debug(
+        `Processing validation for reservation ${command.reservationId}`,
       )
 
-    if (!reservationEvents.length) {
-      throw new Errors.ApplicationError(
-        404,
-        ErrorCode.RESERVATION_NOT_FOUND,
-        `Reservation with ID ${command.reservationId} not found`,
+      // Load the reservation aggregate from event store
+      const reservationEvents =
+        await this.reservationRepository.getEventsForAggregate(
+          command.reservationId,
+        )
+
+      if (!reservationEvents.length) {
+        throw new Errors.ApplicationError(
+          404,
+          ErrorCode.RESERVATION_NOT_FOUND,
+          `Reservation with ID ${command.reservationId} not found`,
+        )
+      }
+
+      // Rebuild the aggregate
+      const reservation = Reservation.rehydrate(reservationEvents)
+
+      // Check active reservations count only once
+      const maxReservations = Number(process.env.BOOK_MAX_RESERVATION_USER) || 3
+      let exceedsLimit = false
+
+      // Only check reservation limits if the initial validation passed
+      if (command.isValid) {
+        const activeReservationsCount =
+          await this.reservationProjectionRepository.countActiveReservationsByUser(
+            reservation.userId,
+          )
+        exceedsLimit = activeReservationsCount >= maxReservations
+      }
+
+      // Create a modified validation event for the projection handler
+      const projectionEvent = this.createProjectionEvent(
+        event,
+        command,
+        exceedsLimit,
       )
+
+      // Update the read model first to reflect validation result
+      await this.projectionHandler.handleBookValidationResult(projectionEvent)
+
+      // Process the domain events one by one to maintain proper state
+      await this.processDomainActions(command, reservation, exceedsLimit)
+
+      logger.info(
+        `Completed validation processing for reservation ${command.reservationId}`,
+      )
+    } catch (error) {
+      logger.error(
+        `Error processing validation for reservation ${command.reservationId}: ${error.message}`,
+      )
+      throw error
     }
-
-    // Rebuild the aggregate
-    const reservation = Reservation.rehydrate(reservationEvents)
-
-    // Create a modified validation event for the projection handler
-    const projectionEvent = await this.createProjectionEvent(
-      event,
-      command,
-      reservation,
-    )
-
-    // Determine the appropriate action
-    const result = await this.determineReservationAction(command, reservation)
-    const newEvent = result.event
-
-    // Update the read model first
-    await this.projectionHandler.handleBookValidationResult(projectionEvent)
-
-    // Save the domain event to the event store
-    await this.reservationRepository.saveEvents(
-      reservation.id,
-      [newEvent],
-      reservation.version,
-    )
-
-    // Publish the domain event
-    await this.eventBus.publish(newEvent)
   }
 
   /**
@@ -88,23 +101,14 @@ export class ValidateReservationHandler {
    * validation result after applying all business rules like reservation limits.
    * This ensures the read model accurately reflects the reservation state.
    */
-  private async createProjectionEvent(
+  private createProjectionEvent(
     event: DomainEvent,
-    command: { reservationId: string; isValid: boolean; reason?: string },
-    reservation: Reservation,
-  ): Promise<DomainEvent> {
+    command: ValidateReservationCommand,
+    exceedsLimit: boolean,
+  ): DomainEvent {
     if (!command.isValid) {
       return event
     }
-
-    const activeReservationsCount =
-      await this.reservationProjectionRepository.countActiveReservationsByUser(
-        reservation.userId,
-      )
-
-    const maxReservations = Number(process.env.BOOK_MAX_RESERVATION_USER) || 3
-
-    const exceedsLimit = activeReservationsCount > maxReservations
 
     if (exceedsLimit) {
       return {
@@ -112,7 +116,7 @@ export class ValidateReservationHandler {
         payload: {
           ...event.payload,
           isValid: false,
-          reason: RESERVATION_BOOK_LIMIT_REACH,
+          reason: RESERVATION_STATUS.RESERVATION_BOOK_LIMIT_REACH,
         },
       }
     }
@@ -121,29 +125,77 @@ export class ValidateReservationHandler {
   }
 
   /**
-   * Determines the appropriate action for a reservation based on validation results
-   * and business rules. This applies domain logic to decide whether to confirm or
-   * reject the reservation.
+   * Processes the domain actions sequentially, ensuring proper state transitions
+   * and event versioning. This approach maintains the aggregate state correctly
+   * through each operation.
    */
-  private async determineReservationAction(
-    command: { reservationId: string; isValid: boolean; reason?: string },
+  private async processDomainActions(
+    command: ValidateReservationCommand,
     reservation: Reservation,
-  ): Promise<{ reservation: Reservation; event: DomainEvent }> {
-    if (!command.isValid) {
-      return reservation.reject(command.reason || BOOK_VALIDATION_FAILED)
-    }
+    exceedsLimit: boolean,
+  ): Promise<void> {
+    let currentReservation = reservation
+    let currentVersion = reservation.version
 
-    const activeReservationsCount =
-      await this.reservationProjectionRepository.countActiveReservationsByUser(
-        reservation.userId,
+    // Handle rejection cases first
+    if (!command.isValid) {
+      const result = currentReservation.reject(
+        command.reason || BOOK_VALIDATION_FAILED,
       )
 
-    const maxReservations = Number(process.env.BOOK_MAX_RESERVATION_USER) || 3
-
-    if (activeReservationsCount >= maxReservations) {
-      return reservation.reject(RESERVATION_BOOK_LIMIT_REACH)
+      await this.saveAndPublishEvent(result.event, currentVersion)
+      return
     }
 
-    return reservation.setPaymentPending()
+    if (exceedsLimit) {
+      const result = currentReservation.reject(RESERVATION_BOOK_LIMIT_REACH)
+
+      await this.saveAndPublishEvent(result.event, currentVersion)
+      return
+    }
+
+    // Set retail price if provided
+    if (command.retailPrice && command.retailPrice > 0) {
+      logger.debug(
+        `Setting retail price to ${command.retailPrice} for reservation ${reservation.reservationId}`,
+      )
+
+      const priceResult = currentReservation.setRetailPrice(command.retailPrice)
+
+      // Save and publish retail price event
+      await this.saveAndPublishEvent(priceResult.event, currentVersion)
+
+      // Update our working variables for the next operation
+      currentReservation = priceResult.reservation
+      currentVersion++
+    }
+
+    // Set payment pending status
+    const paymentResult = currentReservation.setPaymentPending()
+
+    // Save and publish payment pending event
+    await this.saveAndPublishEvent(paymentResult.event, currentVersion)
+  }
+
+  /**
+   * Helper method to save and publish a domain event
+   */
+  private async saveAndPublishEvent(
+    event: DomainEvent,
+    expectedVersion: number,
+  ): Promise<void> {
+    // Save the event to the event store
+    await this.reservationRepository.saveEvents(
+      event.aggregateId,
+      [event],
+      expectedVersion,
+    )
+
+    // Publish the event
+    await this.eventBus.publish(event)
+
+    logger.debug(
+      `Saved and published event ${event.eventType} for aggregate ${event.aggregateId}`,
+    )
   }
 }

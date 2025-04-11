@@ -91,6 +91,7 @@ export class BookProjectionHandler {
         isbn: isbn,
         isValid: !!book,
         reason: book ? null : ErrorCode.BOOK_NOT_FOUND,
+        retailPrice: book ? book.price : null,
       },
       timestamp: new Date(),
       version: 1,

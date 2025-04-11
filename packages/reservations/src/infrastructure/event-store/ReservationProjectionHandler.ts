@@ -1,5 +1,10 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { DomainEvent } from '@book-library-tool/event-store'
+import {
+  DomainEvent,
+  RESERVATION_CANCELLED,
+  RESERVATION_OVERDUE,
+  RESERVATION_RETURNED,
+} from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 
@@ -28,7 +33,7 @@ export class ReservationProjectionHandler {
       id: event.aggregateId,
       userId: event.payload.userId,
       isbn: event.payload.isbn,
-      status: RESERVATION_STATUS.PENDING_PAYMENT,
+      status: RESERVATION_STATUS.CREATED,
       createdAt: createdDate,
       dueDate: dueDate,
       returnedAt: null,
@@ -54,7 +59,7 @@ export class ReservationProjectionHandler {
       },
       {
         $set: {
-          status: 'returned',
+          status: RESERVATION_RETURNED,
           returnedAt: returnedDate,
           lateFee: event.payload.lateFee || 0,
           version: event.version,
@@ -80,7 +85,7 @@ export class ReservationProjectionHandler {
       },
       {
         $set: {
-          status: 'cancelled',
+          status: RESERVATION_CANCELLED,
           cancelledAt: cancelledDate,
           cancellationReason: event.payload.reason,
           version: event.version,
@@ -104,7 +109,7 @@ export class ReservationProjectionHandler {
       },
       {
         $set: {
-          status: 'overdue',
+          status: RESERVATION_OVERDUE,
           overdueAt: new Date(event.timestamp),
           version: event.version,
           updatedAt: new Date(event.timestamp),
@@ -180,21 +185,29 @@ export class ReservationProjectionHandler {
    */
   async handleBookValidationResult(event: DomainEvent): Promise<void> {
     // Get the reservation ID and validation result from the event
-    const { reservationId, isValid, reason } = event.payload
+    const { reservationId, isValid, reason, retailPrice } = event.payload
+
+    // Update object with the basic fields
+    const updateData: any = {
+      status: isValid
+        ? RESERVATION_STATUS.PENDING_PAYMENT
+        : RESERVATION_STATUS.REJECTED,
+      statusReason: isValid ? null : reason,
+      updatedAt: new Date(),
+    }
+
+    // If retail price is provided, add it to the update
+    if (retailPrice !== undefined && retailPrice > 0) {
+      updateData.retailPrice = Number(retailPrice)
+      logger.debug(
+        `Setting retail price for reservation ${reservationId} to ${retailPrice}`,
+      )
+    }
 
     // Update the reservation status in the projection
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
-      { id: reservationId },
-      {
-        $set: {
-          status: isValid
-            ? RESERVATION_STATUS.CONFIRMED
-            : RESERVATION_STATUS.REJECTED,
-          statusReason: isValid ? null : reason,
-          updatedAt: new Date(),
-        },
-      },
-    )
+    await this.db
+      .getCollection(RESERVATION_PROJECTION_TABLE)
+      .updateOne({ id: reservationId }, { $set: updateData })
 
     logger.info(
       `Reservation ${reservationId} validation result: ${isValid ? 'confirmed' : 'rejected'}`,
@@ -217,7 +230,7 @@ export class ReservationProjectionHandler {
       },
       {
         $set: {
-          status: RESERVATION_STATUS.CONFIRMED,
+          status: RESERVATION_STATUS.RESERVED,
           paymentReceived: true,
           paymentAmount: event.payload.amount,
           paymentDate: paymentDate,
@@ -269,6 +282,18 @@ export class ReservationProjectionHandler {
 
     logger.info(
       `Payment declined for reservation ${event.aggregateId}. Status updated to rejected. Reason: ${event.payload.reason}`,
+    )
+  }
+
+  async handleRetailPriceUpdated(event: DomainEvent): Promise<void> {
+    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
+      { id: event.aggregateId },
+      {
+        $set: {
+          retailPrice: Number(event.payload.newRetailPrice),
+          updatedAt: new Date(event.timestamp),
+        },
+      },
     )
   }
 }

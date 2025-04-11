@@ -6,9 +6,9 @@ import {
 } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
 import { paginationMiddleware } from '@book-library-tool/sdk'
+import { BookReturnHandler } from '@commands/BookReturnHandler.js'
 // Command (write) handlers:
 import { CreateReservationHandler } from '@commands/CreateReservationHandler.js'
-import { ReturnReservationHandler } from '@commands/ReturnReservationHandler.js'
 // Controllers for different operations:
 import { CreateReservationController } from '@controllers/reservations/CreateReservationController.js'
 import { GetReservationHistoryController } from '@controllers/reservations/GetReservationHistoryController.js'
@@ -40,10 +40,7 @@ export function createReservationRouter(
     reservationProjectionRepository,
     eventBus,
   )
-  const returnHandler = new ReturnReservationHandler(
-    reservationRepository,
-    eventBus,
-  )
+  const returnHandler = new BookReturnHandler(reservationRepository, eventBus)
 
   // The query (read) handler uses the projection repository.
   const getHistoryHandler = new GetReservationHistoryHandler(

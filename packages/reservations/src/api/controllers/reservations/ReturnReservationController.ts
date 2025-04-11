@@ -1,11 +1,9 @@
 import type { ReservationReturnParams } from '@book-library-tool/sdk'
-import { ReturnReservationHandler } from '@commands/ReturnReservationHandler.js'
+import { BookReturnHandler } from '@commands/BookReturnHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class ReturnReservationController {
-  constructor(
-    private readonly returnReservationHandler: ReturnReservationHandler,
-  ) {
+  constructor(private readonly returnReservationHandler: BookReturnHandler) {
     // Bind methods to ensure the correct "this" context when used as callbacks
     this.returnReservation = this.returnReservation.bind(this)
   }
