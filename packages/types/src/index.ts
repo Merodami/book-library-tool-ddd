@@ -5,7 +5,7 @@ export enum RESERVATION_STATUS {
   LATE = 'late',
   BOUGHT = 'bought',
   CANCELLED = 'cancelled',
-  PENDING = 'pending',
+  PENDING_PAYMENT = 'pending_payment',
   CONFIRMED = 'confirmed',
   REJECTED = 'rejected',
 }

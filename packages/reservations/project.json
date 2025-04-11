@@ -6,7 +6,8 @@
     "@book-library-tool/api",
     "@book-library-tool/auth",
     "@book-library-tool/shared",
-    "@book-library-tool/database"
+    "@book-library-tool/database",
+    "@book-library-tool/event-store"
   ],
   "targets": {
     "typecheck": {

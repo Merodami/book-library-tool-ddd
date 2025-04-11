@@ -28,11 +28,15 @@ export class RabbitMQEventBus implements EventBus {
   private shuttingDown = false
   private reconnectAttempts = 0
   private readonly maxReconnectAttempts = 10
+  private returnHandler: (msg: amqplib.Message) => void
 
   constructor(
     private serviceName: string,
     private rabbitMQUrl: string = getRabbitMQUrl(),
-  ) {}
+  ) {
+    // Create a bound method that can be used for both adding and removing the listener
+    this.returnHandler = this.handleReturnedMessage.bind(this)
+  }
 
   /**
    * Initializes the RabbitMQ connection, channel, exchange, and queue without consuming.
@@ -59,8 +63,14 @@ export class RabbitMQEventBus implements EventBus {
       this.channel = await this.connection.createChannel()
       this.setupConnectionHandlers()
 
+      // Set max listeners to avoid memory leaks
+      this.channel.setMaxListeners(50)
+
       // Set prefetch count
       await this.channel.prefetch(50)
+
+      // Register the return handler once during initialization
+      this.channel.on('return', this.returnHandler)
 
       // Declare exchanges
       await this.channel.assertExchange(this.exchangeName, 'topic', {
@@ -451,6 +461,33 @@ export class RabbitMQEventBus implements EventBus {
   }
 
   /**
+   * Handles messages returned by the RabbitMQ server due to mandatory flag
+   * when no queue is bound with the appropriate routing key.
+   *
+   * @private
+   * @param {amqplib.Message} msg - The returned message
+   */
+  private handleReturnedMessage(msg: amqplib.Message): void {
+    const routingKey = msg.fields.routingKey
+    const exchange = msg.fields.exchange
+    const content = msg.content.toString()
+
+    // Log detailed information for debugging
+    logger.warn({
+      message: 'Message returned from server (no queue bound)',
+      routingKey,
+      exchange,
+      serviceName: this.serviceName,
+      // Include message ID for correlation
+      messageId: msg.properties.messageId || 'unknown',
+      contentPreview:
+        content.substring(0, 200) + (content.length > 200 ? '...' : ''),
+    })
+
+    // ToDo Store returned messages for later analysis or retry
+  }
+
+  /**
    * Closes the RabbitMQ channel and connection gracefully.
    */
   async shutdown(): Promise<void> {
@@ -464,7 +501,10 @@ export class RabbitMQEventBus implements EventBus {
 
     try {
       if (this.channel) {
+        this.channel.removeListener('return', this.returnHandler)
+
         await this.channel.close()
+
         logger.info('RabbitMQ channel closed successfully')
       }
     } catch (error) {

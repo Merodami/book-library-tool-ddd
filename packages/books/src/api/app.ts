@@ -3,7 +3,7 @@ import { MongoDatabaseService } from '@book-library-tool/database'
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
-import { setupEventSubscriptions } from '@event-store/setupEventSubscriptions.js'
+import { SetupEventSubscriptions } from '@event-store/SetupEventSubscriptions.js'
 import { BookProjectionRepository } from '@persistence/mongo/BookProjectionRepository.js'
 // Routers and controllers for different contexts
 import { BookRepository } from '@persistence/mongo/BookRepository.js'
@@ -43,7 +43,7 @@ async function startServer() {
   // Set up event subscriptions to update read models (via the projection handler)
   const bookProjectionHandler = new BookProjectionHandler(dbService)
 
-  await setupEventSubscriptions(eventBus, bookProjectionHandler)
+  await SetupEventSubscriptions(eventBus, bookProjectionHandler)
 
   await eventBus.startConsuming()
 

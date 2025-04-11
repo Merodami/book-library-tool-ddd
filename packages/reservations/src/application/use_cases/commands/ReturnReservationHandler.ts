@@ -1,6 +1,6 @@
 import type { EventBus } from '@book-library-tool/event-store'
 import type { ReservationReturnParams } from '@book-library-tool/sdk'
-import { Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import type { IReservationRepository } from '@repositories/IReservationRepository.js'
 
 /**
@@ -24,7 +24,7 @@ export class ReturnReservationHandler {
     if (!command.reservationId) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_RETURN_REQUEST',
+        ErrorCode.RESERVATION_INVALID_DATA,
         'Reservation ID is required',
       )
     }
@@ -37,7 +37,7 @@ export class ReturnReservationHandler {
     if (!reservation) {
       throw new Errors.ApplicationError(
         404,
-        'RESERVATION_NOT_FOUND',
+        ErrorCode.RESERVATION_NOT_FOUND,
         `Reservation with ID ${command.reservationId} not found`,
       )
     }

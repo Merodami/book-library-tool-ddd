@@ -1,9 +1,13 @@
 import { apiTokenAuth } from '@book-library-tool/auth'
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { RabbitMQEventBus } from '@book-library-tool/event-store'
+import {
+  RabbitMQEventBus,
+  WALLET_PAYMENT_DECLINED,
+  WALLET_PAYMENT_SUCCESS,
+} from '@book-library-tool/event-store'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
-import { setupEventSubscriptions } from '@event-store/setupEventSubscriptions.js'
+import { SetupEventSubscriptions } from '@event-store/SetupEventSubscriptions.js'
 import { ReservationProjectionRepository } from '@persistence/mongo/ReservationProjectionRepository.js'
 import { ReservationRepository } from '@persistence/mongo/ReservationRepository.js'
 import { createReservationRouter } from '@routes/reservations/createReservationRouter.js'
@@ -45,8 +49,19 @@ async function startServer() {
   const reservationProjectionHandler = new ReservationProjectionHandler(
     dbService,
   )
+  // Subscribe to wallet events for payment processing
+  await eventBus.bindEventTypes([
+    WALLET_PAYMENT_SUCCESS,
+    WALLET_PAYMENT_DECLINED,
+  ])
 
-  await setupEventSubscriptions(eventBus, reservationProjectionHandler)
+  // Subscribe to internal domain events for reservations
+  await SetupEventSubscriptions(
+    eventBus,
+    reservationProjectionHandler,
+    reservationRepository,
+    reservationProjectionRepository,
+  )
 
   await eventBus.startConsuming()
 

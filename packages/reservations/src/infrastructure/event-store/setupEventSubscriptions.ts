@@ -8,14 +8,20 @@ import {
   RESERVATION_DELETED,
   RESERVATION_OVERDUE,
   RESERVATION_RETURNED,
+  WALLET_PAYMENT_DECLINED,
+  WALLET_PAYMENT_SUCCESS,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
+import { ValidateReservationHandler } from '@commands/ValidateReservationHandler.js'
+import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
+import { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
+import { IReservationRepository } from '@repositories/IReservationRepository.js'
 
-import { ReservationProjectionHandler } from './ReservationProjectionHandler.js'
-
-export function setupEventSubscriptions(
+export function SetupEventSubscriptions(
   eventBus: EventBus,
   projectionHandler: ReservationProjectionHandler,
+  reservationRepository: IReservationRepository,
+  reservationProjectionRepository: IReservationProjectionRepository,
 ): void {
   // Internal domain events for reservations
   eventBus.subscribe(RESERVATION_CREATED, async (event) => {
@@ -57,9 +63,22 @@ export function setupEventSubscriptions(
       logger.error(`Error handling ReservationDeleted event: ${error}`)
     }
   })
+
+  const validateReservationHandler = new ValidateReservationHandler(
+    reservationRepository,
+    reservationProjectionRepository,
+    projectionHandler,
+    eventBus,
+  )
+
   eventBus.subscribe(BOOK_VALIDATION_RESULT, async (event) => {
     try {
-      await projectionHandler.handleBookValidationResult(event)
+      // Also update the write model (reservation aggregate)
+      await validateReservationHandler.execute(event, {
+        reservationId: event.payload.reservationId,
+        isValid: event.payload.isValid,
+        reason: event.payload.reason,
+      })
     } catch (error) {
       logger.error(`Error handling BookValidationResult event: ${error}`)
     }
@@ -82,6 +101,23 @@ export function setupEventSubscriptions(
       await projectionHandler.handleBookDeleted(event)
     } catch (error) {
       logger.error(`Error handling BookDeleted event: ${error}`)
+    }
+  })
+
+  eventBus.subscribe(WALLET_PAYMENT_DECLINED, async (event) => {
+    try {
+      console.log('WATT')
+      await projectionHandler.handlePaymentDeclined(event)
+    } catch (error) {
+      logger.error(`Error handling BookDeleted event: ${error}`)
+    }
+  })
+
+  eventBus.subscribe(WALLET_PAYMENT_SUCCESS, async (event) => {
+    try {
+      await projectionHandler.handlePaymentSuccess(event)
+    } catch (error) {
+      logger.error(`Error handling PaymentReceived event: ${error}`)
     }
   })
 
