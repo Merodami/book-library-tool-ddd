@@ -4,7 +4,7 @@ export enum RESERVATION_STATUS {
   BORROWED = 'borrowed',
   RETURNED = 'returned',
   LATE = 'late',
-  BOUGHT = 'bought',
+  BROUGHT = 'brought',
   CANCELLED = 'cancelled',
 
   // Reservation is in process

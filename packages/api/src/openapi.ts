@@ -559,10 +559,10 @@ export const OpenAPISpec = {
                       days_late: 3,
                     },
                   },
-                  bookBought: {
-                    summary: 'Book considered bought due to high late fees',
+                  bookBrought: {
+                    summary: 'Book considered brought due to high late fees',
                     value: {
-                      message: 'Book considered bought due to high late fees.',
+                      message: 'Book considered brought due to high late fees.',
                       late_fee_applied: '27.0',
                       days_late: 135,
                     },
@@ -783,7 +783,7 @@ export const OpenAPISpec = {
         responses: {
           '200': {
             description:
-              'Late fee applied. If fees reach or exceed the retail price, the book is considered bought.',
+              'Late fee applied. If fees reach or exceed the retail price, the book is considered brought.',
             content: {
               'application/json': {
                 schema: {
@@ -807,11 +807,11 @@ export const OpenAPISpec = {
                       },
                     },
                   },
-                  bookBought: {
-                    summary: 'Book considered bought due to high late fees',
+                  bookBrought: {
+                    summary: 'Book considered brought due to high late fees',
                     value: {
                       message:
-                        'Late fees of €19.00 exceed or equal book retail price. Book marked as bought.',
+                        'Late fees of €19.00 exceed or equal book retail price. Book marked as brought.',
                       wallet: {
                         userId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
                         balance: 31.5,

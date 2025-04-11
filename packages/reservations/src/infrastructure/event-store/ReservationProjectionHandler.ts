@@ -296,4 +296,22 @@ export class ReservationProjectionHandler {
       },
     )
   }
+
+  /**
+   * Handles the ReservationBookBrought event
+   */
+  async handleReservationBookBrought(event: DomainEvent): Promise<void> {
+    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
+      { id: event.aggregateId },
+      {
+        $set: {
+          status: RESERVATION_STATUS.BROUGHT,
+          updatedAt: new Date(event.timestamp),
+          version: event.version,
+        },
+      },
+    )
+
+    logger.info(`Reservation ${event.payload.reservationId} marked as brought`)
+  }
 }

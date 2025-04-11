@@ -2,6 +2,9 @@ import { apiTokenAuth } from '@book-library-tool/auth'
 import { MongoDatabaseService } from '@book-library-tool/database'
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
+import { BookBroughtHandler } from '@commands/BookBroughtHandler.js'
+import { PaymentHandler } from '@commands/PaymentHandler.js'
+import { ValidateReservationHandler } from '@commands/ValidateReservationHandler.js'
 import { SetupEventSubscriptions } from '@event-store/ReservationEventSubscriptions.js'
 import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
 import { ReservationProjectionRepository } from '@persistence/mongo/ReservationProjectionRepository.js'
@@ -11,9 +14,6 @@ import { createReservationStatusRouter } from '@routes/reservations/createReserv
 import cors from 'cors'
 import express from 'express'
 import gracefulShutdown from 'http-graceful-shutdown'
-
-import { PaymentHandler } from '../application/use_cases/commands/PaymentHandler.js'
-import { ValidateReservationHandler } from '../application/use_cases/commands/ValidateReservationHandler.js'
 
 async function startServer() {
   // Initialize the infrastructure service (database connection)
@@ -63,12 +63,15 @@ async function startServer() {
     eventBus,
   )
 
+  const bookBrought = new BookBroughtHandler(reservationRepository, eventBus)
+
   // Subscribe to internal domain events for reservations
   await SetupEventSubscriptions(
     eventBus,
     reservationProjectionHandler,
     validateReservationHandler,
     paymentHandler,
+    bookBrought,
   )
 
   await eventBus.startConsuming()

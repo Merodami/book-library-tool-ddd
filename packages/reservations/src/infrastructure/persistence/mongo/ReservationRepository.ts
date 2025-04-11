@@ -225,7 +225,7 @@ export class ReservationRepository
     return (
       reservation.status !== RESERVATION_STATUS.RETURNED &&
       reservation.status !== RESERVATION_STATUS.CANCELLED &&
-      reservation.status !== RESERVATION_STATUS.BOUGHT
+      reservation.status !== RESERVATION_STATUS.BROUGHT
     )
   }
 

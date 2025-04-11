@@ -120,6 +120,7 @@ export class Wallet extends AggregateRoot {
    * Applies a late fee to the wallet
    */
   public applyLateFee(
+    reservationId: string,
     daysLate: number,
     retailPrice: number,
     feePerDay: number,
@@ -145,6 +146,7 @@ export class Wallet extends AggregateRoot {
       eventType: WALLET_LATE_FEE_APPLIED,
       payload: {
         userId: this.userId,
+        reservationId: reservationId,
         previousBalance: this.balance.toFloat(),
         fee: feeMoney.toFloat(),
         newBalance: newBalance.toFloat(),
