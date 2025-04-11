@@ -333,7 +333,6 @@ export class Reservation extends AggregateRoot {
     allowedStates: RESERVATION_STATUS[],
     actionName: string,
   ): void {
-    console.log('this.status', this.status)
     if (!allowedStates.includes(this.status)) {
       const errorCode = `RESERVATION_CANNOT_BE_${actionName.toUpperCase()}`
       const errorMessage = `Reservation with id ${this.reservationId} cannot be ${actionName.toLowerCase()} in its current status.`

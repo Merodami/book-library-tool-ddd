@@ -143,7 +143,7 @@ export function SetupEventSubscriptions(
   eventBus.subscribe(WALLET_LATE_FEE_APPLIED, async (event) => {
     try {
       // Check if the book was purchased based on late fees
-      if (event.payload.bookPurchased) {
+      if (event.payload.bookBrought) {
         await bookBroughtHandler.handleBookPurchasedViaLateFee(
           event.payload.userId,
           event.payload.reservationId,
