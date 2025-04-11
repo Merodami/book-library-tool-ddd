@@ -46,6 +46,7 @@ export const LateReturnRequestRef = Type.Ref(
  */
 export const WalletSchema = Type.Object(
   {
+    id: Type.String({ format: 'uuid' }),
     userId: Type.String({ format: 'uuid' }),
     balance: Type.Number(),
     createdAt: Type.Optional(Type.String({ format: 'date-time' })),

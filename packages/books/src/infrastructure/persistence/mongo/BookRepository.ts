@@ -1,4 +1,5 @@
 import {
+  BaseEventSourcedRepository,
   BOOK_CREATED,
   BOOK_DELETED,
   type DomainEvent,
@@ -6,8 +7,6 @@ import {
 import { Errors, logger } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
-
-import { BaseEventSourcedRepository } from './BaseEventSourcedRepository.js'
 
 export class BookRepository
   extends BaseEventSourcedRepository<Book>

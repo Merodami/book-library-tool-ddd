@@ -2,9 +2,11 @@ import {
   getNextGlobalVersion,
   type MongoDatabaseService,
 } from '@book-library-tool/database'
-import type { AggregateRoot, DomainEvent } from '@book-library-tool/event-store'
-import { Errors, logger } from '@book-library-tool/shared'
+import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Collection } from 'mongodb'
+
+import { AggregateRoot } from './AggregateRoot.js'
+import { DomainEvent } from './domain/DomainEvent.js'
 
 export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
   protected readonly collection: Collection<DomainEvent>
@@ -110,7 +112,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
       if (currentVersion !== expectedVersion) {
         throw new Errors.ApplicationError(
           409,
-          'CONCURRENCY_CONFLICT',
+          ErrorCode.CONCURRENCY_CONFLICT,
           `Concurrency conflict for aggregate ${aggregateId}: expected version ${expectedVersion} but found ${currentVersion}.`,
         )
       }
@@ -186,7 +188,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
         // Only retry on concurrency conflicts.
         if (
           error instanceof Errors.ApplicationError &&
-          error.message.includes('CONCURRENCY_CONFLICT')
+          error.message.includes(ErrorCode.CONCURRENCY_CONFLICT)
         ) {
           attempts++
           // Exponential backoff with jitter.

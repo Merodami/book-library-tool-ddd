@@ -28,7 +28,7 @@ export class ReservationProjectionHandler {
       id: event.aggregateId,
       userId: event.payload.userId,
       isbn: event.payload.isbn,
-      status: RESERVATION_STATUS.CONFIRMED,
+      status: RESERVATION_STATUS.PENDING_PAYMENT,
       createdAt: createdDate,
       dueDate: dueDate,
       returnedAt: null,
@@ -198,6 +198,77 @@ export class ReservationProjectionHandler {
 
     logger.info(
       `Reservation ${reservationId} validation result: ${isValid ? 'confirmed' : 'rejected'}`,
+    )
+  }
+
+  /**
+   * Handles the ReservationPaymentReceived event by updating the reservation status to 'confirmed'.
+   * Records the payment information and updates the reservation status.
+   *
+   * @param event - The ReservationPaymentReceived domain event
+   */
+  async handlePaymentSuccess(event: DomainEvent): Promise<void> {
+    const paymentDate = new Date(event.timestamp)
+
+    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
+      {
+        id: event.aggregateId,
+        version: { $lt: event.version },
+      },
+      {
+        $set: {
+          status: RESERVATION_STATUS.CONFIRMED,
+          paymentReceived: true,
+          paymentAmount: event.payload.amount,
+          paymentDate: paymentDate,
+          paymentMethod: event.payload.paymentMethod,
+          paymentReference: event.payload.paymentReference,
+          version: event.version,
+          updatedAt: new Date(event.timestamp),
+        },
+      },
+    )
+
+    logger.info(
+      `Payment received for reservation ${event.aggregateId}. Status updated to confirmed.`,
+    )
+  }
+
+  async handlePaymentDeclined(event: DomainEvent): Promise<void> {
+    const paymentDate = new Date(event.timestamp)
+
+    logger.debug(
+      `Processing payment declined event for reservation ${event.aggregateId}`,
+    )
+
+    const result = await this.db
+      .getCollection(RESERVATION_PROJECTION_TABLE)
+      .updateOne(
+        {
+          id: event.aggregateId,
+          // Remove the version check as this event is from a different stream
+        },
+        {
+          $set: {
+            status: RESERVATION_STATUS.REJECTED,
+            paymentReceived: false, // This should be false for declined payments
+            paymentFailed: true,
+            paymentFailReason: event.payload.reason,
+            paymentAttemptDate: paymentDate,
+            updatedAt: new Date(event.timestamp),
+          },
+        },
+      )
+
+    if (result.matchedCount === 0) {
+      logger.warn(
+        `No reservation found with ID ${event.aggregateId} to update payment declined status`,
+      )
+      return
+    }
+
+    logger.info(
+      `Payment declined for reservation ${event.aggregateId}. Status updated to rejected. Reason: ${event.payload.reason}`,
     )
   }
 }

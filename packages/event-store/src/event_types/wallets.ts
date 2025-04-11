@@ -1,0 +1,24 @@
+/**
+ * Domain event types for the Wallet aggregate.
+ */
+export const WALLET_CREATED = 'WALLET_CREATED'
+export const WALLET_NOT_FOUND = 'WALLET_NOT_FOUND'
+export const WALLET_BALANCE_UPDATED = 'WALLET_BALANCE_UPDATED'
+export const WALLET_LATE_FEE_APPLIED = 'WALLET_LATE_FEE_APPLIED'
+export const WALLET_DELETED = 'WALLET_DELETED'
+export const WALLET_BALANCE_RESERVED = 'WALLET_BALANCE_RESERVED'
+export const WALLET_PAYMENT_SUCCESS = 'WALLET_PAYMENT_SUCCESS'
+export const WALLET_PAYMENT_DECLINED = 'WALLET_PAYMENT_DECLINED'
+
+/**
+ * TypeScript type for the Wallet event types.
+ */
+export type WalletEventType =
+  | typeof WALLET_CREATED
+  | typeof WALLET_NOT_FOUND
+  | typeof WALLET_BALANCE_UPDATED
+  | typeof WALLET_LATE_FEE_APPLIED
+  | typeof WALLET_DELETED
+  | typeof WALLET_BALANCE_RESERVED
+  | typeof WALLET_PAYMENT_SUCCESS
+  | typeof WALLET_PAYMENT_DECLINED

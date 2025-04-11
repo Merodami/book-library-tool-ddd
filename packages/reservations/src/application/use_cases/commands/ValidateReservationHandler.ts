@@ -101,18 +101,10 @@ export class ValidateReservationHandler {
       await this.reservationProjectionRepository.countActiveReservationsByUser(
         reservation.userId,
       )
-    console.log(
-      '🚀 ~ ValidateReservationHandler ~ activeReservationsCount:',
-      activeReservationsCount,
-    )
 
-    const maxReservations = Number(process.env.BOOK_MAX_PER_USER) || 3
-    console.log(
-      '🚀 ~ ValidateReservationHandler ~ maxReservations:',
-      maxReservations,
-    )
+    const maxReservations = Number(process.env.BOOK_MAX_RESERVATION_USER) || 3
+
     const exceedsLimit = activeReservationsCount > maxReservations
-    console.log('🚀 ~ ValidateReservationHandler ~ exceedsLimit:', exceedsLimit)
 
     if (exceedsLimit) {
       return {
@@ -146,12 +138,12 @@ export class ValidateReservationHandler {
         reservation.userId,
       )
 
-    const maxReservations = Number(process.env.BOOK_MAX_PER_USER) || 3
+    const maxReservations = Number(process.env.BOOK_MAX_RESERVATION_USER) || 3
 
     if (activeReservationsCount >= maxReservations) {
       return reservation.reject(RESERVATION_BOOK_LIMIT_REACH)
     }
 
-    return reservation.confirm()
+    return reservation.setPaymentPending()
   }
 }

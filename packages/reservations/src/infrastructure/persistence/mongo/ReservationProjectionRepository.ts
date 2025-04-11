@@ -135,7 +135,6 @@ export class ReservationProjectionRepository
     if (userId) {
       filter.userId = userId
     }
-    console.log('🚀 ~ filter:', filter)
 
     // Use the pagination helper to get paginated reservation data
     const paginatedReservations = await getPaginatedData<Reservation>(
@@ -218,6 +217,7 @@ export class ReservationProjectionRepository
           RESERVATION_STATUS.RESERVED,
           RESERVATION_STATUS.CONFIRMED,
           RESERVATION_STATUS.BORROWED,
+          RESERVATION_STATUS.PENDING_PAYMENT,
         ],
       },
       deletedAt: { $exists: false },

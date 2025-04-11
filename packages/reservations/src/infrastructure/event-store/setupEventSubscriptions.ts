@@ -8,6 +8,8 @@ import {
   RESERVATION_DELETED,
   RESERVATION_OVERDUE,
   RESERVATION_RETURNED,
+  WALLET_PAYMENT_DECLINED,
+  WALLET_PAYMENT_SUCCESS,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 import { ValidateReservationHandler } from '@commands/ValidateReservationHandler.js'
@@ -99,6 +101,23 @@ export function SetupEventSubscriptions(
       await projectionHandler.handleBookDeleted(event)
     } catch (error) {
       logger.error(`Error handling BookDeleted event: ${error}`)
+    }
+  })
+
+  eventBus.subscribe(WALLET_PAYMENT_DECLINED, async (event) => {
+    try {
+      console.log('WATT')
+      await projectionHandler.handlePaymentDeclined(event)
+    } catch (error) {
+      logger.error(`Error handling BookDeleted event: ${error}`)
+    }
+  })
+
+  eventBus.subscribe(WALLET_PAYMENT_SUCCESS, async (event) => {
+    try {
+      await projectionHandler.handlePaymentSuccess(event)
+    } catch (error) {
+      logger.error(`Error handling PaymentReceived event: ${error}`)
     }
   })
 

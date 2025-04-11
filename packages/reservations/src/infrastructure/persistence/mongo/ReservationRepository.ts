@@ -1,4 +1,5 @@
 import {
+  BaseEventSourcedRepository,
   type DomainEvent,
   RESERVATION_CONFIRMED,
 } from '@book-library-tool/event-store'
@@ -7,8 +8,6 @@ import { Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Reservation } from '@entities/Reservation.js'
 import type { IReservationRepository } from '@repositories/IReservationRepository.js'
-
-import { BaseEventSourcedRepository } from './BaseEventSourcedRepository.js'
 
 /**
  * Event-sourced repository implementation for Reservation aggregates.

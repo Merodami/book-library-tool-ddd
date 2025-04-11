@@ -18,11 +18,20 @@ export enum ErrorCode {
   RESERVATION_CANNOT_BE_CONFIRMED = 'RESERVATION_CANNOT_BE_CONFIRMED',
   RESERVATION_CANNOT_BE_REJECTED = 'RESERVATION_CANNOT_BE_REJECTED',
 
+  // Wallet-related errors
+  WALLET_NOT_FOUND = 'WALLET_NOT_FOUND',
+  PAYMENT_PROCESSING_ERROR = 'PAYMENT_PROCESSING_ERROR',
+  // User-related errors
+  USER_NOT_FOUND = 'USER_NOT_FOUND',
+
   // General errors
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   UNAUTHORIZED = 'UNAUTHORIZED',
   FORBIDDEN = 'FORBIDDEN',
   INTERNAL_ERROR = 'INTERNAL_ERROR',
+  CONCURRENCY_CONFLICT = 'CONCURRENCY_CONFLICT',
+  DATABASE_ERROR = 'DATABASE_ERROR',
+  DUPLICATE_ENTITY = 'DUPLICATE_ENTITY',
 }
 
 /**
@@ -32,6 +41,8 @@ export function getStatusCodeForError(code: ErrorCode): number {
   switch (code) {
     case ErrorCode.BOOK_NOT_FOUND:
     case ErrorCode.RESERVATION_NOT_FOUND:
+    case ErrorCode.WALLET_NOT_FOUND:
+    case ErrorCode.USER_NOT_FOUND:
       return 404
 
     case ErrorCode.BOOK_ALREADY_EXISTS:
@@ -52,7 +63,14 @@ export function getStatusCodeForError(code: ErrorCode): number {
     case ErrorCode.FORBIDDEN:
       return 403
 
+    case ErrorCode.DUPLICATE_ENTITY:
+      return 409
+
     case ErrorCode.INTERNAL_ERROR:
+    case ErrorCode.CONCURRENCY_CONFLICT:
+    case ErrorCode.DATABASE_ERROR:
+    case ErrorCode.PAYMENT_PROCESSING_ERROR:
+      return 500
     default:
       return 500
   }
@@ -89,6 +107,12 @@ export function getDefaultMessageForError(code: ErrorCode): string {
 
     case ErrorCode.RESERVATION_CANNOT_BE_REJECTED:
       return 'The reservation cannot be rejected in its current state'
+
+    case ErrorCode.WALLET_NOT_FOUND:
+      return 'The requested wallet could not be found'
+
+    case ErrorCode.PAYMENT_PROCESSING_ERROR:
+      return 'An error occurred while processing the payment'
 
     case ErrorCode.VALIDATION_ERROR:
       return 'Validation error'

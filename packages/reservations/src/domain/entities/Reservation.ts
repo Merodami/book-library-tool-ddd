@@ -5,6 +5,7 @@ import {
   RESERVATION_CANCELLED,
   RESERVATION_CONFIRMED,
   RESERVATION_CREATED,
+  RESERVATION_PENDING_PAYMENT,
   RESERVATION_REJECTED,
   RESERVATION_RETURNED,
 } from '@book-library-tool/event-store'
@@ -268,6 +269,7 @@ export class Reservation extends AggregateRoot {
     const actionName = eventType.replace('Reservation', '').toLowerCase()
     const basePayload = {
       reservationId: this.reservationId,
+      userId: this.userId,
       previousStatus: this.status,
       updatedStatus: newStatus,
       [`${actionName}At`]: now.toISOString(),
@@ -349,17 +351,17 @@ export class Reservation extends AggregateRoot {
   }
 
   /**
-   * Domain method to confirm a reservation after book validation.
+   * Domain method to set pending payment a reservation after book validation.
    */
-  public confirm(): { reservation: Reservation; event: DomainEvent } {
+  public setPaymentPending(): { reservation: Reservation; event: DomainEvent } {
     this.validateStateTransition(
-      [RESERVATION_STATUS.RESERVED, RESERVATION_STATUS.PENDING],
-      RESERVATION_STATUS.CONFIRMED,
+      [RESERVATION_STATUS.RESERVED],
+      RESERVATION_STATUS.PENDING_PAYMENT,
     )
 
     return this.createStateTransition(
-      RESERVATION_STATUS.CONFIRMED,
-      RESERVATION_CONFIRMED,
+      RESERVATION_STATUS.PENDING_PAYMENT,
+      RESERVATION_PENDING_PAYMENT,
     )
   }
 
@@ -374,7 +376,7 @@ export class Reservation extends AggregateRoot {
       [
         RESERVATION_STATUS.CONFIRMED,
         RESERVATION_STATUS.RESERVED,
-        RESERVATION_STATUS.PENDING,
+        RESERVATION_STATUS.PENDING_PAYMENT,
       ],
       RESERVATION_STATUS.REJECTED,
     )
