@@ -46,7 +46,12 @@ async function startServer() {
     dbService,
   )
 
-  await setupEventSubscriptions(eventBus, reservationProjectionHandler)
+  await setupEventSubscriptions(
+    eventBus,
+    reservationProjectionHandler,
+    reservationRepository,
+    reservationProjectionRepository,
+  )
 
   await eventBus.startConsuming()
 

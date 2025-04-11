@@ -11,6 +11,7 @@ export const RESERVATION_PENDING = 'ReservationPending'
 export const RESERVATION_CONFIRMED = 'ReservationConfirmed'
 export const RESERVATION_REJECTED = 'ReservationRejected'
 export const RESERVATION_BOOK_VALIDATION = 'ReservationValidateBook'
+export const RESERVATION_BOOK_LIMIT_REACH = 'ReservationBookLimitReach'
 
 /**
  * TypeScript type for the Reservation event types.
@@ -26,3 +27,4 @@ export type ReservationEventType =
   | typeof RESERVATION_CONFIRMED
   | typeof RESERVATION_REJECTED
   | typeof RESERVATION_BOOK_VALIDATION
+  | typeof RESERVATION_BOOK_LIMIT_REACH
