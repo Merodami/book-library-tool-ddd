@@ -12,7 +12,16 @@ import { WalletProjectionHandler } from '@event-store/WalletProjectionHandler.js
 import { BookReturnHandler } from '@use_cases/commands/BookReturnHandler.js'
 
 /**
- * Sets up event subscriptions for wallet-related events
+ * Sets up event subscriptions for wallet-related events.
+ * This module configures the event-driven architecture for the wallet context,
+ * handling both internal wallet events and cross-domain events from the
+ * reservations context.
+ *
+ * The subscriptions maintain eventual consistency by:
+ * - Updating wallet projections for internal events
+ * - Processing payment requests from reservations
+ * - Handling book returns and late fee applications
+ * - Managing error scenarios and logging
  */
 export function SetupEventSubscriptions(
   eventBus: EventBus,
@@ -71,6 +80,7 @@ export function SetupEventSubscriptions(
     }
   })
 
+  // Subscribe to WALLET_LATE_FEE_APPLIED events
   eventBus.subscribe(WALLET_LATE_FEE_APPLIED, async (event) => {
     try {
       await projectionHandler.handleWalletLateFeeApplied(event)

@@ -5,4 +5,3 @@ export {
   validateParams,
   validateQuery,
 } from './src/validation.js'
-export { ErrorMessages } from './util/errorMessages.js'

@@ -1,5 +1,6 @@
 import { DomainEvent, EventBus } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
+import { ProcessWalletPaymentCommand } from '@commands/ProcessWalletPaymentCommand.js'
 import { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepository.js'
 import { IWalletRepository } from '@repositories/IWalletRepository.js'
 
@@ -8,7 +9,10 @@ const WALLET_PAYMENT_DECLINED = 'WALLET_PAYMENT_DECLINED'
 const RESERVATION_FEE = Number(process.env.BOOK_RESERVATION_FEE) || 3
 
 /**
- * Command handler for processing wallet payments
+ * Command handler for processing wallet payments.
+ * This class handles the payment processing workflow for book reservations,
+ * ensuring proper balance checks and maintaining consistency between
+ * the event store and projection.
  */
 export class ProcessWalletPaymentHandler {
   constructor(
@@ -18,13 +22,21 @@ export class ProcessWalletPaymentHandler {
   ) {}
 
   /**
-   * Processes a payment for a reservation from a user's wallet
+   * Processes a payment for a reservation from a user's wallet.
+   * This method implements the payment processing workflow:
+   * 1. Checks wallet existence and balance in the projection
+   * 2. Verifies wallet consistency with the event store
+   * 3. Processes the payment if funds are available
+   * 4. Publishes appropriate success/declined events
+   *
+   * @param command - The payment processing command
+   * @param command.userId - The ID of the user making the payment
+   * @param command.reservationId - The ID of the reservation being paid for
+   * @param command.amount - Optional payment amount (defaults to reservation fee)
+   * @returns Promise resolving to true if payment succeeds, false if declined
+   * @throws {ApplicationError} If payment processing fails (500)
    */
-  async execute(command: {
-    userId: string
-    reservationId: string
-    amount?: number
-  }): Promise<boolean> {
+  async execute(command: ProcessWalletPaymentCommand): Promise<boolean> {
     try {
       const { userId, reservationId, amount = RESERVATION_FEE } = command
 
@@ -116,7 +128,13 @@ export class ProcessWalletPaymentHandler {
   }
 
   /**
-   * Publishes a payment success event
+   * Publishes a payment success event to notify other services.
+   * This event is used to update the reservation status and trigger
+   * any necessary follow-up actions.
+   *
+   * @param userId - The ID of the user who made the payment
+   * @param reservationId - The ID of the reservation being paid for
+   * @param amount - The amount that was paid
    */
   private async publishSuccessEvent(
     userId: string,
@@ -141,7 +159,13 @@ export class ProcessWalletPaymentHandler {
   }
 
   /**
-   * Publishes a payment declined event
+   * Publishes a payment declined event to notify other services.
+   * This event is used to update the reservation status and trigger
+   * any necessary follow-up actions.
+   *
+   * @param userId - The ID of the user whose payment was declined
+   * @param reservationId - The ID of the reservation that failed payment
+   * @param reason - The reason why the payment was declined
    */
   private async publishDeclinedEvent(
     userId: string,

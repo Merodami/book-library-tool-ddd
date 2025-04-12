@@ -1,9 +1,8 @@
 import { EventBus } from '@book-library-tool/event-store'
 import { Errors } from '@book-library-tool/shared'
+import { UpdateBookCommand } from '@commands/UpdateBookCommand.js'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
-
-import { UpdateBookCommand } from './UpdateBookCommand.js'
 
 export class UpdateBookHandler {
   constructor(

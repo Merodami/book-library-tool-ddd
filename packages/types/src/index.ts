@@ -1,3 +1,6 @@
+/**
+ * Reservation status values used throughout the application.
+ */
 export enum RESERVATION_STATUS {
   // Reservation has been approved and paid
   RESERVED = 'reserved',
@@ -14,6 +17,9 @@ export enum RESERVATION_STATUS {
   REJECTED = 'rejected',
 }
 
+/**
+ * Metadata for paginated API responses.
+ */
 export type PaginationMetadata = {
   total: number
   page: number
@@ -23,19 +29,25 @@ export type PaginationMetadata = {
   hasPrev: boolean
 }
 
+/**
+ * Generic type for wrapping paginated data with metadata.
+ */
 export type PaginatedResult<T> = {
   data: T[]
   pagination: PaginationMetadata
 }
 
 /**
- * Generic type for paginated query parameters
+ * Standard parameters for paginated API requests.
  */
 export type PaginatedQuery = {
   page?: number
   limit?: number
 }
 
+/**
+ * Read model representation of a book.
+ */
 export interface BookProjection {
   id: string // The aggregate ID
   isbn: string // Business identifier

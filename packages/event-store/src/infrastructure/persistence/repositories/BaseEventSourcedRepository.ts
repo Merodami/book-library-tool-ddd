@@ -3,10 +3,9 @@ import {
   type MongoDatabaseService,
 } from '@book-library-tool/database'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
+import { DomainEvent } from '@events/DomainEvent.js'
+import { AggregateRoot } from '@model/AggregateRoot.js'
 import { Collection } from 'mongodb'
-
-import { AggregateRoot } from './AggregateRoot.js'
-import { DomainEvent } from './domain/DomainEvent.js'
 
 export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
   protected readonly collection: Collection<DomainEvent>

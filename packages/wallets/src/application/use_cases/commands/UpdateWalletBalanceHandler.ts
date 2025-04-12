@@ -7,7 +7,20 @@ import { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepo
 import { IWalletRepository } from '@repositories/IWalletRepository.js'
 
 /**
- * Command handler for updating wallet balance
+ * Command handler for updating wallet balance.
+ * This class implements the command side of the CQRS pattern, handling
+ * wallet balance updates through event sourcing. It ensures data consistency
+ * by:
+ * - Managing both new and existing wallet updates
+ * - Handling concurrency conflicts
+ * - Maintaining consistency between event store and projection
+ * - Publishing domain events for state changes
+ *
+ * The handler is responsible for:
+ * - Processing balance update commands
+ * - Creating new wallets when needed
+ * - Managing event persistence and publication
+ * - Handling data inconsistencies between event store and projection
  */
 export class UpdateWalletBalanceHandler {
   constructor(
@@ -17,7 +30,18 @@ export class UpdateWalletBalanceHandler {
   ) {}
 
   /**
-   * Updates a wallet's balance or creates a new wallet
+   * Updates a wallet's balance or creates a new wallet.
+   * This method implements the main command processing logic, handling:
+   * - Existing wallet updates through event sourcing
+   * - New wallet creation when needed
+   * - Data consistency checks between event store and projection
+   * - Error handling and logging
+   *
+   * @param command - The balance update command
+   * @returns Promise resolving to the updated wallet DTO
+   * @throws {ApplicationError} If:
+   *   - A concurrency conflict occurs (409)
+   *   - The operation fails (500)
    */
   async execute(command: UpdateWalletBalanceCommand): Promise<WalletDTO> {
     try {
@@ -71,7 +95,15 @@ export class UpdateWalletBalanceHandler {
   }
 
   /**
-   * Updates an existing wallet
+   * Updates an existing wallet through event sourcing.
+   * This method handles the update of an existing wallet by:
+   * - Generating a new balance update event
+   * - Persisting the event with version control
+   * - Publishing the event for projection updates
+   *
+   * @param wallet - The existing wallet to update
+   * @param amount - The amount to update the balance by
+   * @returns Promise resolving to the updated wallet DTO
    */
   private async updateExistingWallet(
     wallet: Wallet,
@@ -97,7 +129,15 @@ export class UpdateWalletBalanceHandler {
   }
 
   /**
-   * Creates a new wallet
+   * Creates a new wallet through event sourcing.
+   * This method handles the creation of a new wallet by:
+   * - Generating a wallet creation event
+   * - Persisting the event
+   * - Publishing the event for projection updates
+   *
+   * @param userId - The ID of the user to create the wallet for
+   * @param initialBalance - The initial balance for the new wallet
+   * @returns Promise resolving to the new wallet DTO
    */
   private async createNewWallet(
     userId: string,

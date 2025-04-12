@@ -1,6 +1,5 @@
+import type { DomainEvent } from '@events/DomainEvent.js'
 import { v4 as uuidv4 } from 'uuid'
-
-import type { DomainEvent } from './domain/DomainEvent.js'
 
 /**
  * AggregateRoot provides a common foundation for all domain aggregates.

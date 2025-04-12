@@ -7,9 +7,20 @@ import { ErrorCode } from '@book-library-tool/shared'
 
 const BOOK_PROJECTION_TABLE = 'book_projection'
 
+/**
+ * Event handler that maintains the read model for books in MongoDB.
+ * This class is responsible for keeping the book projections in sync with domain events,
+ * ensuring that the read model accurately reflects the current state of books in the system.
+ */
 export class BookProjectionHandler {
   constructor(private readonly db: MongoDatabaseService) {}
 
+  /**
+   * Handles the creation of a new book by inserting its projection into MongoDB.
+   * This method is triggered when a BookCreated event is received.
+   *
+   * @param event - The domain event containing the book creation data
+   */
   async handleBookCreated(event: DomainEvent): Promise<void> {
     await this.db.getCollection(BOOK_PROJECTION_TABLE).insertOne({
       id: event.aggregateId,
@@ -24,6 +35,13 @@ export class BookProjectionHandler {
     })
   }
 
+  /**
+   * Updates an existing book projection when changes are made to a book.
+   * This method is triggered when a BookUpdated event is received.
+   * Only updates fields that have actually changed in the event payload.
+   *
+   * @param event - The domain event containing the book update data
+   */
   async handleBookUpdated(event: DomainEvent): Promise<void> {
     const updates: any = {}
 
@@ -57,6 +75,13 @@ export class BookProjectionHandler {
     )
   }
 
+  /**
+   * Handles the deletion of a book by marking it as deleted in the projection.
+   * This method is triggered when a BookDeleted event is received.
+   * Instead of removing the record, it sets a deletedAt timestamp for audit purposes.
+   *
+   * @param event - The domain event containing the book deletion data
+   */
   async handleBookDeleted(event: DomainEvent): Promise<void> {
     await this.db.getCollection(BOOK_PROJECTION_TABLE).updateOne(
       { id: event.aggregateId },
@@ -70,6 +95,14 @@ export class BookProjectionHandler {
     )
   }
 
+  /**
+   * Validates a book reservation request by checking if the book exists and is available.
+   * This method is triggered when a reservation validation request is received.
+   * Returns a validation result event indicating whether the reservation is valid.
+   *
+   * @param event - The domain event containing the reservation validation request
+   * @returns A domain event containing the validation result
+   */
   async handleReservationValidateBook(
     event: DomainEvent,
   ): Promise<DomainEvent> {

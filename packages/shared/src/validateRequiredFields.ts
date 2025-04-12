@@ -1,5 +1,3 @@
-import { isNil, trim } from 'lodash-es'
-
 /**
  * Validates that the specified fields are neither null, undefined, nor empty strings.
  * Numbers are considered invalid if they are NaN.
@@ -12,10 +10,10 @@ export function validateRequiredFields(fields: Record<string, any>): void {
     const value = fields[key]
 
     // Check for null or undefined
-    if (isNil(value)) return true
+    if (value === null || value === undefined) return true
 
     // If it's a string, check that it's not empty after trimming.
-    if (typeof value === 'string' && !trim(value)) return true
+    if (typeof value === 'string' && !value.trim()) return true
 
     // If it's a number, you might want to check if it's NaN.
     if (typeof value === 'number' && isNaN(value)) return true

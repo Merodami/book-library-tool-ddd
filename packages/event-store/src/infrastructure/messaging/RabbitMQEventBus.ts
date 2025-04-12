@@ -1,28 +1,31 @@
 import { logger } from '@book-library-tool/shared'
+import type { DomainEvent } from '@events/DomainEvent.js'
+import type { EventBus } from '@messaging/EventBus.js'
 import amqplib from 'amqplib'
 import { v4 as uuidv4 } from 'uuid'
 
-import type { DomainEvent } from './domain/DomainEvent.js'
-import type { EventBus } from './EventBus.js'
-
 /**
  * RabbitMQEventBus implements the EventBus interface using RabbitMQ.
+ * Provides reliable message publishing, consumption, error handling,
+ * and support for unroutable message processing.
  */
 export class RabbitMQEventBus implements EventBus {
-  private connection!: any // Bypass TypeScript strict typing for simplicity.
+  private connection!: any
   private channel!: any
-  // Use environment variable for the exchange name; this is where events are published.
   private readonly exchangeName = process.env.EVENTS_EXCHANGE || 'events'
   private queueName!: string
-  // Local registry for event handlers.
+
+  // Registry for event handlers
   private handlers: Map<string, Array<(event: DomainEvent) => Promise<void>>> =
     new Map()
-  // Pending subscriptions before initialization.
+
+  // Pending subscriptions before initialization
   private pendingSubscriptions: Array<{
     eventType: string
     handler: (event: DomainEvent) => Promise<void>
   }> = []
-  // Flags to track initialization.
+
+  // State flags
   private initialized = false
   private initializing = false
   private shuttingDown = false
@@ -30,22 +33,25 @@ export class RabbitMQEventBus implements EventBus {
   private readonly maxReconnectAttempts = 10
   private returnHandler: (msg: amqplib.Message) => void
 
+  /**
+   * Creates a new instance of RabbitMQEventBus.
+   *
+   * @param serviceName - Name of the service using this event bus
+   * @param rabbitMQUrl - RabbitMQ connection URL (optional, defaults to environment values)
+   */
   constructor(
     private serviceName: string,
     private rabbitMQUrl: string = getRabbitMQUrl(),
   ) {
-    // Create a bound method that can be used for both adding and removing the listener
     this.returnHandler = this.handleReturnedMessage.bind(this)
   }
 
   /**
-   * Initializes the RabbitMQ connection, channel, exchange, and queue without consuming.
+   * Initializes the RabbitMQ connection, channel, exchanges and queues.
+   * Must be called before publishing or consuming messages.
    */
   async init(): Promise<void> {
-    if (this.initialized) {
-      return
-    }
-
+    if (this.initialized) return
     if (this.initializing) {
       while (this.initializing) {
         await new Promise((resolve) => setTimeout(resolve, 100))
@@ -56,118 +62,140 @@ export class RabbitMQEventBus implements EventBus {
     this.initializing = true
 
     try {
-      // Connect to RabbitMQ
+      // Set up RabbitMQ connection and channel
       this.connection = await amqplib.connect(this.rabbitMQUrl)
-
-      // Declare exchange
       this.channel = await this.connection.createChannel()
       this.setupConnectionHandlers()
-
-      // Set max listeners to avoid memory leaks
       this.channel.setMaxListeners(50)
-
-      // Set prefetch count
       await this.channel.prefetch(50)
-
-      // Register the return handler once during initialization
       this.channel.on('return', this.returnHandler)
 
-      // Set up the dead letter exchange for failed message processing
-      const deadLetterExchange = `${this.exchangeName}.deadletter`
-      await this.channel.assertExchange(deadLetterExchange, 'topic', {
-        durable: true,
-        autoDelete: false,
-      })
+      // Set up exchanges
+      await this.setupExchanges()
 
-      // Set up the alternate exchange for unroutable messages
-      const alternateExchange = `${this.exchangeName}.alternate`
-      await this.channel.assertExchange(alternateExchange, 'fanout', {
-        durable: true,
-        autoDelete: false,
-      })
-
-      // Declare main exchange with alternate exchange for handling unroutable messages
-      await this.channel.assertExchange(this.exchangeName, 'topic', {
-        durable: true,
-        autoDelete: false,
-        arguments: {
-          'alternate-exchange': alternateExchange,
-        },
-      })
-
-      // Generate a service-specific queue name
-      const environment = process.env.ENVIRONMENT || 'development'
-      const queueName = `${this.serviceName}.${environment}.queue`
-
-      // Create the main queue with dead letter configuration
-      const { queue } = await this.channel.assertQueue(queueName, {
-        durable: true,
-        exclusive: false,
-        autoDelete: false,
-        arguments: {
-          'x-dead-letter-exchange': deadLetterExchange,
-          'x-message-ttl': 1000 * 60 * 60 * 24 * 7,
-          'x-max-length': 1000000,
-          'x-queue-mode': 'default',
-        },
-      })
-
-      this.queueName = queue
-
-      // Create and bind dead letter queue for failed processing
-      const dlqName = `${this.queueName}.deadletter`
-      await this.channel.assertQueue(dlqName, {
-        durable: true,
-        exclusive: false,
-        autoDelete: false,
-      })
-
-      await this.channel.bindQueue(dlqName, deadLetterExchange, '#')
-
-      // Create and bind the unroutable messages queue for when services are down
-      const unroutableQueueName = `${this.serviceName}.unroutable`
-      await this.channel.assertQueue(unroutableQueueName, {
-        durable: true,
-        exclusive: false,
-        autoDelete: false,
-      })
-
-      await this.channel.bindQueue(unroutableQueueName, alternateExchange, '')
-
-      logger.info(`Created unroutable messages queue: ${unroutableQueueName}`)
+      // Set up queues
+      await this.setupQueues()
 
       // Process pending subscriptions
-      for (const { eventType, handler } of this.pendingSubscriptions) {
-        this.subscribeNow(eventType, handler)
-      }
+      await this.processPendingSubscriptions()
 
-      this.pendingSubscriptions = []
       this.initialized = true
-
       logger.info(
         `RabbitMQEventBus initialized. Exchange: ${this.exchangeName}, Queue: ${this.queueName}`,
       )
     } catch (error) {
       logger.error('Failed to initialize RabbitMQEventBus:', error)
-
-      // Important: If initialization fails, attempt to close connections
-      try {
-        if (this.channel) {
-          await this.channel.close().catch(() => {}) // Ignore errors if already closed
-        }
-        if (this.connection) {
-          await this.connection.close().catch(() => {}) // Ignore errors if already closed
-        }
-      } catch (closeError) {
-        logger.error(
-          'Error during cleanup after failed initialization:',
-          closeError,
-        )
-      }
-
+      await this.cleanupAfterError()
       throw error
     } finally {
       this.initializing = false
+    }
+  }
+
+  /**
+   * Sets up the exchanges needed for the event bus.
+   * - Main exchange: For routing messages to appropriate queues
+   * - Dead letter exchange: For messages that failed processing
+   * - Alternate exchange: For messages that couldn't be routed
+   */
+  private async setupExchanges(): Promise<void> {
+    // Set up the dead letter exchange
+    const deadLetterExchange = `${this.exchangeName}.deadletter`
+    await this.channel.assertExchange(deadLetterExchange, 'topic', {
+      durable: true,
+      autoDelete: false,
+    })
+
+    // Set up the alternate exchange
+    const alternateExchange = `${this.exchangeName}.alternate`
+    await this.channel.assertExchange(alternateExchange, 'fanout', {
+      durable: true,
+      autoDelete: false,
+    })
+
+    // Declare main exchange with alternate exchange
+    await this.channel.assertExchange(this.exchangeName, 'topic', {
+      durable: true,
+      autoDelete: false,
+      arguments: {
+        'alternate-exchange': alternateExchange,
+      },
+    })
+  }
+
+  /**
+   * Sets up the queues needed for the event bus.
+   * - Main queue: For consuming messages for this service
+   * - Dead letter queue: For messages that failed processing
+   * - Unroutable queue: For messages with no immediate destination
+   */
+  private async setupQueues(): Promise<void> {
+    const deadLetterExchange = `${this.exchangeName}.deadletter`
+    const alternateExchange = `${this.exchangeName}.alternate`
+    const environment = process.env.ENVIRONMENT || 'development'
+
+    // Create the main service queue
+    const queueName = `${this.serviceName}.${environment}.queue`
+    const { queue } = await this.channel.assertQueue(queueName, {
+      durable: true,
+      exclusive: false,
+      autoDelete: false,
+      arguments: {
+        'x-dead-letter-exchange': deadLetterExchange,
+        'x-message-ttl': 1000 * 60 * 60 * 24 * 7, // 7 days
+        'x-max-length': 1000000,
+        'x-queue-mode': 'default',
+      },
+    })
+    this.queueName = queue
+
+    // Create and bind dead letter queue
+    const dlqName = `${this.queueName}.deadletter`
+    await this.channel.assertQueue(dlqName, {
+      durable: true,
+      exclusive: false,
+      autoDelete: false,
+    })
+    await this.channel.bindQueue(dlqName, deadLetterExchange, '#')
+
+    // Create and bind unroutable queue
+    const unroutableQueueName = `${this.serviceName}.unroutable`
+    await this.channel.assertQueue(unroutableQueueName, {
+      durable: true,
+      exclusive: false,
+      autoDelete: false,
+    })
+    await this.channel.bindQueue(unroutableQueueName, alternateExchange, '')
+
+    logger.info(`Created unroutable messages queue: ${unroutableQueueName}`)
+  }
+
+  /**
+   * Process any subscriptions that were requested before initialization.
+   */
+  private async processPendingSubscriptions(): Promise<void> {
+    for (const { eventType, handler } of this.pendingSubscriptions) {
+      this.subscribeNow(eventType, handler)
+    }
+    this.pendingSubscriptions = []
+  }
+
+  /**
+   * Clean up resources after a failed initialization.
+   */
+  private async cleanupAfterError(): Promise<void> {
+    try {
+      if (this.channel) {
+        await this.channel.close().catch(() => {})
+      }
+      if (this.connection) {
+        await this.connection.close().catch(() => {})
+      }
+    } catch (closeError) {
+      logger.error(
+        'Error during cleanup after failed initialization:',
+        closeError,
+      )
     }
   }
 
@@ -180,7 +208,7 @@ export class RabbitMQEventBus implements EventBus {
       await this.init()
     }
 
-    // Configure robust consumer with retry policies
+    // Configure consumer
     await this.channel.consume(
       this.queueName,
       async (msg: any) => {
@@ -191,62 +219,17 @@ export class RabbitMQEventBus implements EventBus {
 
         try {
           logger.debug(`Processing message ${messageId} [${routingKey}]`)
-
-          // Track processing metrics
           const startTime = Date.now()
-
-          // Process the message
           await this.handleMessage(msg)
-
-          // Log processing time for monitoring
           const processingTime = Date.now() - startTime
           logger.debug(`Processed message ${messageId} in ${processingTime}ms`)
         } catch (error) {
-          logger.error(`Error processing message ${messageId}:`, error)
-
-          // Get message headers or create new ones
-          const headers = msg.properties.headers || {}
-
-          // Check retry count, retry up to 3 times before sending to DLQ
-          const retryCount = (headers['x-retry-count'] || 0) + 1
-
-          if (retryCount <= 3) {
-            // Retry with exponential backoff
-            const delay = 1000 * Math.pow(2, retryCount - 1)
-            logger.info(
-              `Retrying message ${messageId} (${retryCount}/3) after ${delay}ms`,
-            )
-
-            // Update headers with retry info
-            headers['x-retry-count'] = retryCount
-            headers['x-last-retry-reason'] = error.message
-
-            // Setup for delayed retry using RabbitMQ's dead-letter + TTL pattern
-            const retryQueueName = `${this.queueName}.retry.${retryCount}`
-            await this.channel.assertQueue(retryQueueName, {
-              durable: true,
-              arguments: {
-                'x-message-ttl': delay,
-                'x-dead-letter-exchange': this.exchangeName,
-                'x-dead-letter-routing-key': routingKey,
-              },
-            })
-
-            // Publish to retry queue with delay
-            this.channel.publish('', retryQueueName, msg.content, {
-              ...msg.properties,
-              headers,
-            })
-
-            // Acknowledge original message
-            this.channel.ack(msg)
-          } else {
-            // Send to dead-letter queue after max retries
-            logger.warn(
-              `Message ${messageId} exceeded retry limit, sending to DLQ`,
-            )
-            this.channel.nack(msg, false, false)
-          }
+          await this.handleMessageProcessingError(
+            msg,
+            error,
+            messageId,
+            routingKey,
+          )
         }
       },
       { noAck: false },
@@ -254,13 +237,72 @@ export class RabbitMQEventBus implements EventBus {
 
     logger.info(`Started consuming messages from queue: ${this.queueName}`)
 
-    // Start consuming from the unroutable messages queue to reprocess them
-    await this.consumeUnroutableMessages()
+    // Start processing unroutable messages
+    this.consumeUnroutableMessages()
   }
 
+  /**
+   * Handles errors that occur during message processing.
+   * Implements a retry strategy with exponential backoff.
+   */
+  private async handleMessageProcessingError(
+    msg: any,
+    error: any,
+    messageId: string,
+    routingKey: string,
+  ): Promise<void> {
+    logger.error(`Error processing message ${messageId}:`, error)
+
+    // Get message headers or create new ones
+    const headers = msg.properties.headers || {}
+
+    // Check retry count, retry up to 3 times before sending to DLQ
+    const retryCount = (headers['x-retry-count'] || 0) + 1
+
+    if (retryCount <= 3) {
+      // Retry with exponential backoff
+      const delay = 1000 * Math.pow(2, retryCount - 1)
+      logger.info(
+        `Retrying message ${messageId} (${retryCount}/3) after ${delay}ms`,
+      )
+
+      // Update headers with retry info
+      headers['x-retry-count'] = retryCount
+      headers['x-last-retry-reason'] = error.message
+
+      // Setup for delayed retry using RabbitMQ's dead-letter + TTL pattern
+      const retryQueueName = `${this.queueName}.retry.${retryCount}`
+      await this.channel.assertQueue(retryQueueName, {
+        durable: true,
+        arguments: {
+          'x-message-ttl': delay,
+          'x-dead-letter-exchange': this.exchangeName,
+          'x-dead-letter-routing-key': routingKey,
+        },
+      })
+
+      // Publish to retry queue with delay
+      this.channel.publish('', retryQueueName, msg.content, {
+        ...msg.properties,
+        headers,
+      })
+
+      // Acknowledge original message
+      this.channel.ack(msg)
+    } else {
+      // Send to dead-letter queue after max retries
+      logger.warn(`Message ${messageId} exceeded retry limit, sending to DLQ`)
+      this.channel.nack(msg, false, false)
+    }
+  }
+
+  /**
+   * Sets up a processor to handle unroutable messages.
+   * Periodically checks for messages in the unroutable queue and attempts to republish them.
+   */
   private consumeUnroutableMessages(): void {
     const unroutableQueueName = `${this.serviceName}.unroutable`
-    let processingInterval = 3000 // Start with 3 seconds
+    const processingInterval = 3000 // Start with 3 seconds
     let consecutiveEmpty = 0
     let processing = false
 
@@ -288,9 +330,18 @@ export class RabbitMQEventBus implements EventBus {
             const event: DomainEvent = JSON.parse(content)
             const routingKey = event.eventType
 
+            // Extract headers or initialize if missing
+            const headers = msg.properties.headers || {}
+            const retryCount = (headers['x-retry-count'] || 0) + 1
+
+            // Update headers
+            headers['x-retry-count'] = retryCount
+            headers['x-last-retry'] = new Date().toISOString()
+
             // Attempt to republish
             this.channel.publish(this.exchangeName, routingKey, msg.content, {
               ...msg.properties,
+              headers,
               mandatory: true,
             })
 
@@ -303,17 +354,15 @@ export class RabbitMQEventBus implements EventBus {
         }
 
         // Adjust the interval based on results
+        this.adjustUnroutableProcessingInterval(
+          processedCount,
+          consecutiveEmpty,
+        )
+
         if (processedCount > 0) {
-          // Messages found and processed, speed up
           consecutiveEmpty = 0
-          processingInterval = 1000 // Check every second when active
         } else {
-          // No messages, gradually slow down
           consecutiveEmpty++
-          processingInterval = Math.min(
-            30000,
-            1000 * Math.pow(1.5, Math.min(5, consecutiveEmpty)),
-          )
         }
       } catch (error) {
         logger.error(`Error in unroutable message processor: ${error.message}`)
@@ -340,28 +389,27 @@ export class RabbitMQEventBus implements EventBus {
   }
 
   /**
-   * Checks if any bindings exist for a given routing key
+   * Adjusts the interval for processing unroutable messages based on activity.
    */
-  private async checkBindingsExist(routingKey: string): Promise<boolean> {
-    try {
-      // First check local handlers (faster)
-      if (this.handlers.has(routingKey) || this.handlers.has('*')) {
-        return true
-      }
-
-      // If no local handlers, just assume bindings might exist elsewhere in the system
-      // and try republishing after some delay/retries
-
-      // Alternative: Query RabbitMQ Management API if you have access
-      // This would require setting up an HTTP client and authentication
-
-      return false
-    } catch (error) {
-      logger.error(`Error checking bindings: ${error}`)
-      return false
+  private adjustUnroutableProcessingInterval(
+    processedCount: number,
+    consecutiveEmpty: number,
+  ): number {
+    if (processedCount > 0) {
+      // Messages found and processed, speed up
+      return 1000 // Check every second when active
+    } else {
+      // No messages, gradually slow down
+      return Math.min(
+        30000,
+        1000 * Math.pow(1.5, Math.min(5, consecutiveEmpty)),
+      )
     }
   }
 
+  /**
+   * Sets up event handlers for connection and channel events.
+   */
   private setupConnectionHandlers(): void {
     this.connection.on('error', (err: any) => {
       logger.error('RabbitMQ connection error:', err)
@@ -384,10 +432,13 @@ export class RabbitMQEventBus implements EventBus {
     })
   }
 
+  /**
+   * Attempts to reconnect to RabbitMQ after a connection failure.
+   * Uses exponential backoff for retry attempts.
+   */
   async reconnect(): Promise<void> {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       logger.error('Max reconnection attempts reached, giving up')
-      // Trigger application alert/restart
       process.exit(1)
       return
     }
@@ -413,7 +464,7 @@ export class RabbitMQEventBus implements EventBus {
   }
 
   /**
-   * Internal method to handle incoming messages.
+   * Handles an incoming message by parsing it and dispatching to registered handlers.
    */
   private async handleMessage(msg: any): Promise<void> {
     if (!msg) return
@@ -423,26 +474,30 @@ export class RabbitMQEventBus implements EventBus {
       const event: DomainEvent = JSON.parse(content)
       const routingKey = msg.fields.routingKey
 
-      // Retrieve both specific handlers and global handlers.
+      // Retrieve both specific handlers and global handlers
       const specificHandlers = this.handlers.get(routingKey) || []
       const globalHandlers = this.handlers.get('*') || []
       const allHandlers = [...specificHandlers, ...globalHandlers]
 
+      // Execute all handlers sequentially
       for (const handler of allHandlers) {
         await handler(event)
       }
 
-      // Acknowledge message processing.
+      // Acknowledge message processing
       this.channel.ack(msg)
     } catch (error) {
       logger.error('Error handling message:', error)
-      // Nack the message so it can be retried or sent to dead-letter.
+      // Nack the message so it can be retried or sent to dead-letter
       this.channel.nack(msg, false, false)
     }
   }
 
   /**
-   * Publishes a domain event using the event's eventType as the routing key.
+   * Publishes a domain event to the message bus.
+   * Uses the event's eventType as the routing key.
+   *
+   * @param event - The domain event to publish
    */
   async publish(event: DomainEvent): Promise<void> {
     if (!this.initialized) {
@@ -452,7 +507,7 @@ export class RabbitMQEventBus implements EventBus {
     const routingKey = event.eventType
     const messageBuffer = Buffer.from(JSON.stringify(event))
 
-    // Add enterprise-level message properties
+    // Add message properties
     const properties = {
       persistent: true,
       messageId: event.aggregateId || uuidv4(),
@@ -464,7 +519,7 @@ export class RabbitMQEventBus implements EventBus {
         'x-correlation-id': event.metadata?.correlationId || 'none',
         'x-event-version': event.version || '1.0',
       },
-      mandatory: true, // This tells RabbitMQ to return un-routable messages
+      mandatory: true, // Return un-routable messages
     }
 
     const published = this.channel.publish(
@@ -484,7 +539,9 @@ export class RabbitMQEventBus implements EventBus {
 
   /**
    * Registers a handler for a specific event type.
-   * Queues the subscription if the bus is not initialized.
+   *
+   * @param eventType - The event type to subscribe to, or '*' for all events
+   * @param handler - The handler function to invoke when an event is received
    */
   subscribe(
     eventType: string,
@@ -527,6 +584,9 @@ export class RabbitMQEventBus implements EventBus {
 
   /**
    * Registers a handler for all event types.
+   * Shorthand for subscribe('*', handler).
+   *
+   * @param handler - The handler function to invoke for all events
    */
   subscribeToAll(handler: (event: DomainEvent) => Promise<void>): void {
     this.subscribe('*', handler)
@@ -534,6 +594,10 @@ export class RabbitMQEventBus implements EventBus {
 
   /**
    * Unsubscribes a handler for a specific event type.
+   *
+   * @param eventType - The event type to unsubscribe from
+   * @param handler - The handler function to remove
+   * @returns true if the handler was removed, false otherwise
    */
   unsubscribe(
     eventType: string,
@@ -567,7 +631,9 @@ export class RabbitMQEventBus implements EventBus {
   }
 
   /**
-   * Subscribes a handler for all event types.
+   * Binds the queue to multiple event types at once.
+   *
+   * @param eventTypes - Array of event types to bind to
    */
   async bindEventTypes(eventTypes: string[]): Promise<void> {
     if (!this.initialized) {
@@ -586,9 +652,6 @@ export class RabbitMQEventBus implements EventBus {
   /**
    * Handles messages returned by the RabbitMQ server due to mandatory flag
    * when no queue is bound with the appropriate routing key.
-   *
-   * @private
-   * @param {amqplib.Message} msg - The returned message
    */
   private handleReturnedMessage(msg: amqplib.Message): void {
     const routingKey = msg.fields.routingKey
@@ -601,7 +664,6 @@ export class RabbitMQEventBus implements EventBus {
       routingKey,
       exchange,
       serviceName: this.serviceName,
-      // Include message ID for correlation
       messageId: msg.properties.messageId || 'unknown',
       contentPreview:
         content.substring(0, 200) + (content.length > 200 ? '...' : ''),
@@ -612,8 +674,8 @@ export class RabbitMQEventBus implements EventBus {
   }
 
   /**
-   * Republishes messages from the unroutable queue
-   * Call this method when you want to retry sending unroutable messages
+   * Manually republishes messages from the unroutable queue.
+   * Useful for administrative tasks or when services come back online.
    */
   async republishUnroutableMessages(): Promise<void> {
     const unroutableQueueName = `${this.serviceName}.unroutable`
@@ -651,6 +713,7 @@ export class RabbitMQEventBus implements EventBus {
 
   /**
    * Closes the RabbitMQ channel and connection gracefully.
+   * Should be called when shutting down the application.
    */
   async shutdown(): Promise<void> {
     if (!this.initialized) {
@@ -664,9 +727,7 @@ export class RabbitMQEventBus implements EventBus {
     try {
       if (this.channel) {
         this.channel.removeListener('return', this.returnHandler)
-
         await this.channel.close()
-
         logger.info('RabbitMQ channel closed successfully')
       }
     } catch (error) {
@@ -688,7 +749,8 @@ export class RabbitMQEventBus implements EventBus {
 
   /**
    * Checks the health of the RabbitMQ connection and channel.
-   * Returns 'UP' if healthy, 'DOWN' otherwise.
+   *
+   * @returns An object with status ('UP' or 'DOWN') and details
    */
   async checkHealth(): Promise<{ status: string; details: any }> {
     try {
@@ -727,7 +789,7 @@ export class RabbitMQEventBus implements EventBus {
 }
 
 /**
- * Retrieves the RabbitMQ URL from environment variables or uses a default value.
+ * Retrieves the RabbitMQ URL from environment variables or uses default values.
  */
 function getRabbitMQUrl(): string {
   const rabbitMQUsername = process.env.RABBIT_MQ_USERNAME || 'library'
