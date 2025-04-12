@@ -23,7 +23,18 @@ export class UpdateBookController {
       const { title, author, publicationYear, publisher, price } =
         req.body as BookUpdateRequest
 
-      if (!title || !author || !publicationYear || !publisher || !price) {
+      if (
+        title === undefined ||
+        title === null ||
+        author === undefined ||
+        author === null ||
+        publicationYear === undefined ||
+        publicationYear === null ||
+        publisher === undefined ||
+        publisher === null ||
+        price === undefined ||
+        price === null
+      ) {
         throw new Errors.ApplicationError(
           400,
           'INVALID_BOOK_UPDATE_REQUEST',

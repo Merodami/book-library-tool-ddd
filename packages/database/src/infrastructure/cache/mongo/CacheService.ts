@@ -21,10 +21,11 @@ export class CacheService {
     hits: 0,
     misses: 0,
   }
+  private cleanupIntervalId: NodeJS.Timeout | null = null
 
   constructor() {
     // Start cache cleanup interval
-    setInterval(() => this.cleanupCache(), 60000) // Cleanup every minute
+    this.cleanupIntervalId = setInterval(() => this.cleanupCache(), 60000) // Cleanup every minute
   }
 
   /**
@@ -114,5 +115,17 @@ export class CacheService {
       hits: 0,
       misses: 0,
     }
+  }
+
+  /**
+   * Disposes of the CacheService by clearing the cleanup interval and cache.
+   * This should be called when the service is no longer needed to prevent memory leaks.
+   */
+  dispose(): void {
+    if (this.cleanupIntervalId) {
+      clearInterval(this.cleanupIntervalId)
+      this.cleanupIntervalId = null
+    }
+    this.clear()
   }
 }

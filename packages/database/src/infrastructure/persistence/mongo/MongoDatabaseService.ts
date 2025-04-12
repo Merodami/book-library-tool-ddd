@@ -51,6 +51,11 @@ export class MongoDatabaseService {
   constructor(dbName: string) {
     this.dbName = dbName
     this.cacheService = new CacheService()
+
+    // Handle process termination signals
+    process.on('SIGTERM', () => {
+      this.cacheService.dispose()
+    })
   }
 
   /**
