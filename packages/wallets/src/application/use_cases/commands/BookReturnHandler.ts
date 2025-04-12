@@ -5,7 +5,10 @@ import { BookReturnCommand } from '@commands/BookReturnCommand.js'
 import { IWalletRepository } from '@repositories/IWalletRepository.js'
 
 /**
- * Command handler for applying late fees to a wallet
+ * Command handler for applying late fees to a wallet.
+ * This class handles the late fee processing workflow when books are returned,
+ * including the business rule that a book is considered purchased if the late fee
+ * exceeds its retail price.
  */
 export class BookReturnHandler {
   constructor(
@@ -14,7 +17,19 @@ export class BookReturnHandler {
   ) {}
 
   /**
-   * Applies a late fee to a wallet
+   * Applies a late fee to a wallet based on the number of days a book is late.
+   * This method implements the late fee processing workflow:
+   * 1. Verifies the wallet exists
+   * 2. Calculates the late fee based on days late
+   * 3. Applies the fee and checks if the book is purchased
+   * 4. Saves and publishes the domain event
+   *
+   * @param command - The book return command containing late fee details
+   * @returns Promise resolving to an object indicating if the book was purchased
+   * @throws {ApplicationError} If:
+   *   - Wallet is not found (404)
+   *   - Concurrency conflict occurs
+   *   - Other processing errors occur
    */
   async execute(
     command: BookReturnCommand,

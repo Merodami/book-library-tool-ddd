@@ -1,10 +1,8 @@
-// src/application/commands/PaymentHandler.ts
 import { DomainEvent, type EventBus } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Reservation } from '@entities/Reservation.js'
+import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
 import type { IReservationRepository } from '@repositories/IReservationRepository.js'
-
-import { ReservationProjectionHandler } from '../../../infrastructure/event-store/ReservationProjectionHandler.js'
 
 /**
  * Handler responsible for processing payment events from the Wallet service.

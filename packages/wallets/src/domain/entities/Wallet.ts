@@ -16,6 +16,19 @@ export interface WalletProps {
 /**
  * Wallet aggregate root that handles wallet balance operations
  * and generates domain events for state changes.
+ *
+ * This class implements the aggregate root pattern and event sourcing,
+ * ensuring that all wallet state changes are captured as domain events.
+ * It maintains invariants and business rules related to:
+ * - Wallet creation and initialization
+ * - Balance updates and transactions
+ * - Late fee calculations and book purchase conditions
+ *
+ * The wallet aggregate is responsible for:
+ * - Maintaining consistency of wallet state
+ * - Generating domain events for all state changes
+ * - Enforcing business rules around balance operations
+ * - Supporting event sourcing through rehydration
  */
 export class Wallet extends AggregateRoot {
   public readonly userId: string
@@ -37,7 +50,16 @@ export class Wallet extends AggregateRoot {
   }
 
   /**
-   * Factory method to create a new wallet
+   * Factory method to create a new wallet.
+   * This method initializes a new wallet with the specified user ID and
+   * optional initial balance. It generates a WALLET_CREATED domain event
+   * to record the wallet's creation.
+   *
+   * @param props - Configuration for wallet creation
+   * @param props.userId - The ID of the user who owns the wallet
+   * @param props.initialBalance - Optional initial balance (defaults to 0)
+   * @param props.existingWalletId - Optional ID for existing wallet recreation
+   * @returns An object containing the new wallet and its creation event
    */
   public static create(props: {
     userId: string
@@ -77,7 +99,12 @@ export class Wallet extends AggregateRoot {
   }
 
   /**
-   * Updates the wallet balance by adding or subtracting the specified amount
+   * Updates the wallet balance by adding or subtracting the specified amount.
+   * This method enforces business rules around balance updates and generates
+   * a WALLET_BALANCE_UPDATED domain event to record the change.
+   *
+   * @param amount - The amount to add (positive) or subtract (negative)
+   * @returns An object containing the updated wallet and the balance update event
    */
   public updateBalance(amount: number): { wallet: Wallet; event: DomainEvent } {
     const now = new Date()
@@ -117,7 +144,18 @@ export class Wallet extends AggregateRoot {
   }
 
   /**
-   * Applies a late fee to the wallet
+   * Applies a late fee to the wallet based on the number of days a book is late.
+   * This method implements the business rule that if the late fee exceeds the
+   * book's retail price, the book is considered purchased.
+   *
+   * @param reservationId - The ID of the reservation being processed
+   * @param daysLate - The number of days the book is late
+   * @param retailPrice - The retail price of the book
+   * @param feePerDay - The daily late fee rate
+   * @returns An object containing:
+   *   - The updated wallet
+   *   - The late fee application event
+   *   - A boolean indicating if the book was purchased
    */
   public applyLateFee(
     reservationId: string,
@@ -167,7 +205,13 @@ export class Wallet extends AggregateRoot {
   }
 
   /**
-   * Rehydrates a Wallet aggregate from an array of DomainEvents
+   * Rehydrates a Wallet aggregate from an array of DomainEvents.
+   * This method implements event sourcing by replaying events in order
+   * to reconstruct the wallet's current state.
+   *
+   * @param events - Array of domain events in chronological order
+   * @returns A fully reconstructed Wallet instance
+   * @throws Error if no events are provided or if the first event is not WALLET_CREATED
    */
   public static rehydrate(events: DomainEvent[]): Wallet {
     if (!events || events.length === 0) {
@@ -209,7 +253,11 @@ export class Wallet extends AggregateRoot {
   }
 
   /**
-   * Applies events to update the wallet state
+   * Applies events to update the wallet state.
+   * This protected method is used internally during rehydration
+   * to update the wallet's state based on domain events.
+   *
+   * @param event - The domain event to apply
    */
   protected applyEvent(event: DomainEvent): void {
     switch (event.eventType) {
@@ -232,7 +280,12 @@ export class Wallet extends AggregateRoot {
   }
 
   /**
-   * Creates a Wallet instance from persistence data (projection)
+   * Creates a Wallet instance from persistence data (projection).
+   * This method is used to reconstruct a wallet from the read model
+   * when full event replay is not necessary.
+   *
+   * @param data - The persistence data containing wallet state
+   * @returns A Wallet instance with the specified state
    */
   public static fromPersistence(data: {
     id: string
@@ -260,7 +313,10 @@ export class Wallet extends AggregateRoot {
   }
 
   /**
-   * Converts the Wallet entity to a data transfer object suitable for API responses
+   * Converts the Wallet entity to a data transfer object suitable for API responses.
+   * This method formats the wallet's data for external consumption,
+   * including proper date formatting and balance precision.
+   *
    * @returns A DTO representation of the wallet with balance formatted to one decimal place
    */
   public toDTO(): WalletDTO {

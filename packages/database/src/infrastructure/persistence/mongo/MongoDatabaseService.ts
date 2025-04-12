@@ -1,5 +1,6 @@
 import { logger } from '@book-library-tool/shared'
 import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
+import { CacheService } from '@cache/mongo/CacheService.js'
 import {
   Collection,
   Db,
@@ -7,8 +8,16 @@ import {
   Filter,
   MongoClient,
   MongoClientOptions,
+  MongoError,
   WithId,
 } from 'mongodb'
+
+interface MongoMetrics {
+  queryCount: number
+  queryTime: number
+  errorCount: number
+  retryCount: number
+}
 
 /**
  * MongoDatabaseService encapsulates low‑level MongoDB connection management.
@@ -17,6 +26,8 @@ import {
  * - Establishing a connection to the MongoDB instance.
  * - Managing the connection lifecycle.
  * - Exposing type‑safe collections for higher‑level adapters.
+ * - Implementing retry logic for transient failures.
+ * - Tracking performance metrics.
  *
  * The higher‑level repository (e.g. MongoRepository) uses this service to obtain
  * a specific collection and perform CRUD operations in a database‑agnostic way.
@@ -25,6 +36,13 @@ export class MongoDatabaseService {
   private client: MongoClient | null = null
   private db: Db | null = null
   private dbName: string
+  private cacheService: CacheService
+  private metrics: MongoMetrics = {
+    queryCount: 0,
+    queryTime: 0,
+    errorCount: 0,
+    retryCount: 0,
+  }
 
   /**
    * Constructor for MongoDatabaseService.
@@ -32,6 +50,7 @@ export class MongoDatabaseService {
    */
   constructor(dbName: string) {
     this.dbName = dbName
+    this.cacheService = new CacheService()
   }
 
   /**
@@ -52,8 +71,19 @@ export class MongoDatabaseService {
       throw new Error('MONGO_URI is not defined in the environment variables')
     }
 
-    // Define client options (defaults are typically sufficient).
-    const options: MongoClientOptions = {}
+    const options: MongoClientOptions = {
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      maxIdleTimeMS: 60000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 10000,
+      retryWrites: true,
+      retryReads: true,
+      w: 'majority',
+      readConcern: { level: 'majority' },
+      writeConcern: { w: 'majority' },
+    }
 
     this.client = new MongoClient(uri, options)
     await this.client.connect()
@@ -109,7 +139,109 @@ export class MongoDatabaseService {
   }
 
   /**
-   * Generic pagination method for any collection
+   * Determines if an error is transient and can be retried.
+   * @param error - The error to check
+   * @returns true if the error is transient, false otherwise
+   */
+  private isTransientError(error: unknown): boolean {
+    if (!(error instanceof MongoError)) {
+      return false
+    }
+
+    // List of transient error codes that can be retried
+    const transientErrorCodes = [
+      6, // HostUnreachable
+      7, // HostNotFound
+      89, // NetworkTimeout
+      91, // ShutdownInProgress
+      189, // PrimarySteppedDown
+      262, // ExceededTimeLimit
+      9001, // SocketException
+      10107, // NotMaster
+      11600, // InterruptedAtShutdown
+      11602, // InterruptedDueToReplStateChange
+      13435, // NotMasterNoSlaveOk
+      13436, // NotMasterOrSecondary
+    ]
+
+    const errorCode = (error as MongoError & { code?: number }).code
+    return (
+      (errorCode !== undefined && transientErrorCodes.includes(errorCode)) ||
+      error.message.includes('network error') ||
+      error.message.includes('connection reset') ||
+      error.message.includes('socket exception')
+    )
+  }
+
+  /**
+   * Executes an operation with retry logic for transient failures.
+   * @param operation - The operation to execute
+   * @param maxRetries - Maximum number of retry attempts
+   * @returns The result of the operation
+   * @throws The last error if all retries fail
+   */
+  private async withRetry<T>(
+    operation: () => Promise<T>,
+    maxRetries = 3,
+  ): Promise<T> {
+    let lastError: Error = new Error('No operation attempted')
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await operation()
+      } catch (error) {
+        lastError = error as Error
+        if (this.isTransientError(error)) {
+          this.metrics.retryCount++
+          const delay = 1000 * Math.pow(2, i)
+          logger.warn(
+            `Retry attempt ${i + 1}/${maxRetries} after ${delay}ms: ${error.message}`,
+          )
+          await new Promise((resolve) => setTimeout(resolve, delay))
+          continue
+        }
+        throw error
+      }
+    }
+    throw lastError
+  }
+
+  /**
+   * Gets the current metrics for the database service.
+   * @returns The current metrics
+   */
+  getMetrics(): MongoMetrics {
+    return { ...this.metrics }
+  }
+
+  /**
+   * Resets the metrics counters.
+   */
+  resetMetrics(): void {
+    this.metrics = {
+      queryCount: 0,
+      queryTime: 0,
+      errorCount: 0,
+      retryCount: 0,
+    }
+  }
+
+  /**
+   * Invalidates cache entries for a specific collection
+   */
+  invalidateCache(collectionName: string): void {
+    this.cacheService.invalidateCollection(collectionName)
+  }
+
+  /**
+   * Clears the entire cache
+   */
+  clearCache(): void {
+    this.cacheService.clear()
+  }
+
+  /**
+   * Generic pagination method for any collection with retry logic and caching
    */
   async paginateCollection<T extends Document = Document>(
     collection: Collection<T>,
@@ -118,46 +250,80 @@ export class MongoDatabaseService {
     options?: {
       projection?: Record<string, number>
       sort?: Record<string, 1 | -1>
+      cacheTtl?: number
     },
   ): Promise<PaginatedResult<WithId<T>>> {
-    const { page: possiblePage, limit: possibleLimit } = pagination
+    const startTime = Date.now()
+    const collectionName = collection.collectionName
+    const cacheKey = this.cacheService.generateCacheKey(
+      collectionName,
+      query as Record<string, unknown>,
+    )
 
-    const limit = possibleLimit
-      ? Math.floor(Number(possibleLimit))
-      : Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
+    // Try to get from cache first if cacheTtl is specified
+    if (options?.cacheTtl) {
+      const cached = this.cacheService.get<PaginatedResult<WithId<T>>>(cacheKey)
+      if (cached) {
+        return cached
+      }
+    }
 
-    const page = possiblePage ? Math.floor(Number(possiblePage)) : 1
+    try {
+      const { page: possiblePage, limit: possibleLimit } = pagination
 
-    const totalItems = await collection.countDocuments(query)
+      const limit = possibleLimit
+        ? Math.floor(Number(possibleLimit))
+        : Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
 
-    const totalPages = Math.ceil(totalItems / limit)
+      const page = possiblePage ? Math.floor(Number(possiblePage)) : 1
 
-    const cursor = collection
-      .find(query, {
-        projection: {
-          _id: 0,
-          createdAt: 0,
-          updatedAt: 0,
-          ...options?.projection,
+      const totalItems = await this.withRetry(() =>
+        collection.countDocuments(query),
+      )
+
+      const totalPages = Math.ceil(totalItems / limit)
+
+      const cursor = collection
+        .find(query, {
+          projection: {
+            _id: 0,
+            createdAt: 0,
+            updatedAt: 0,
+            ...options?.projection,
+          },
+        })
+        .sort(options?.sort || {})
+        .skip((page - 1) * limit)
+        .limit(limit)
+
+      const rawData = await this.withRetry(() => cursor.toArray())
+      const data = rawData.map(({ _id, ...rest }) => rest as WithId<T>)
+
+      const result = {
+        data,
+        pagination: {
+          page,
+          limit,
+          total: totalItems,
+          pages: totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
         },
-      })
-      .sort(options?.sort || {})
-      .skip((page - 1) * limit)
-      .limit(limit)
+      }
 
-    const rawData = await cursor.toArray()
-    const data = rawData.map(({ _id, ...rest }) => rest as WithId<T>)
+      // Cache the result if cacheTtl is specified
+      if (options?.cacheTtl) {
+        this.cacheService.set(cacheKey, result, options.cacheTtl)
+      }
 
-    return {
-      data,
-      pagination: {
-        page,
-        limit,
-        total: totalItems,
-        pages: totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
+      this.metrics.queryCount++
+      this.metrics.queryTime += Date.now() - startTime
+
+      return result
+    } catch (error) {
+      this.metrics.errorCount++
+      this.metrics.queryTime += Date.now() - startTime
+      throw error
     }
   }
 }

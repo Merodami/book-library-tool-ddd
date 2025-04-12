@@ -1,4 +1,5 @@
 import type { BookUpdateRequest } from '@book-library-tool/sdk'
+import { Errors } from '@book-library-tool/shared'
 import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
@@ -21,6 +22,14 @@ export class UpdateBookController {
       const { isbn } = req.params
       const { title, author, publicationYear, publisher, price } =
         req.body as BookUpdateRequest
+
+      if (!title || !author || !publicationYear || !publisher || !price) {
+        throw new Errors.ApplicationError(
+          400,
+          'INVALID_BOOK_UPDATE_REQUEST',
+          'Missing required fields in the request body',
+        )
+      }
 
       await this.updateBookHandler.execute({
         isbn,

@@ -12,14 +12,23 @@ const RESERVATION_PROJECTION_TABLE = 'reservation_projection'
 
 /**
  * Projection handler for reservation events.
- * Responsible for maintaining the read model of reservations based on domain events.
- * This class focuses on updating the denormalized view model used for queries.
+ * This class maintains the read model of reservations by processing domain events
+ * and updating a denormalized MongoDB collection. It implements the CQRS pattern's
+ * read model, providing efficient query capabilities for reservation data.
+ *
+ * The handler processes both internal reservation events and cross-domain events
+ * from the books and wallet contexts, ensuring eventual consistency across
+ * bounded contexts.
  */
 export class ReservationProjectionHandler {
   constructor(private readonly db: MongoDatabaseService) {}
 
   /**
    * Handles the ReservationCreated event by creating a new reservation projection.
+   * Sets up the initial reservation state including:
+   * - User and book information
+   * - Due date (14 days from creation)
+   * - Initial status and timestamps
    *
    * @param event - The ReservationCreated domain event
    */
@@ -45,7 +54,8 @@ export class ReservationProjectionHandler {
 
   /**
    * Handles the ReservationReturned event by updating the reservation status to 'returned'.
-   * Also records the return date and any late fees.
+   * Records the return date and any late fees that were applied.
+   * This update is version-aware to prevent race conditions.
    *
    * @param event - The ReservationReturned domain event
    */
@@ -71,7 +81,8 @@ export class ReservationProjectionHandler {
 
   /**
    * Handles the ReservationCancelled event by updating the reservation status to 'cancelled'.
-   * Records the cancellation date and reason.
+   * Records the cancellation date and reason, maintaining an audit trail of the cancellation.
+   * This update is version-aware to prevent race conditions.
    *
    * @param event - The ReservationCancelled domain event
    */
@@ -97,7 +108,8 @@ export class ReservationProjectionHandler {
 
   /**
    * Handles the ReservationOverdue event by marking the reservation as 'overdue'.
-   * Records when the reservation became overdue.
+   * Records when the reservation became overdue and updates the status accordingly.
+   * This update is version-aware to prevent race conditions.
    *
    * @param event - The ReservationOverdue domain event
    */
@@ -120,7 +132,8 @@ export class ReservationProjectionHandler {
 
   /**
    * Handles the ReservationDeleted event by marking the reservation as deleted.
-   * This is typically a soft delete that preserves the record but marks it as removed.
+   * Implements a soft delete pattern that preserves the record for audit purposes
+   * while marking it as removed from active use.
    *
    * @param event - The ReservationDeleted domain event
    */
@@ -137,16 +150,14 @@ export class ReservationProjectionHandler {
     )
   }
 
-  // External event handlers for cross-service events
-
   /**
    * Handles the BookDetailsUpdated event from the Books service.
-   * Updates all reservations that reference the updated book.
+   * Updates all active reservations that reference the updated book.
+   * This ensures the read model stays in sync with book information changes.
    *
    * @param event - The BookDetailsUpdated domain event
    */
   async handleBookDetailsUpdated(event: DomainEvent): Promise<void> {
-    // When a book's details are updated, we need to update all reservations that reference it
     await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateMany(
       { isbn: event.payload.isbn, deletedAt: null },
       {
@@ -159,12 +170,12 @@ export class ReservationProjectionHandler {
 
   /**
    * Handles the BookDeleted event from the Books service.
-   * Marks affected reservations to indicate the book has been deleted.
+   * Marks affected active reservations to indicate the book has been deleted.
+   * This helps maintain data consistency across bounded contexts.
    *
    * @param event - The BookDeleted domain event
    */
   async handleBookDeleted(event: DomainEvent): Promise<void> {
-    // When a book is deleted, we could mark affected reservations or add a note
     await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateMany(
       { isbn: event.payload.isbn, status: 'active', deletedAt: null },
       {
@@ -179,15 +190,14 @@ export class ReservationProjectionHandler {
   /**
    * Handles the BookValidationResult event from the Books service.
    * Updates the reservation status based on the book validation result.
-   * Part of the eventual consistency pattern where book existence is validated asynchronously.
+   * This is part of the eventual consistency pattern where book existence
+   * is validated asynchronously.
    *
    * @param event - The BookValidationResult domain event
    */
   async handleBookValidationResult(event: DomainEvent): Promise<void> {
-    // Get the reservation ID and validation result from the event
     const { reservationId, isValid, reason, retailPrice } = event.payload
 
-    // Update object with the basic fields
     const updateData: any = {
       status: isValid
         ? RESERVATION_STATUS.PENDING_PAYMENT
@@ -196,7 +206,6 @@ export class ReservationProjectionHandler {
       updatedAt: new Date(),
     }
 
-    // If retail price is provided, add it to the update
     if (retailPrice !== undefined && retailPrice > 0) {
       updateData.retailPrice = Number(retailPrice)
       logger.debug(
@@ -204,7 +213,6 @@ export class ReservationProjectionHandler {
       )
     }
 
-    // Update the reservation status in the projection
     await this.db
       .getCollection(RESERVATION_PROJECTION_TABLE)
       .updateOne({ id: reservationId }, { $set: updateData })
@@ -215,10 +223,11 @@ export class ReservationProjectionHandler {
   }
 
   /**
-   * Handles the ReservationPaymentReceived event by updating the reservation status to 'confirmed'.
-   * Records the payment information and updates the reservation status.
+   * Handles successful payment events from the wallet context.
+   * Updates the reservation status to 'reserved' and records payment details.
+   * This update is version-aware to prevent race conditions.
    *
-   * @param event - The ReservationPaymentReceived domain event
+   * @param event - The payment success domain event
    */
   async handlePaymentSuccess(event: DomainEvent): Promise<void> {
     const paymentDate = new Date(event.timestamp)
@@ -247,6 +256,13 @@ export class ReservationProjectionHandler {
     )
   }
 
+  /**
+   * Handles declined payment events from the wallet context.
+   * Updates the reservation status to 'rejected' and records payment failure details.
+   * This helps track payment attempts and their outcomes.
+   *
+   * @param event - The payment declined domain event
+   */
   async handlePaymentDeclined(event: DomainEvent): Promise<void> {
     const paymentDate = new Date(event.timestamp)
 
@@ -259,12 +275,11 @@ export class ReservationProjectionHandler {
       .updateOne(
         {
           id: event.aggregateId,
-          // Remove the version check as this event is from a different stream
         },
         {
           $set: {
             status: RESERVATION_STATUS.REJECTED,
-            paymentReceived: false, // This should be false for declined payments
+            paymentReceived: false,
             paymentFailed: true,
             paymentFailReason: event.payload.reason,
             paymentAttemptDate: paymentDate,
@@ -285,6 +300,13 @@ export class ReservationProjectionHandler {
     )
   }
 
+  /**
+   * Handles retail price updates for reservations.
+   * Updates the price information in the reservation projection when
+   * the book's retail price changes.
+   *
+   * @param event - The retail price update domain event
+   */
   async handleRetailPriceUpdated(event: DomainEvent): Promise<void> {
     await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
       { id: event.aggregateId },
@@ -298,7 +320,11 @@ export class ReservationProjectionHandler {
   }
 
   /**
-   * Handles the ReservationBookBrought event
+   * Handles the ReservationBookBrought event.
+   * Updates the reservation status to 'brought' when a book is returned
+   * to the library. This marks the completion of the reservation lifecycle.
+   *
+   * @param event - The book brought domain event
    */
   async handleReservationBookBrought(event: DomainEvent): Promise<void> {
     await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(

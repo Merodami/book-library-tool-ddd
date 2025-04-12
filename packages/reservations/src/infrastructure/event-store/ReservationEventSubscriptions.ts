@@ -20,6 +20,23 @@ import { ReservationProjectionHandler } from '@event-store/ReservationProjection
 import { BookBroughtHandler } from '@use_cases/commands/BookBroughtHandler.js'
 import { PaymentHandler } from '@use_cases/commands/PaymentHandler.js'
 
+/**
+ * Configures all event subscriptions for the reservations bounded context.
+ * This function sets up handlers for:
+ * - Internal reservation domain events (created, returned, cancelled, etc.)
+ * - Cross-domain events from the books context (updates, deletions)
+ * - Payment-related events from the wallet context
+ * - Late fee and purchase events
+ *
+ * Each subscription includes error handling and logging to ensure
+ * system stability and observability.
+ *
+ * @param eventBus - The event bus instance for publishing/subscribing to events
+ * @param projectionHandler - Handler for updating the read model
+ * @param validateReservationHandler - Handler for validating reservations
+ * @param paymentHandler - Handler for processing payment events
+ * @param bookBroughtHandler - Handler for processing book purchase scenarios
+ */
 export function SetupEventSubscriptions(
   eventBus: EventBus,
   projectionHandler: ReservationProjectionHandler,
@@ -68,6 +85,11 @@ export function SetupEventSubscriptions(
     }
   })
 
+  /**
+   * Handles book validation results from the books bounded context.
+   * Updates both the read model (projection) and the write model (reservation aggregate)
+   * with the validation outcome.
+   */
   eventBus.subscribe(BOOK_VALIDATION_RESULT, async (event) => {
     try {
       logger.debug(
@@ -86,7 +108,11 @@ export function SetupEventSubscriptions(
     }
   })
 
-  // Cross-service events from the books domain
+  /**
+   * Handles book updates from the books bounded context.
+   * Only processes updates that affect the book's title, as this is relevant
+   * for reservation records.
+   */
   eventBus.subscribe(BOOK_UPDATED, async (event) => {
     try {
       // Only handle this event if the title was updated
@@ -98,6 +124,10 @@ export function SetupEventSubscriptions(
     }
   })
 
+  /**
+   * Handles book deletions from the books bounded context.
+   * Updates the reservation projection to reflect the book's deletion.
+   */
   eventBus.subscribe(BOOK_DELETED, async (event) => {
     try {
       await projectionHandler.handleBookDeleted(event)
@@ -106,6 +136,10 @@ export function SetupEventSubscriptions(
     }
   })
 
+  /**
+   * Handles declined payment events from the wallet bounded context.
+   * Updates the reservation state to reflect the failed payment.
+   */
   eventBus.subscribe(WALLET_PAYMENT_DECLINED, async (event) => {
     try {
       await paymentHandler.handlePaymentDeclined(event)
@@ -114,6 +148,10 @@ export function SetupEventSubscriptions(
     }
   })
 
+  /**
+   * Handles successful payment events from the wallet bounded context.
+   * Updates the reservation state to reflect the completed payment.
+   */
   eventBus.subscribe(WALLET_PAYMENT_SUCCESS, async (event) => {
     try {
       await paymentHandler.handlePaymentSuccess(event)
@@ -122,6 +160,10 @@ export function SetupEventSubscriptions(
     }
   })
 
+  /**
+   * Handles retail price updates for reservations.
+   * Updates the projection with the new price information.
+   */
   eventBus.subscribe(RESERVATION_RETAIL_PRICE_UPDATED, async (event) => {
     try {
       await projectionHandler.handleRetailPriceUpdated(event)
@@ -132,6 +174,10 @@ export function SetupEventSubscriptions(
     }
   })
 
+  /**
+   * Handles events when a book is brought back to the library.
+   * Updates the reservation projection to reflect the book's return.
+   */
   eventBus.subscribe(RESERVATION_BOOK_BROUGHT, async (event) => {
     try {
       await projectionHandler.handleReservationBookBrought(event)
@@ -140,14 +186,21 @@ export function SetupEventSubscriptions(
     }
   })
 
+  /**
+   * Handles late fee application events from the wallet bounded context.
+   * If the late fees have accumulated to the purchase price, triggers
+   * the book purchase process.
+   */
   eventBus.subscribe(WALLET_LATE_FEE_APPLIED, async (event) => {
     try {
       // Check if the book was purchased based on late fees
       if (event.payload.bookBrought) {
-        await bookBroughtHandler.handleBookPurchasedViaLateFee(
-          event.payload.userId,
-          event.payload.reservationId,
-        )
+        await bookBroughtHandler.execute({
+          userId: event.payload.userId,
+          reservationId: event.payload.reservationId,
+          lateFees: event.payload.lateFees,
+          retailPrice: event.payload.retailPrice,
+        })
       }
     } catch (error) {
       logger.error(`Error handling WALLET_LATE_FEE_APPLIED event: ${error}`)
