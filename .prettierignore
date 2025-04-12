@@ -11,3 +11,4 @@ Dockerfile
 packages/sdk/src/openapi
 *.txt
 *.csv
+.cursor
