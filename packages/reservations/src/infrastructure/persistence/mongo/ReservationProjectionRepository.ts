@@ -5,7 +5,7 @@ import {
   PaginatedResult,
   RESERVATION_STATUS,
 } from '@book-library-tool/types'
-import { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
+import { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
 import type { Collection } from 'mongodb'
 
 /**

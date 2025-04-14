@@ -1,7 +1,7 @@
 import { schemas, validateQuery } from '@book-library-tool/api'
-import { CatalogController } from '@controllers/catalog/CatalogController.js'
-import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
-import { GetAllBooksHandler } from '@use_cases/queries/GetAllBooksHandler.js'
+import { CatalogController } from '@books/controllers/catalog/CatalogController.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { GetAllBooksHandler } from '@books/use_cases/queries/GetAllBooksHandler.js'
 import { Router } from 'express'
 
 /**

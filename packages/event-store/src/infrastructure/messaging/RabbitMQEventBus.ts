@@ -1,6 +1,6 @@
 import { logger } from '@book-library-tool/shared'
-import type { DomainEvent } from '@events/DomainEvent.js'
-import type { EventBus } from '@messaging/EventBus.js'
+import type { DomainEvent } from '@event-store/events/DomainEvent.js'
+import type { EventBus } from '@event-store/messaging/EventBus.js'
 import amqplib from 'amqplib'
 import { v4 as uuidv4 } from 'uuid'
 

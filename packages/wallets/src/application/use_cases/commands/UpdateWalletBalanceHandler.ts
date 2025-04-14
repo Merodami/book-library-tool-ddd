@@ -1,10 +1,10 @@
-import { WalletDTO } from '@book-library-tool/api/src/schemas/wallets.js'
+import { WalletDTO } from '@book-library-tool/api'
 import { EventBus } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { UpdateWalletBalanceCommand } from '@commands/UpdateWalletBalanceCommand.js'
-import { Wallet } from '@entities/Wallet.js'
-import { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepository.js'
-import { IWalletRepository } from '@repositories/IWalletRepository.js'
+import { UpdateWalletBalanceCommand } from '@wallets/commands/UpdateWalletBalanceCommand.js'
+import { Wallet } from '@wallets/entities/Wallet.js'
+import { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
+import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
 
 /**
  * Command handler for updating wallet balance.

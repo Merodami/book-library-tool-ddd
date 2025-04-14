@@ -6,8 +6,8 @@ import {
 import type { ReservationRequest } from '@book-library-tool/sdk'
 import { Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { Reservation } from '@entities/Reservation.js'
-import type { IReservationRepository } from '@repositories/IReservationRepository.js'
+import { Reservation } from '@reservations/entities/Reservation.js'
+import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
 
 /**
  * Event-sourced repository implementation for Reservation aggregates.

@@ -1,5 +1,5 @@
 import { DomainEvent } from '@book-library-tool/event-store'
-import { Wallet } from '@entities/Wallet.js'
+import { Wallet } from '@wallets/entities/Wallet.js'
 
 /**
  * Repository interface for wallet write operations

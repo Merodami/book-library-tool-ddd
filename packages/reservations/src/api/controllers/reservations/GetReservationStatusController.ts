@@ -1,5 +1,5 @@
 import { Reservation } from '@book-library-tool/sdk'
-import { GetReservationStatusHandler } from '@queries/GetReservationStatusHandler.js'
+import { GetReservationStatusHandler } from '@reservations/queries/GetReservationStatusHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class GetReservationStatusController {

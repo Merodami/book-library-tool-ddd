@@ -10,8 +10,24 @@
     "allowJs": false,
     "baseUrl": ".",
     "paths": {
-      // Main
-      "*": ["src/*"]
+      // API
+      "@auth/controllers/*": ["src/api/controllers/*"],
+      "@auth/routes/*": ["src/api/routes/*"],
+
+      // Application
+      "@auth/dto/*": ["src/application/dtos/*"],
+      "@auth/use_cases/*": ["src/application/use_cases/*"],
+      "@auth/commands/*": ["src/application/use_cases/commands/*"],
+      "@auth/queries/*": ["src/application/use_cases/queries/*"],
+
+      // Domain
+      "@auth/entities/*": ["src/domain/entities/*"],
+      "@auth/repositories/*": ["src/domain/repositories/*"],
+      "@auth/value_objects/*": ["src/domain/value_objects/*"],
+
+      // Infrastructure
+      "@auth/database/*": ["src/infrastructure/database/*"],
+      "@auth/persistence/*": ["src/infrastructure/persistence/*"]
     }
   },
   "include": ["src"],

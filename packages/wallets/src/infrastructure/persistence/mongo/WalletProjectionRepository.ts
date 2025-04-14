@@ -1,7 +1,7 @@
-import { WalletDTO } from '@book-library-tool/api/src/schemas/wallets.js'
+import { WalletDTO } from '@book-library-tool/api'
 import { MongoDatabaseService } from '@book-library-tool/database'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepository.js'
+import { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
 import { Collection, MongoError } from 'mongodb'
 
 const WALLET_PROJECTION_TABLE = 'wallet_projection'

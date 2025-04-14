@@ -6,9 +6,9 @@ import {
 import type { ReservationRequest } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { Reservation } from '@entities/Reservation.js'
-import { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
-import { IReservationRepository } from '@repositories/IReservationRepository.js'
+import { Reservation } from '@reservations/entities/Reservation.js'
+import { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
+import { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
 
 /**
  * Handles the creation of new reservations.

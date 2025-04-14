@@ -1,9 +1,8 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
 import type { Book, PaginatedBookResponse } from '@book-library-tool/sdk'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
+import { GetAllBooksQuery } from '@books/queries/GetAllBooksQuery.js'
 import type { Collection } from 'mongodb'
-
-import { GetAllBooksQuery } from '../../../application/use_cases/queries/GetAllBooksQuery.js'
 
 /**
  * Maps a MongoDB document to the Book domain model.

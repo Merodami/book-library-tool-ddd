@@ -10,27 +10,27 @@
     "baseUrl": ".",
     "paths": {
       // Main
-      "@reservations/*": ["src/*"],
+      "@wallets/*": ["src/*"],
 
       // API
-      "@controllers/*": ["src/api/controllers/*"],
-      "@routes/*": ["src/api/routes/*"],
+      "@wallets/controllers/*": ["src/api/controllers/*"],
+      "@wallets/routes/*": ["src/api/routes/*"],
 
       // Application
-      "@dto/*": ["src/application/dtos/*"],
-      "@use_cases/*": ["src/application/use_cases/*"],
-      "@commands/*": ["src/application/use_cases/commands/*"],
-      "@queries/*": ["src/application/use_cases/queries/*"],
+      "@wallets/dto/*": ["src/application/dtos/*"],
+      "@wallets/use_cases/*": ["src/application/use_cases/*"],
+      "@wallets/commands/*": ["src/application/use_cases/commands/*"],
+      "@wallets/queries/*": ["src/application/use_cases/queries/*"],
 
       // Domain
-      "@entities/*": ["src/domain/entities/*"],
-      "@repositories/*": ["src/domain/repositories/*"],
-      "@value_objects/*": ["src/domain/value_objects/*"],
+      "@wallets/entities/*": ["src/domain/entities/*"],
+      "@wallets/repositories/*": ["src/domain/repositories/*"],
+      "@wallets/value_objects/*": ["src/domain/value_objects/*"],
 
       // Infrastructure
-      "@database/*": ["src/infrastructure/database/*"],
-      "@persistence/*": ["src/infrastructure/persistence/*"],
-      "@event-store/*": ["src/infrastructure/event-store/*"]
+      "@wallets/database/*": ["src/infrastructure/database/*"],
+      "@wallets/persistence/*": ["src/infrastructure/persistence/*"],
+      "@wallets/event-store/*": ["src/infrastructure/event-store/*"]
     }
   },
   "include": ["src"],

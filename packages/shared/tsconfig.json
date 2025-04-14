@@ -4,7 +4,28 @@
     "outDir": "dist",
     "rootDir": "src",
     "composite": true,
-    "tsBuildInfoFile": "dist/.tsbuildinfo"
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      // API
+      "@shared/controllers/*": ["src/api/controllers/*"],
+      "@shared/routes/*": ["src/api/routes/*"],
+
+      // Application
+      "@shared/dto/*": ["src/application/dtos/*"],
+      "@shared/use_cases/*": ["src/application/use_cases/*"],
+      "@shared/commands/*": ["src/application/use_cases/commands/*"],
+      "@shared/queries/*": ["src/application/use_cases/queries/*"],
+
+      // Domain
+      "@shared/entities/*": ["src/domain/entities/*"],
+      "@shared/repositories/*": ["src/domain/repositories/*"],
+      "@shared/value_objects/*": ["src/domain/value_objects/*"],
+
+      // Infrastructure
+      "@shared/database/*": ["src/infrastructure/database/*"],
+      "@shared/persistence/*": ["src/infrastructure/persistence/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "../../node_modules", "node_modules"]

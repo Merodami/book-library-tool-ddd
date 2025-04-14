@@ -15,10 +15,10 @@ import {
   WALLET_PAYMENT_SUCCESS,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
-import { ValidateReservationHandler } from '@commands/ValidateReservationHandler.js'
-import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
-import { BookBroughtHandler } from '@use_cases/commands/BookBroughtHandler.js'
-import { PaymentHandler } from '@use_cases/commands/PaymentHandler.js'
+import { ValidateReservationHandler } from '@reservations/commands/ValidateReservationHandler.js'
+import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
+import { BookBroughtHandler } from '@reservations/use_cases/commands/BookBroughtHandler.js'
+import { PaymentHandler } from '@reservations/use_cases/commands/PaymentHandler.js'
 
 /**
  * Configures all event subscriptions for the reservations bounded context.

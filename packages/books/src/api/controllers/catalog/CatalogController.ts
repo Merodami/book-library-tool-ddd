@@ -1,5 +1,5 @@
 import { CatalogSearchQuery } from '@book-library-tool/sdk'
-import { GetAllBooksHandler } from '@use_cases/queries/GetAllBooksHandler.js'
+import { GetAllBooksHandler } from '@books/use_cases/queries/GetAllBooksHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class CatalogController {

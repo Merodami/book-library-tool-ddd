@@ -1,7 +1,7 @@
 import { schemas, validateParams } from '@book-library-tool/api'
-import { GetReservationStatusController } from '@controllers/reservations/GetReservationStatusController.js'
-import { GetReservationStatusHandler } from '@queries/GetReservationStatusHandler.js'
-import type { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
+import { GetReservationStatusController } from '@reservations/controllers/reservations/GetReservationStatusController.js'
+import { GetReservationStatusHandler } from '@reservations/queries/GetReservationStatusHandler.js'
+import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
 import { Router } from 'express'
 
 /**

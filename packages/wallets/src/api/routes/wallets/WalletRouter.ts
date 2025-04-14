@@ -1,9 +1,10 @@
 import type { EventBus } from '@book-library-tool/event-store'
-import type { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepository.js'
-import type { IWalletRepository } from '@repositories/IWalletRepository.js'
-import { createWalletCommandRouter } from '@routes/wallets/WalletCommandRouter.js'
-import { createWalletQueryRouter } from '@routes/wallets/WalletQueryRouter.js'
+import type { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
+import type { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
 import { Router } from 'express'
+
+import { createWalletCommandRouter } from './WalletCommandRouter.js'
+import { createWalletQueryRouter } from './WalletQueryRouter.js'
 
 /**
  * Creates and configures the main wallet router

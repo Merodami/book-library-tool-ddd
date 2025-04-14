@@ -1,4 +1,4 @@
-import type { DomainEvent } from '@events/DomainEvent.js'
+import type { DomainEvent } from '@event-store/events/DomainEvent.js'
 
 /**
  * EventBus provides an abstraction for publishing domain events,

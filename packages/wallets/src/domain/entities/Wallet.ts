@@ -1,4 +1,4 @@
-import { WalletDTO } from '@book-library-tool/api/src/schemas/wallets.js'
+import { WalletDTO } from '@book-library-tool/api'
 import {
   AggregateRoot,
   DomainEvent,
@@ -6,7 +6,7 @@ import {
   WALLET_CREATED,
   WALLET_LATE_FEE_APPLIED,
 } from '@book-library-tool/event-store'
-import { Money } from '@value_objects/Money.js'
+import { Money } from '@wallets/value_objects/Money.js'
 
 export interface WalletProps {
   userId: string

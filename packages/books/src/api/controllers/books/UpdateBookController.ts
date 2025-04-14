@@ -1,6 +1,6 @@
 import type { BookUpdateRequest } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
-import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
+import { UpdateBookHandler } from '@books/commands/UpdateBookHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class UpdateBookController {

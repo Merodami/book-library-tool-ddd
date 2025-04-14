@@ -1,7 +1,7 @@
 import type { Reservation } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import type { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
+import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
 
 /**
  * Handles queries for a specific reservation's status.

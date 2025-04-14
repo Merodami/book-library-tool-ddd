@@ -1,8 +1,8 @@
 import { EventBus, WALLET_NOT_FOUND } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
-import { BookReturnCommand } from '@commands/BookReturnCommand.js'
-import { IWalletRepository } from '@repositories/IWalletRepository.js'
+import { BookReturnCommand } from '@wallets/commands/BookReturnCommand.js'
+import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
 
 /**
  * Command handler for applying late fees to a wallet.

@@ -7,7 +7,28 @@
     "tsBuildInfoFile": "dist/.tsbuildinfo",
     "declaration": true,
     "declarationDir": "dist",
-    "allowJs": false
+    "allowJs": false,
+    "baseUrl": ".",
+    "paths": {
+      // API
+      "@sdk/controllers/*": ["src/api/controllers/*"],
+      "@sdk/routes/*": ["src/api/routes/*"],
+
+      // Application
+      "@sdk/dto/*": ["src/application/dtos/*"],
+      "@sdk/use_cases/*": ["src/application/use_cases/*"],
+      "@sdk/commands/*": ["src/application/use_cases/commands/*"],
+      "@sdk/queries/*": ["src/application/use_cases/queries/*"],
+
+      // Domain
+      "@sdk/entities/*": ["src/domain/entities/*"],
+      "@sdk/repositories/*": ["src/domain/repositories/*"],
+      "@sdk/value_objects/*": ["src/domain/value_objects/*"],
+
+      // Infrastructure
+      "@sdk/database/*": ["src/infrastructure/database/*"],
+      "@sdk/persistence/*": ["src/infrastructure/persistence/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["dist", "../../node_modules", "node_modules"],

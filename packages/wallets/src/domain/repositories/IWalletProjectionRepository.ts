@@ -1,4 +1,4 @@
-import { WalletDTO } from '@book-library-tool/api/src/schemas/wallets.js'
+import { WalletDTO } from '@book-library-tool/api'
 
 /**
  * Repository interface for wallet read operations

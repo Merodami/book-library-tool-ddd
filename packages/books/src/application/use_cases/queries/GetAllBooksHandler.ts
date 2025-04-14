@@ -1,8 +1,7 @@
 import { PaginatedBookResponse } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
-import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
-
-import { GetAllBooksQuery } from './GetAllBooksQuery.js'
+import { GetAllBooksQuery } from '@books/queries/GetAllBooksQuery.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 
 export class GetAllBooksHandler {
   constructor(

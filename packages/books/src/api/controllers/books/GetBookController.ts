@@ -1,4 +1,4 @@
-import { GetBookHandler } from '@queries/GetBookHandler.js'
+import { GetBookHandler } from '@books/queries/GetBookHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class GetBookController {

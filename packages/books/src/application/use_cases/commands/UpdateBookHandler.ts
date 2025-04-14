@@ -1,8 +1,8 @@
 import { EventBus } from '@book-library-tool/event-store'
 import { Errors } from '@book-library-tool/shared'
-import { UpdateBookCommand } from '@commands/UpdateBookCommand.js'
-import { Book } from '@entities/Book.js'
-import { IBookRepository } from '@repositories/IBookRepository.js'
+import { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
+import { Book } from '@books/entities/Book.js'
+import { IBookRepository } from '@books/repositories/IBookRepository.js'
 
 export class UpdateBookHandler {
   constructor(
@@ -37,7 +37,7 @@ export class UpdateBookHandler {
 
     const currentBook = Book.rehydrate(events)
 
-    const { book: updatedBook, event } = currentBook.update({
+    const { event } = currentBook.update({
       title: command.title,
       author: command.author,
       publicationYear: command.publicationYear,

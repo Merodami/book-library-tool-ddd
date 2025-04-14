@@ -9,28 +9,25 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      // Main
-      "@reservations/*": ["src/*"],
-
       // API
-      "@controllers/*": ["src/api/controllers/*"],
-      "@routes/*": ["src/api/routes/*"],
+      "@reservations/controllers/*": ["src/api/controllers/*"],
+      "@reservations/routes/*": ["src/api/routes/*"],
 
       // Application
-      "@dto/*": ["src/application/dtos/*"],
-      "@use_cases/*": ["src/application/use_cases/*"],
-      "@commands/*": ["src/application/use_cases/commands/*"],
-      "@queries/*": ["src/application/use_cases/queries/*"],
+      "@reservations/dto/*": ["src/application/dtos/*"],
+      "@reservations/use_cases/*": ["src/application/use_cases/*"],
+      "@reservations/commands/*": ["src/application/use_cases/commands/*"],
+      "@reservations/queries/*": ["src/application/use_cases/queries/*"],
 
       // Domain
-      "@entities/*": ["src/domain/entities/*"],
-      "@repositories/*": ["src/domain/repositories/*"],
-      "@value_objects/*": ["src/domain/value_objects/*"],
+      "@reservations/entities/*": ["src/domain/entities/*"],
+      "@reservations/repositories/*": ["src/domain/repositories/*"],
+      "@reservations/value_objects/*": ["src/domain/value_objects/*"],
 
       // Infrastructure
-      "@database/*": ["src/infrastructure/database/*"],
-      "@persistence/*": ["src/infrastructure/persistence/*"],
-      "@event-store/*": ["src/infrastructure/event-store/*"]
+      "@reservations/database/*": ["src/infrastructure/database/*"],
+      "@reservations/persistence/*": ["src/infrastructure/persistence/*"],
+      "@reservations/event-store/*": ["src/infrastructure/event-store/*"]
     }
   },
   "include": ["src"],

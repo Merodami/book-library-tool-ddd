@@ -1,8 +1,8 @@
 import { DomainEvent, EventBus } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { ProcessWalletPaymentCommand } from '@commands/ProcessWalletPaymentCommand.js'
-import { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepository.js'
-import { IWalletRepository } from '@repositories/IWalletRepository.js'
+import { ProcessWalletPaymentCommand } from '@wallets/commands/ProcessWalletPaymentCommand.js'
+import { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
+import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
 
 const WALLET_PAYMENT_SUCCESS = 'WALLET_PAYMENT_SUCCESS'
 const WALLET_PAYMENT_DECLINED = 'WALLET_PAYMENT_DECLINED'

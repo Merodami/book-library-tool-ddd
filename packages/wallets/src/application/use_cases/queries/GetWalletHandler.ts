@@ -1,6 +1,6 @@
 import { Wallet } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepository.js'
+import { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
 
 /**
  * Query handler for retrieving wallet information.

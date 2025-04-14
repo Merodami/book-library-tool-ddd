@@ -1,5 +1,5 @@
 import type { BookCreateRequest } from '@book-library-tool/sdk'
-import { CreateBookHandler } from '@commands/CreateBookHandler.js'
+import { CreateBookHandler } from '@books/commands/CreateBookHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class CreateBookController {

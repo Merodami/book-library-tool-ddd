@@ -1,7 +1,7 @@
 import type { EventBus } from '@book-library-tool/event-store'
 import type { ReservationReturnParams } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import type { IReservationRepository } from '@repositories/IReservationRepository.js'
+import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
 
 /**
  * Handles the return of reserved books.

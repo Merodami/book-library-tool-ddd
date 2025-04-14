@@ -6,11 +6,11 @@ import {
 } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { ValidateReservationCommand } from '@commands/ValidateReservationCommand.js'
-import { Reservation } from '@entities/Reservation.js'
-import { ReservationProjectionHandler } from '@event-store/ReservationProjectionHandler.js'
-import type { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
-import type { IReservationRepository } from '@repositories/IReservationRepository.js'
+import { ValidateReservationCommand } from '@reservations/commands/ValidateReservationCommand.js'
+import { Reservation } from '@reservations/entities/Reservation.js'
+import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
+import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
+import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
 
 /**
  * Handler responsible for validating reservations based on book availability
