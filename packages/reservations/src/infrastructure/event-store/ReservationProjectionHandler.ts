@@ -1,4 +1,3 @@
-import { MongoDatabaseService } from '@book-library-tool/database'
 import {
   DomainEvent,
   RESERVATION_CANCELLED,
@@ -7,13 +6,12 @@ import {
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-
-const RESERVATION_PROJECTION_TABLE = 'reservation_projection'
+import { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
 
 /**
  * Projection handler for reservation events.
  * This class maintains the read model of reservations by processing domain events
- * and updating a denormalized MongoDB collection. It implements the CQRS pattern's
+ * and updating a denormalized projection collection. It implements the CQRS pattern's
  * read model, providing efficient query capabilities for reservation data.
  *
  * The handler processes both internal reservation events and cross-domain events
@@ -21,7 +19,7 @@ const RESERVATION_PROJECTION_TABLE = 'reservation_projection'
  * bounded contexts.
  */
 export class ReservationProjectionHandler {
-  constructor(private readonly db: MongoDatabaseService) {}
+  constructor(private readonly repository: IReservationProjectionRepository) {}
 
   /**
    * Handles the ReservationCreated event by creating a new reservation projection.
@@ -38,7 +36,7 @@ export class ReservationProjectionHandler {
     const dueDate = new Date(createdDate)
     dueDate.setDate(createdDate.getDate() + 14) // 2 weeks loan period
 
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).insertOne({
+    await this.repository.saveReservation({
       id: event.aggregateId,
       userId: event.payload.userId,
       isbn: event.payload.isbn,
@@ -62,20 +60,16 @@ export class ReservationProjectionHandler {
   async handleReservationReturned(event: DomainEvent): Promise<void> {
     const returnedDate = new Date(event.timestamp)
 
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
+    await this.repository.updateReservationReturned(
+      event.aggregateId,
       {
-        id: event.aggregateId,
-        version: { $lt: event.version },
+        status: RESERVATION_RETURNED,
+        returnedAt: returnedDate,
+        lateFee: event.payload.lateFee || 0,
+        version: event.version,
+        updatedAt: new Date(event.timestamp),
       },
-      {
-        $set: {
-          status: RESERVATION_RETURNED,
-          returnedAt: returnedDate,
-          lateFee: event.payload.lateFee || 0,
-          version: event.version,
-          updatedAt: new Date(event.timestamp),
-        },
-      },
+      event.version,
     )
   }
 
@@ -89,20 +83,16 @@ export class ReservationProjectionHandler {
   async handleReservationCancelled(event: DomainEvent): Promise<void> {
     const cancelledDate = new Date(event.timestamp)
 
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
+    await this.repository.updateReservationCancelled(
+      event.aggregateId,
       {
-        id: event.aggregateId,
-        version: { $lt: event.version },
+        status: RESERVATION_CANCELLED,
+        cancelledAt: cancelledDate,
+        cancellationReason: event.payload.reason,
+        version: event.version,
+        updatedAt: new Date(event.timestamp),
       },
-      {
-        $set: {
-          status: RESERVATION_CANCELLED,
-          cancelledAt: cancelledDate,
-          cancellationReason: event.payload.reason,
-          version: event.version,
-          updatedAt: new Date(event.timestamp),
-        },
-      },
+      event.version,
     )
   }
 
@@ -114,19 +104,15 @@ export class ReservationProjectionHandler {
    * @param event - The ReservationOverdue domain event
    */
   async handleReservationOverdue(event: DomainEvent): Promise<void> {
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
+    await this.repository.updateReservationOverdue(
+      event.aggregateId,
       {
-        id: event.aggregateId,
-        version: { $lt: event.version },
+        status: RESERVATION_OVERDUE,
+        overdueAt: new Date(event.timestamp),
+        version: event.version,
+        updatedAt: new Date(event.timestamp),
       },
-      {
-        $set: {
-          status: RESERVATION_OVERDUE,
-          overdueAt: new Date(event.timestamp),
-          version: event.version,
-          updatedAt: new Date(event.timestamp),
-        },
-      },
+      event.version,
     )
   }
 
@@ -138,15 +124,10 @@ export class ReservationProjectionHandler {
    * @param event - The ReservationDeleted domain event
    */
   async handleReservationDeleted(event: DomainEvent): Promise<void> {
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
-      { id: event.aggregateId },
-      {
-        $set: {
-          version: event.version,
-          deletedAt: new Date(),
-          updatedAt: new Date(event.timestamp),
-        },
-      },
+    await this.repository.markReservationAsDeleted(
+      event.aggregateId,
+      event.version,
+      new Date(event.timestamp),
     )
   }
 
@@ -158,13 +139,9 @@ export class ReservationProjectionHandler {
    * @param event - The BookDetailsUpdated domain event
    */
   async handleBookDetailsUpdated(event: DomainEvent): Promise<void> {
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateMany(
-      { isbn: event.payload.isbn, deletedAt: null },
-      {
-        $set: {
-          updatedAt: new Date(event.timestamp),
-        },
-      },
+    await this.repository.updateReservationsForBookUpdate(
+      event.payload.isbn,
+      new Date(event.timestamp),
     )
   }
 
@@ -176,14 +153,9 @@ export class ReservationProjectionHandler {
    * @param event - The BookDeleted domain event
    */
   async handleBookDeleted(event: DomainEvent): Promise<void> {
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateMany(
-      { isbn: event.payload.isbn, status: 'active', deletedAt: null },
-      {
-        $set: {
-          bookDeleted: true,
-          updatedAt: new Date(event.timestamp),
-        },
-      },
+    await this.repository.markReservationsForDeletedBook(
+      event.payload.isbn,
+      new Date(event.timestamp),
     )
   }
 
@@ -213,9 +185,10 @@ export class ReservationProjectionHandler {
       )
     }
 
-    await this.db
-      .getCollection(RESERVATION_PROJECTION_TABLE)
-      .updateOne({ id: reservationId }, { $set: updateData })
+    await this.repository.updateReservationValidationResult(
+      reservationId,
+      updateData,
+    )
 
     logger.info(
       `Reservation ${reservationId} validation result: ${isValid ? 'confirmed' : 'rejected'}`,
@@ -232,23 +205,19 @@ export class ReservationProjectionHandler {
   async handlePaymentSuccess(event: DomainEvent): Promise<void> {
     const paymentDate = new Date(event.timestamp)
 
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
+    await this.repository.updateReservationPaymentSuccess(
+      event.aggregateId,
       {
-        id: event.aggregateId,
-        version: { $lt: event.version },
+        status: RESERVATION_STATUS.RESERVED,
+        paymentReceived: true,
+        paymentAmount: event.payload.amount,
+        paymentDate: paymentDate,
+        paymentMethod: event.payload.paymentMethod,
+        paymentReference: event.payload.paymentReference,
+        version: event.version,
+        updatedAt: new Date(event.timestamp),
       },
-      {
-        $set: {
-          status: RESERVATION_STATUS.RESERVED,
-          paymentReceived: true,
-          paymentAmount: event.payload.amount,
-          paymentDate: paymentDate,
-          paymentMethod: event.payload.paymentMethod,
-          paymentReference: event.payload.paymentReference,
-          version: event.version,
-          updatedAt: new Date(event.timestamp),
-        },
-      },
+      event.version,
     )
 
     logger.info(
@@ -270,23 +239,17 @@ export class ReservationProjectionHandler {
       `Processing payment declined event for reservation ${event.aggregateId}`,
     )
 
-    const result = await this.db
-      .getCollection(RESERVATION_PROJECTION_TABLE)
-      .updateOne(
-        {
-          id: event.aggregateId,
-        },
-        {
-          $set: {
-            status: RESERVATION_STATUS.REJECTED,
-            paymentReceived: false,
-            paymentFailed: true,
-            paymentFailReason: event.payload.reason,
-            paymentAttemptDate: paymentDate,
-            updatedAt: new Date(event.timestamp),
-          },
-        },
-      )
+    const result = await this.repository.updateReservationPaymentDeclined(
+      event.aggregateId,
+      {
+        status: RESERVATION_STATUS.REJECTED,
+        paymentReceived: false,
+        paymentFailed: true,
+        paymentFailReason: event.payload.reason,
+        paymentAttemptDate: paymentDate,
+        updatedAt: new Date(event.timestamp),
+      },
+    )
 
     if (result.matchedCount === 0) {
       logger.warn(
@@ -308,14 +271,10 @@ export class ReservationProjectionHandler {
    * @param event - The retail price update domain event
    */
   async handleRetailPriceUpdated(event: DomainEvent): Promise<void> {
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
-      { id: event.aggregateId },
-      {
-        $set: {
-          retailPrice: Number(event.payload.newRetailPrice),
-          updatedAt: new Date(event.timestamp),
-        },
-      },
+    await this.repository.updateReservationRetailPrice(
+      event.aggregateId,
+      Number(event.payload.newRetailPrice),
+      new Date(event.timestamp),
     )
   }
 
@@ -327,15 +286,10 @@ export class ReservationProjectionHandler {
    * @param event - The book brought domain event
    */
   async handleReservationBookBrought(event: DomainEvent): Promise<void> {
-    await this.db.getCollection(RESERVATION_PROJECTION_TABLE).updateOne(
-      { id: event.aggregateId },
-      {
-        $set: {
-          status: RESERVATION_STATUS.BROUGHT,
-          updatedAt: new Date(event.timestamp),
-          version: event.version,
-        },
-      },
+    await this.repository.updateReservationBookBrought(
+      event.aggregateId,
+      event.version,
+      new Date(event.timestamp),
     )
 
     logger.info(`Reservation ${event.payload.reservationId} marked as brought`)

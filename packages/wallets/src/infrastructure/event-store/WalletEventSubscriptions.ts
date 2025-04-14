@@ -23,7 +23,7 @@ import { BookReturnHandler } from '@wallets/use_cases/commands/BookReturnHandler
  * - Handling book returns and late fee applications
  * - Managing error scenarios and logging
  */
-export function SetupEventSubscriptions(
+export function WalletEventSubscriptions(
   eventBus: EventBus,
   projectionHandler: WalletProjectionHandler,
   paymentHandler: ProcessWalletPaymentHandler,

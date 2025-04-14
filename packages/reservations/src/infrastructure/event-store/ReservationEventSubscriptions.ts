@@ -37,7 +37,7 @@ import { PaymentHandler } from '@reservations/use_cases/commands/PaymentHandler.
  * @param paymentHandler - Handler for processing payment events
  * @param bookBroughtHandler - Handler for processing book purchase scenarios
  */
-export function SetupEventSubscriptions(
+export function ReservationEventSubscriptions(
   eventBus: EventBus,
   projectionHandler: ReservationProjectionHandler,
   validateReservationHandler: ValidateReservationHandler,

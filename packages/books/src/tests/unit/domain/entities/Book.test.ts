@@ -1,157 +1,223 @@
-import { Book, BookProps } from '@books/entities/Book.js'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { Book } from '@books/entities/Book.js'
+import { describe, expect, it } from 'vitest'
 
-describe('Book Entity', () => {
-  let validBookProps: BookProps
-
-  beforeEach(() => {
-    validBookProps = {
-      isbn: '978-3-16-148410-0',
-      title: 'Test Book',
-      author: 'Test Author',
-      publicationYear: 2023,
-      publisher: 'Test Publisher',
-      price: 29.99,
-    }
-  })
+describe('Book', () => {
+  const validBookData = {
+    isbn: '978-3-16-148410-0',
+    title: 'Test Book',
+    author: 'Test Author',
+    publicationYear: 2024,
+    publisher: 'Test Publisher',
+    price: 29.99,
+  }
 
   describe('create', () => {
-    it('should create a new book with valid properties', () => {
-      const { book, event } = Book.create(validBookProps)
+    it('should create a new book with valid data', () => {
+      // Act
+      const { book, event } = Book.create(validBookData)
 
-      // Verify book properties
+      // Assert
       expect(book).toBeInstanceOf(Book)
-      expect(book.isbn).toBe(validBookProps.isbn)
-      expect(book.title).toBe(validBookProps.title)
-      expect(book.author).toBe(validBookProps.author)
-      expect(book.publicationYear).toBe(validBookProps.publicationYear)
-      expect(book.publisher).toBe(validBookProps.publisher)
-      expect(book.price).toBe(validBookProps.price)
-      expect(book.createdAt).toBeInstanceOf(Date)
-      expect(book.updatedAt).toBeInstanceOf(Date)
-      expect(book.deletedAt).toBeUndefined()
-
-      // Verify event was added to domain events
-      expect(book.domainEvents).toContain(event)
-    })
-
-    it('should generate a BookCreated event', () => {
-      const { event } = Book.create(validBookProps)
+      expect(book.isbn).toBe(validBookData.isbn)
+      expect(book.title).toBe(validBookData.title)
+      expect(book.author).toBe(validBookData.author)
+      expect(book.publicationYear).toBe(validBookData.publicationYear)
+      expect(book.publisher).toBe(validBookData.publisher)
+      expect(book.price).toBe(validBookData.price)
+      expect(book.version).toBe(0)
+      expect(book.isDeleted()).toBe(false)
 
       expect(event).toBeDefined()
       expect(event.eventType).toBe('BookCreated')
-      expect(event.payload).toEqual({
-        ...validBookProps,
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
-      })
+      expect(event.aggregateId).toBe(book.id)
+      expect(event.version).toBe(1)
+    })
+
+    it('should throw error when ISBN is invalid', () => {
+      // Arrange
+      const invalidData = {
+        ...validBookData,
+        isbn: 1234,
+      }
+
+      // @ts-expect-error - This is a test for invalid data
+      expect(() => Book.create(invalidData)).toThrow('VALIDATION_ERROR')
+    })
+
+    it('should throw error when title is empty', () => {
+      // Arrange
+      const invalidData = {
+        ...validBookData,
+        title: '',
+      }
+
+      // Act & Assert
+      expect(() => Book.create(invalidData)).toThrow('VALIDATION_ERROR')
+    })
+
+    it('should throw error when author is empty', () => {
+      // Arrange
+      const invalidData = {
+        ...validBookData,
+        author: '',
+      }
+
+      // Act & Assert
+      expect(() => Book.create(invalidData)).toThrow('VALIDATION_ERROR')
+    })
+
+    it('should throw error when publication year is invalid', () => {
+      // Arrange
+      const invalidData = {
+        ...validBookData,
+        publicationYear: -1,
+      }
+
+      // Act & Assert
+      expect(() => Book.create(invalidData)).toThrow('VALIDATION_ERROR')
+    })
+
+    it('should throw error when publisher is empty', () => {
+      // Arrange
+      const invalidData = {
+        ...validBookData,
+        publisher: '',
+      }
+
+      // Act & Assert
+      expect(() => Book.create(invalidData)).toThrow('VALIDATION_ERROR')
+    })
+
+    it('should throw error when price is invalid', () => {
+      // Arrange
+      const invalidData = {
+        ...validBookData,
+        price: -1,
+      }
+
+      // Act & Assert
+      expect(() => Book.create(invalidData)).toThrow('VALIDATION_ERROR')
     })
   })
 
   describe('update', () => {
-    it('should update book properties', async () => {
-      const { book: originalBook } = Book.create(validBookProps)
-      const updateProps = {
+    it('should update book with valid data', () => {
+      // Arrange
+      const { book: currentBook } = Book.create(validBookData)
+      const updateData = {
         title: 'Updated Title',
+        author: 'Updated Author',
+        publicationYear: 2025,
+        publisher: 'Updated Publisher',
         price: 39.99,
       }
 
-      // Add a small delay to ensure timestamps are different
-      await new Promise((resolve) => setTimeout(resolve, 1))
+      // Act
+      const { book: updatedBook, event } = currentBook.update(updateData)
 
-      const { book: updatedBook, event } = originalBook.update(updateProps)
+      // Assert
+      expect(updatedBook).toBeInstanceOf(Book)
+      expect(updatedBook.isbn).toBe(validBookData.isbn)
+      expect(updatedBook.title).toBe(updateData.title)
+      expect(updatedBook.author).toBe(updateData.author)
+      expect(updatedBook.publicationYear).toBe(updateData.publicationYear)
+      expect(updatedBook.publisher).toBe(updateData.publisher)
+      expect(updatedBook.price).toBe(updateData.price)
+      expect(updatedBook.version).toBe(1)
+      expect(updatedBook.isDeleted()).toBe(false)
 
-      expect(updatedBook.title).toBe(updateProps.title)
-      expect(updatedBook.price).toBe(updateProps.price)
-      expect(updatedBook.updatedAt.getTime()).toBeGreaterThan(
-        originalBook.updatedAt.getTime(),
-      )
-      expect(updatedBook.domainEvents).toContain(event)
+      expect(event).toBeDefined()
+      expect(event.eventType).toBe('BookUpdated')
+      expect(event.aggregateId).toBe(updatedBook.id)
+      expect(event.version).toBe(1)
     })
 
-    it('should generate a BookUpdated event', () => {
-      const { book: originalBook } = Book.create(validBookProps)
-      const updateProps = {
-        title: 'Updated Title',
+    it('should throw error when updating with invalid data', () => {
+      // Arrange
+      const { book: currentBook } = Book.create(validBookData)
+      const invalidData = {
+        title: '',
       }
 
-      const { event } = originalBook.update(updateProps)
-
-      expect(event.eventType).toBe('BookUpdated')
-      expect(event.payload.previous.title).toBe(validBookProps.title)
-      expect(event.payload.updated.title).toBe(updateProps.title)
-    })
-
-    it('should throw error when trying to update a deleted book', () => {
-      const { book } = Book.create(validBookProps)
-      const { book: deletedBook } = book.delete()
-
-      expect(() => deletedBook.update({ title: 'New Title' })).toThrow(
-        'has been deleted',
-      )
-    })
-
-    it('should throw error when no changes are provided', () => {
-      const { book } = Book.create(validBookProps)
-
-      expect(() => book.update({})).toThrow('no changes to apply')
+      // Act & Assert
+      expect(() => currentBook.update(invalidData)).toThrow('VALIDATION_ERROR')
     })
   })
 
   describe('delete', () => {
     it('should mark book as deleted', () => {
-      const { book: originalBook } = Book.create(validBookProps)
-      const { book: deletedBook, event } = originalBook.delete()
+      // Arrange
+      const { book: currentBook } = Book.create(validBookData)
 
-      expect(deletedBook.deletedAt).toBeInstanceOf(Date)
-      expect(deletedBook.isDeleted()).toBe(true)
-      expect(deletedBook.domainEvents).toContain(event)
-    })
+      // Act
+      const { book, event } = currentBook.delete()
 
-    it('should generate a BookDeleted event', () => {
-      const { book } = Book.create(validBookProps)
-      const { event } = book.delete()
-
+      // Assert
+      expect(book.isDeleted()).toBe(true)
+      expect(event).toBeDefined()
       expect(event.eventType).toBe('BookDeleted')
-      expect(event.payload.deletedAt).toBeDefined()
+      expect(event.aggregateId).toBe(currentBook.id)
+      expect(event.version).toBe(1)
     })
 
-    it('should throw error when trying to delete an already deleted book', () => {
-      const { book } = Book.create(validBookProps)
-      const { book: deletedBook } = book.delete()
+    it('should throw error when deleting already deleted book', () => {
+      // Arrange
+      const { book: currentBook } = Book.create(validBookData)
 
-      expect(() => deletedBook.delete()).toThrow('already deleted')
+      const { book: deletedBook } = currentBook.delete()
+
+      // Act & Assert
+      expect(() => deletedBook.delete()).toThrow(
+        `Book with id ${currentBook.id} is already deleted.`,
+      )
     })
   })
 
   describe('rehydrate', () => {
     it('should rehydrate book from events', () => {
+      // Arrange
       const { book: originalBook, event: createdEvent } =
-        Book.create(validBookProps)
-      const { event: updatedEvent } = originalBook.update({
-        title: 'Updated Title',
-      })
-      const { event: deletedEvent } = originalBook.delete()
+        Book.create(validBookData)
 
-      const rehydratedBook = Book.rehydrate([
-        createdEvent,
-        updatedEvent,
-        deletedEvent,
-      ])
+      const updateData = { title: 'Updated Title' }
 
-      expect(rehydratedBook.id).toBe(originalBook.id)
-      expect(rehydratedBook.title).toBe('Updated Title')
+      const { book: updatedBook, event: updatedEvent } =
+        originalBook.update(updateData)
+
+      const { event: deletedEvent } = updatedBook.delete()
+
+      const events = [createdEvent, updatedEvent, deletedEvent]
+
+      // Act
+      const rehydratedBook = Book.rehydrate(events)
+
+      // Assert
+      expect(rehydratedBook).toBeInstanceOf(Book)
+      expect(rehydratedBook.isbn).toBe(validBookData.isbn)
+      expect(rehydratedBook.title).toBe(updateData.title)
+      expect(rehydratedBook.author).toBe(validBookData.author)
+      expect(rehydratedBook.publicationYear).toBe(validBookData.publicationYear)
+      expect(rehydratedBook.publisher).toBe(validBookData.publisher)
+      expect(rehydratedBook.price).toBe(validBookData.price)
+      expect(rehydratedBook.version).toBe(2)
       expect(rehydratedBook.isDeleted()).toBe(true)
     })
 
-    it('should throw error when no events are provided', () => {
-      expect(() => Book.rehydrate([])).toThrow('No events provided')
+    it('should throw error when rehydrating with empty events', () => {
+      // Act & Assert
+      expect(() => Book.rehydrate([])).toThrow(
+        'No events provided to rehydrate the Book aggregate',
+      )
     })
 
     it('should throw error when first event is not BookCreated', () => {
-      const { book } = Book.create(validBookProps)
-      const { event: updatedEvent } = book.update({ title: 'Updated Title' })
+      // Arrange
+      const { book: originalBook } = Book.create(validBookData)
+      const { event: updatedEvent } = originalBook.update({
+        title: 'Updated Title',
+      })
 
+      // Act & Assert
       expect(() => Book.rehydrate([updatedEvent])).toThrow(
         'First event must be a BookCreated event',
       )

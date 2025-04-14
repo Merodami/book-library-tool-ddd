@@ -7,17 +7,10 @@ import { Collection, MongoError } from 'mongodb'
 const WALLET_PROJECTION_TABLE = 'wallet_projection'
 
 /**
- * MongoDB implementation of the wallet projection repository for read operations.
+ * MongoDB implementation of the wallet projection repository.
  * This repository is part of the CQRS pattern's read model, providing efficient
- * query access to wallet data. It maintains a denormalized view of wallet state
- * optimized for read operations.
- *
- * The repository implements the IWalletProjectionRepository interface and is
- * responsible for:
- * - Retrieving wallet information by user ID
- * - Optimizing query performance through field projection
- * - Handling database errors and providing appropriate error responses
- * - Maintaining data consistency through soft delete patterns
+ * query access to wallet data and handling event-driven updates. It maintains
+ * a denormalized view of wallet state optimized for read operations.
  */
 export class WalletProjectionRepository implements IWalletProjectionRepository {
   private readonly collection: Collection<WalletDTO>
@@ -117,6 +110,77 @@ export class WalletProjectionRepository implements IWalletProjectionRepository {
     } catch (error) {
       const errorMessage = `Error retrieving wallet for user ${userId}: ${error.message}`
 
+      logger.error(errorMessage)
+
+      if (error instanceof MongoError) {
+        throw new Errors.ApplicationError(
+          500,
+          ErrorCode.DATABASE_ERROR,
+          errorMessage,
+        )
+      }
+
+      throw error
+    }
+  }
+
+  /**
+   * Saves a new wallet projection from a WalletCreated event.
+   *
+   * @param walletData - Data for the new wallet projection
+   */
+  async saveWallet(walletData: WalletDTO): Promise<void> {
+    try {
+      await this.collection.insertOne(walletData)
+
+      logger.info(`Created wallet projection for user ${walletData.userId}`)
+    } catch (error) {
+      const errorMessage = `Error saving wallet for user ${walletData.userId}: ${error.message}`
+      logger.error(errorMessage)
+
+      if (error instanceof MongoError) {
+        throw new Errors.ApplicationError(
+          500,
+          ErrorCode.DATABASE_ERROR,
+          errorMessage,
+        )
+      }
+
+      throw error
+    }
+  }
+
+  /**
+   * Updates a wallet's balance based on various events that affect the balance.
+   * This is a generic balance update method that can be used by different event handlers.
+   *
+   * @param id - The wallet ID
+   * @param newBalance - The new balance amount
+   * @param version - The new version number
+   * @param timestamp - The timestamp of the update
+   */
+  async updateWalletBalance(
+    id: string,
+    newBalance: number,
+    version: number,
+    timestamp: Date,
+  ): Promise<void> {
+    try {
+      await this.collection.updateOne(
+        {
+          id,
+          version: { $lt: version },
+        },
+        {
+          $set: {
+            balance: newBalance,
+            version,
+            updatedAt: timestamp.toISOString(),
+          },
+        },
+      )
+    } catch (error) {
+      const errorMessage = `Error updating wallet balance for ID ${id}: ${error.message}`
       logger.error(errorMessage)
 
       if (error instanceof MongoError) {

@@ -5,7 +5,7 @@ import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { BookBroughtHandler } from '@reservations/commands/BookBroughtHandler.js'
 import { PaymentHandler } from '@reservations/commands/PaymentHandler.js'
 import { ValidateReservationHandler } from '@reservations/commands/ValidateReservationHandler.js'
-import { SetupEventSubscriptions } from '@reservations/event-store/ReservationEventSubscriptions.js'
+import { ReservationEventSubscriptions } from '@reservations/event-store/ReservationEventSubscriptions.js'
 import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
 import { ReservationProjectionRepository } from '@reservations/persistence/mongo/ReservationProjectionRepository.js'
 import { ReservationRepository } from '@reservations/persistence/mongo/ReservationRepository.js'
@@ -47,7 +47,7 @@ async function startServer() {
 
   // Set up event subscriptions to update read models (via the projection handler)
   const reservationProjectionHandler = new ReservationProjectionHandler(
-    dbService,
+    reservationProjectionRepository,
   )
 
   const validateReservationHandler = new ValidateReservationHandler(
@@ -66,7 +66,7 @@ async function startServer() {
   const bookBrought = new BookBroughtHandler(reservationRepository, eventBus)
 
   // Subscribe to internal domain events for reservations
-  await SetupEventSubscriptions(
+  await ReservationEventSubscriptions(
     eventBus,
     reservationProjectionHandler,
     validateReservationHandler,

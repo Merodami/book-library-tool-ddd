@@ -5,6 +5,7 @@ import {
   createErrorEvent,
   EventBus,
   RESERVATION_BOOK_VALIDATION,
+  RESERVATION_BOOK_VALIDATION_FAILED,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
@@ -17,7 +18,7 @@ import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.
  * Using async callbacks with try/catch ensures that errors are caught and logged,
  * preventing unhandled promise rejections.
  */
-export function SetupEventSubscriptions(
+export function BookEventSubscriptions(
   eventBus: EventBus,
   projectionHandler: BookProjectionHandler,
 ): void {
@@ -64,7 +65,11 @@ export function SetupEventSubscriptions(
       logger.error(`Error validating book for reservation: ${error}`)
 
       // Create and publish generic error response
-      const errorEvent = createErrorEvent(event, error, 'BookValidationFailed')
+      const errorEvent = createErrorEvent(
+        event,
+        error,
+        RESERVATION_BOOK_VALIDATION_FAILED,
+      )
 
       // Optionally add specific fields needed for error recovery
       errorEvent.payload.reservationId = event.payload.reservationId

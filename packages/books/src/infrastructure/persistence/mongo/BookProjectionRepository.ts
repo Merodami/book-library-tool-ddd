@@ -1,7 +1,9 @@
+// packages/books/src/infrastructure/persistence/mongo/MongoBookProjectionRepository.ts
 import { MongoDatabaseService } from '@book-library-tool/database'
 import type { Book, PaginatedBookResponse } from '@book-library-tool/sdk'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
 import { GetAllBooksQuery } from '@books/queries/GetAllBooksQuery.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import type { Collection } from 'mongodb'
 
 /**
@@ -36,11 +38,12 @@ function mapProjectionToBook(doc: any): Book {
  * The repository uses MongoDB's aggregation framework for complex queries
  * and implements proper indexing for optimal performance.
  */
-export class BookProjectionRepository {
-  private readonly collection: Collection<Book>
+export class BookProjectionRepository implements IBookProjectionRepository {
+  private readonly collection: Collection<any>
+  private readonly BOOK_PROJECTION_TABLE = 'book_projection'
 
   constructor(private dbService: MongoDatabaseService) {
-    this.collection = dbService.getCollection('book_projection')
+    this.collection = dbService.getCollection(this.BOOK_PROJECTION_TABLE)
   }
 
   /**
@@ -121,5 +124,77 @@ export class BookProjectionRepository {
     }
 
     return doc ? mapProjectionToBook(doc) : null
+  }
+
+  /**
+   * Saves a new book projection in the database.
+   *
+   * @param bookProjection - The book projection data to save
+   */
+  async saveProjection(bookProjection: any): Promise<void> {
+    await this.collection.insertOne(bookProjection)
+  }
+
+  /**
+   * Updates a book projection with partial data.
+   *
+   * @param id - The aggregate ID of the book to update
+   * @param updates - Partial book data to update
+   * @param version - The new version number
+   */
+  async updateProjection(
+    id: string,
+    updates: any,
+    version: number,
+  ): Promise<void> {
+    await this.collection.updateOne(
+      {
+        id,
+        version: { $lt: version },
+      },
+      {
+        $set: {
+          ...updates,
+          version,
+        },
+      },
+    )
+  }
+
+  /**
+   * Marks a book as deleted by setting the deletedAt timestamp.
+   *
+   * @param id - The aggregate ID of the book to mark as deleted
+   * @param version - The new version number
+   * @param timestamp - The timestamp when the book was deleted
+   */
+  async markAsDeleted(
+    id: string,
+    version: number,
+    timestamp: Date,
+  ): Promise<void> {
+    await this.collection.updateOne(
+      { id },
+      {
+        $set: {
+          deletedAt: new Date(),
+          version,
+          updatedAt: timestamp,
+        },
+      },
+    )
+  }
+
+  /**
+   * Finds a book for reservation validation.
+   *
+   * @param isbn - The ISBN of the book to find
+   * @returns The book data if found and not deleted, null otherwise
+   */
+  async findBookForReservation(isbn: string): Promise<any | null> {
+    return this.collection.findOne({
+      isbn,
+      deletedAt: { $exists: false },
+    })
   }
 }

@@ -3,7 +3,7 @@ import { MongoDatabaseService } from '@book-library-tool/database'
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { ProcessWalletPaymentHandler } from '@wallets/commands/ProcessWalletPaymentHandler.js'
-import { SetupEventSubscriptions } from '@wallets/event-store/WalletEventSubscriptions.js'
+import { WalletEventSubscriptions } from '@wallets/event-store/WalletEventSubscriptions.js'
 import { WalletProjectionHandler } from '@wallets/event-store/WalletProjectionHandler.js'
 import { WalletProjectionRepository } from '@wallets/persistence/mongo/WalletProjectionRepository.js'
 import { WalletRepository } from '@wallets/persistence/mongo/WalletRepository.js'
@@ -54,7 +54,7 @@ async function startServer() {
 
   const bookReturnHandler = new BookReturnHandler(walletRepository, eventBus)
 
-  await SetupEventSubscriptions(
+  await WalletEventSubscriptions(
     eventBus,
     walletProjectionHandler,
     paymentHandler,

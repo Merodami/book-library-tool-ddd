@@ -8,6 +8,8 @@ import {
 import { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
 import type { Collection } from 'mongodb'
 
+const RESERVATION_PROJECTION_TABLE = 'reservation_projection'
+
 /**
  * Maps database document to the Reservation entity.
  * Ensures that the data structure from the database matches the expected external data model.
@@ -30,30 +32,27 @@ function mapProjectionToReservation(doc: any): Reservation {
 }
 
 /**
- * Repository implementation for reservation projections.
- * Handles read-only operations against the reservation projection model.
- * Part of the CQRS pattern where this represents the Query side.
+ * MongoDB implementation of the reservation projection repository.
+ * Handles both read operations for queries and update operations for event handling.
  */
 export class ReservationProjectionRepository
   implements IReservationProjectionRepository
 {
-  private readonly collection: Collection<Reservation>
+  private readonly collection: Collection<any>
 
   /**
-   * Creates a new instance of ReservationProjectionRepository.
+   * Creates a new instance of MongoReservationProjectionRepository.
    *
    * @param dbService MongoDB database service
    */
   constructor(private dbService: MongoDatabaseService) {
-    this.collection = dbService.getCollection('reservation_projection')
+    this.collection = dbService.getCollection(RESERVATION_PROJECTION_TABLE)
   }
+
+  // Read methods from IReservationProjectionRepository
 
   /**
    * Retrieves all reservations for a specific user with pagination.
-   *
-   * @param userId The user identifier
-   * @param pagination Page number and limit options
-   * @returns Paginated list of the user's reservations
    */
   async getUserReservations(
     userId: string,
@@ -82,9 +81,6 @@ export class ReservationProjectionRepository
 
   /**
    * Retrieves a specific reservation by its ID.
-   *
-   * @param reservationId The reservation identifier
-   * @returns The reservation if found, null otherwise
    */
   async getReservationById(reservationId: string): Promise<Reservation | null> {
     const doc = await this.collection.findOne({ id: reservationId })
@@ -94,12 +90,6 @@ export class ReservationProjectionRepository
 
   /**
    * Retrieves reservations for a specific book with optional filtering.
-   *
-   * @param isbn The book's ISBN
-   * @param userId Optional filter by user ID
-   * @param status Optional filter by reservation status
-   * @param pagination Page number and limit options
-   * @returns Paginated list of reservations for the book
    */
   async getBookReservations(
     isbn: string,
@@ -151,10 +141,6 @@ export class ReservationProjectionRepository
 
   /**
    * Retrieves all active reservations for a specific book.
-   * Used to check book availability and manage inventory.
-   *
-   * @param isbn The book's ISBN
-   * @returns List of active reservations for the book
    */
   async getActiveBookReservations(isbn: string): Promise<Reservation[]> {
     const activeReservations = await this.collection
@@ -173,11 +159,6 @@ export class ReservationProjectionRepository
 
   /**
    * Retrieves reservations filtered by status with pagination.
-   * Useful for administrative dashboards and reporting.
-   *
-   * @param status The reservation status to filter by
-   * @param pagination Page number and limit options
-   * @returns Paginated list of reservations with the specified status
    */
   async getReservationsByStatus(
     status: RESERVATION_STATUS,
@@ -201,10 +182,6 @@ export class ReservationProjectionRepository
 
   /**
    * Counts the number of active reservations for a specific user.
-   * Used to enforce business rules such as the maximum number of concurrent reservations.
-   *
-   * @param userId The user identifier
-   * @returns The count of active reservations for the user
    */
   async countActiveReservationsByUser(userId: string): Promise<number> {
     const count = await this.collection.countDocuments({
@@ -221,5 +198,192 @@ export class ReservationProjectionRepository
     })
 
     return count
+  }
+
+  /**
+   * Creates a new reservation projection.
+   */
+  async saveReservation(reservationData: any): Promise<void> {
+    await this.collection.insertOne(reservationData)
+  }
+
+  /**
+   * Common method for version-aware updates to prevent duplication.
+   * Used by multiple event handlers that need similar update logic.
+   */
+  private async updateReservationWithVersion(
+    id: string,
+    updates: any,
+    version: number,
+  ): Promise<void> {
+    await this.collection.updateOne(
+      {
+        id,
+        version: { $lt: version },
+      },
+      {
+        $set: updates,
+      },
+    )
+  }
+
+  /**
+   * Updates a reservation when it's returned.
+   */
+  async updateReservationReturned(
+    id: string,
+    updates: any,
+    version: number,
+  ): Promise<void> {
+    await this.updateReservationWithVersion(id, updates, version)
+  }
+
+  /**
+   * Updates a reservation when it's cancelled.
+   */
+  async updateReservationCancelled(
+    id: string,
+    updates: any,
+    version: number,
+  ): Promise<void> {
+    await this.updateReservationWithVersion(id, updates, version)
+  }
+
+  /**
+   * Updates a reservation when it becomes overdue.
+   */
+  async updateReservationOverdue(
+    id: string,
+    updates: any,
+    version: number,
+  ): Promise<void> {
+    await this.updateReservationWithVersion(id, updates, version)
+  }
+
+  /**
+   * Marks a reservation as deleted.
+   */
+  async markReservationAsDeleted(
+    id: string,
+    version: number,
+    timestamp: Date,
+  ): Promise<void> {
+    await this.collection.updateOne(
+      { id },
+      {
+        $set: {
+          version,
+          deletedAt: new Date(),
+          updatedAt: timestamp,
+        },
+      },
+    )
+  }
+
+  /**
+   * Updates all reservations for a book when book details change.
+   */
+  async updateReservationsForBookUpdate(
+    isbn: string,
+    timestamp: Date,
+  ): Promise<void> {
+    await this.collection.updateMany(
+      { isbn, deletedAt: null },
+      {
+        $set: {
+          updatedAt: timestamp,
+        },
+      },
+    )
+  }
+
+  /**
+   * Updates reservations when a book is deleted.
+   */
+  async markReservationsForDeletedBook(
+    isbn: string,
+    timestamp: Date,
+  ): Promise<void> {
+    await this.collection.updateMany(
+      { isbn, status: 'active', deletedAt: null },
+      {
+        $set: {
+          bookDeleted: true,
+          updatedAt: timestamp,
+        },
+      },
+    )
+  }
+
+  /**
+   * Updates a reservation based on book validation results.
+   */
+  async updateReservationValidationResult(
+    reservationId: string,
+    updates: any,
+  ): Promise<void> {
+    await this.collection.updateOne({ id: reservationId }, { $set: updates })
+  }
+
+  /**
+   * Updates a reservation after successful payment.
+   */
+  async updateReservationPaymentSuccess(
+    id: string,
+    updates: any,
+    version: number,
+  ): Promise<void> {
+    await this.updateReservationWithVersion(id, updates, version)
+  }
+
+  /**
+   * Updates a reservation after failed payment.
+   */
+  async updateReservationPaymentDeclined(
+    id: string,
+    updates: any,
+  ): Promise<{ matchedCount: number }> {
+    const result = await this.collection.updateOne({ id }, { $set: updates })
+
+    return { matchedCount: result.matchedCount }
+  }
+
+  /**
+   * Updates a reservation's retail price.
+   */
+  async updateReservationRetailPrice(
+    id: string,
+    retailPrice: number,
+    timestamp: Date,
+  ): Promise<void> {
+    await this.collection.updateOne(
+      { id },
+      {
+        $set: {
+          retailPrice: Number(retailPrice),
+          updatedAt: timestamp,
+        },
+      },
+    )
+  }
+
+  /**
+   * Updates a reservation when the book is brought back.
+   */
+  async updateReservationBookBrought(
+    id: string,
+    version: number,
+    timestamp: Date,
+  ): Promise<void> {
+    await this.collection.updateOne(
+      { id },
+      {
+        $set: {
+          status: RESERVATION_STATUS.BROUGHT,
+          updatedAt: timestamp,
+          version,
+        },
+      },
+    )
   }
 }
