@@ -104,6 +104,81 @@ This system is built using several modern architectural patterns to ensure scala
 - **Graceful Shutdown**: Proper resource cleanup on application termination
 - **Cache Invalidation**: Support for selective cache invalidation by collection
 
+### Redis Caching Implementation
+
+The system implements a sophisticated caching layer using Redis with the following features:
+
+- **Method-Level Caching**: Using the `@Cache` decorator to cache method results
+- **Configurable TTL**: Cache entries can have different time-to-live values
+- **Automatic Serialization**: Complex objects are automatically serialized for storage
+- **Cache Invalidation**: Support for pattern-based cache invalidation
+- **Health Checks**: Redis connection health monitoring
+- **Error Handling**: Graceful fallback when Redis is unavailable
+
+Example usage:
+
+```typescript
+@Cache(60) // Cache for 60 seconds
+async getBooks() {
+  // Method implementation
+}
+```
+
+### GraphQL Caching
+
+The GraphQL layer implements multiple caching strategies:
+
+1. **Resolver-Level Caching**:
+
+   - Individual resolvers can be cached using the `@Cache` decorator
+   - Cache keys are generated based on query parameters
+   - Automatic cache invalidation on mutations
+
+2. **Response Caching**:
+
+   - Apollo Server's built-in response caching
+   - Configurable max-age for different types of queries
+   - Cache control directives support
+
+3. **DataLoader Caching**:
+   - Batch loading of related data
+   - Request-level caching of loaded entities
+   - Automatic cache invalidation on updates
+
+Example resolver with caching:
+
+```typescript
+@Cache(300) // Cache for 5 minutes
+async book(_, { isbn }, context) {
+  return context.bookLoader.load(isbn);
+}
+```
+
+### Cache Configuration
+
+The caching system can be configured through environment variables:
+
+```env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DEFAULT_TTL=3600
+```
+
+### Cache Invalidation
+
+Cache invalidation is handled automatically for:
+
+- Book creation/updates/deletion
+- Reservation changes
+- User data modifications
+
+Manual cache invalidation is also supported:
+
+```typescript
+await invalidateCache(target, methodName, context)
+await clearClassCache(target, context)
+```
+
 ## Contents
 
 - [Book Library Tool](#book-library-tool)
@@ -124,6 +199,10 @@ This system is built using several modern architectural patterns to ensure scala
   - [Technical Implementation Details](#technical-implementation-details)
     - [Database Layer](#database-layer)
     - [Caching System](#caching-system)
+    - [Redis Caching Implementation](#redis-caching-implementation)
+    - [GraphQL Caching](#graphql-caching)
+    - [Cache Configuration](#cache-configuration)
+    - [Cache Invalidation](#cache-invalidation)
   - [Contents](#contents)
   - [ToDo](#todo)
   - [API Endpoints](#api-endpoints)
