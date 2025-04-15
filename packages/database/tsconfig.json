@@ -7,29 +7,29 @@
     "tsBuildInfoFile": "dist/.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      // Main
-      "@reservations/*": ["src/*"],
-
       // API
-      "@controllers/*": ["src/api/controllers/*"],
-      "@routes/*": ["src/api/routes/*"],
+      "@database/controllers/*": ["src/api/controllers/*"],
+      "@database/routes/*": ["src/api/routes/*"],
 
       // Application
-      "@dto/*": ["src/application/dtos/*"],
-      "@use_cases/*": ["src/application/use_cases/*"],
-      "@commands/*": ["src/application/use_cases/commands/*"],
-      "@queries/*": ["src/application/use_cases/queries/*"],
+      "@database/dto/*": ["src/application/dtos/*"],
+      "@database/use_cases/*": ["src/application/use_cases/*"],
+      "@database/commands/*": ["src/application/use_cases/commands/*"],
+      "@database/queries/*": ["src/application/use_cases/queries/*"],
 
       // Domain
-      "@entities/*": ["src/domain/entities/*"],
-      "@repositories/*": ["src/domain/repositories/*"],
-      "@value_objects/*": ["src/domain/value_objects/*"],
+      "@database/entities/*": ["src/domain/entities/*"],
+      "@database/repositories/*": ["src/domain/repositories/*"],
+      "@database/value_objects/*": ["src/domain/value_objects/*"],
 
       // Infrastructure
-      "@database/*": ["src/infrastructure/database/*"],
-      "@cache/*": ["src/infrastructure/cache/*"],
-      "@persistence/*": ["src/infrastructure/persistence/*"],
-      "@event-store/*": ["src/infrastructure/event-store/*"]
+      "@database/database/*": ["src/infrastructure/database/*"],
+      "@database/cache/*": ["src/infrastructure/cache/*"],
+      "@database/persistence/*": ["src/infrastructure/persistence/*"],
+      "@database/event-store/*": ["src/infrastructure/event-store/*"],
+
+      // Test utils
+      "@database/testUtils/*": ["src/testUtils/*"]
     }
   },
   "include": ["src/**/*.ts"],

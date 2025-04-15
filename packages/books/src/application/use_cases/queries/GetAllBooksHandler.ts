@@ -1,8 +1,9 @@
-import { PaginatedBookResponse } from '@book-library-tool/sdk'
+import type {
+  CatalogSearchQuery,
+  PaginatedBookResponse,
+} from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
-
-import { GetAllBooksQuery } from './GetAllBooksQuery.js'
 
 export class GetAllBooksHandler {
   constructor(
@@ -13,11 +14,16 @@ export class GetAllBooksHandler {
    * Retrieves all books from the repository.
    * This method is useful for listing all available books.
    *
-   * @returns An array of Book aggregates.
+   * @param query - The search query parameters
+   * @param fields - Optional array of fields to return
+   * @returns A paginated response of Book objects
    */
-  async execute(query: GetAllBooksQuery): Promise<PaginatedBookResponse> {
+  async execute(
+    query: CatalogSearchQuery,
+    fields?: string[],
+  ): Promise<PaginatedBookResponse> {
     // Retrieve all events for the given aggregate ID.
-    const books = await this.projectionRepository.getAllBooks(query)
+    const books = await this.projectionRepository.getAllBooks(query, fields)
 
     if (!books || books.data.length === 0) {
       throw new Errors.ApplicationError(

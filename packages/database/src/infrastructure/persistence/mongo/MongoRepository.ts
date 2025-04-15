@@ -1,9 +1,9 @@
 import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
-import { MongoDatabaseService } from '@persistence/mongo/MongoDatabaseService.js'
+import { MongoDatabaseService } from '@database/persistence/mongo/MongoDatabaseService.js'
 import {
   IDatabaseService,
   QueryCriteria,
-} from '@repositories/IDatabaseService.js'
+} from '@database/repositories/IDatabaseService.js'
 import {
   Collection,
   Document,

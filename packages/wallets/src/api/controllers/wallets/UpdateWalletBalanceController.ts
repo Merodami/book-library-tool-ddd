@@ -1,5 +1,5 @@
 import { User } from '@book-library-tool/sdk'
-import { UpdateWalletBalanceHandler } from '@commands/UpdateWalletBalanceHandler.js'
+import { UpdateWalletBalanceHandler } from '@wallets/commands/UpdateWalletBalanceHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 /**

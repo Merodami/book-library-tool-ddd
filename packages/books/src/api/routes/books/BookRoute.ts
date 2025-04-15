@@ -30,7 +30,7 @@ export function createBookRouter(
   bookRepository: IBookRepository,
   bookProjectionRepository: IBookProjectionRepository,
   eventBus: EventBus,
-) {
+): Router {
   const router = Router()
 
   // Instantiate individual handlers

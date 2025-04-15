@@ -37,7 +37,7 @@ export class UpdateBookHandler {
 
     const currentBook = Book.rehydrate(events)
 
-    const { book: updatedBook, event } = currentBook.update({
+    const { event } = currentBook.update({
       title: command.title,
       author: command.author,
       publicationYear: command.publicationYear,

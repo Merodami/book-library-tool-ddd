@@ -19,6 +19,8 @@
     "incremental": true,
     "sourceMap": true,
     "noEmit": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "paths": {
       "@book-library-tool/*": ["./packages/*"]
     }
@@ -35,6 +37,7 @@
     { "path": "packages/shared" },
     { "path": "packages/books" },
     { "path": "packages/reservations" },
-    { "path": "packages/wallets" }
+    { "path": "packages/wallets" },
+    { "path": "packages/graphql-gateway" }
   ]
 }

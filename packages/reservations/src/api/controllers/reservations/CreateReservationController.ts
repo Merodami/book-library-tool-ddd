@@ -1,5 +1,5 @@
 import type { ReservationRequest } from '@book-library-tool/sdk'
-import { CreateReservationHandler } from '@commands/CreateReservationHandler.js'
+import { CreateReservationHandler } from '@reservations/commands/CreateReservationHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class CreateReservationController {

@@ -22,3 +22,19 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: library
       RABBITMQ_DEFAULT_PASS: library
+
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis_data:

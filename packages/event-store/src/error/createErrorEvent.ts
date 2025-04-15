@@ -1,4 +1,4 @@
-import { DomainEvent } from '@events/DomainEvent.js'
+import { DomainEvent } from '@event-store/events/DomainEvent.js'
 
 /**
  * Creates a standardized error response event when event processing fails.
@@ -13,7 +13,7 @@ export function createErrorEvent(
   error: Error,
   eventType?: string,
 ): DomainEvent {
-  const errorEventType = eventType || `${originalEvent.eventType}Failed`
+  const errorEventType = eventType || `${originalEvent.eventType}_FAILED`
 
   return {
     eventType: errorEventType,

@@ -3,8 +3,8 @@ import {
   type MongoDatabaseService,
 } from '@book-library-tool/database'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { DomainEvent } from '@events/DomainEvent.js'
-import { AggregateRoot } from '@model/AggregateRoot.js'
+import { DomainEvent } from '@event-store/events/DomainEvent.js'
+import { AggregateRoot } from '@event-store/model/AggregateRoot.js'
 import { Collection } from 'mongodb'
 
 export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {

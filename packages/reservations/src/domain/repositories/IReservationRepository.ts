@@ -1,6 +1,6 @@
 import type { DomainEvent } from '@book-library-tool/event-store'
 import type { ReservationRequest } from '@book-library-tool/sdk'
-import type { Reservation } from '@entities/Reservation.js'
+import type { Reservation } from '@reservations/entities/Reservation.js'
 
 /**
  * IReservationRepository abstracts the persistence and retrieval of domain events

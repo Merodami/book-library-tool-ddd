@@ -2,12 +2,12 @@ import { apiTokenAuth } from '@book-library-tool/auth'
 import { MongoDatabaseService } from '@book-library-tool/database'
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
-import { ProcessWalletPaymentHandler } from '@commands/ProcessWalletPaymentHandler.js'
-import { SetupEventSubscriptions } from '@event-store/WalletEventSubscriptions.js'
-import { WalletProjectionHandler } from '@event-store/WalletProjectionHandler.js'
-import { WalletProjectionRepository } from '@persistence/mongo/WalletProjectionRepository.js'
-import { WalletRepository } from '@persistence/mongo/WalletRepository.js'
-import { WalletRouter } from '@routes/wallets/WalletRouter.js'
+import { ProcessWalletPaymentHandler } from '@wallets/commands/ProcessWalletPaymentHandler.js'
+import { WalletEventSubscriptions } from '@wallets/event-store/WalletEventSubscriptions.js'
+import { WalletProjectionHandler } from '@wallets/event-store/WalletProjectionHandler.js'
+import { WalletProjectionRepository } from '@wallets/persistence/mongo/WalletProjectionRepository.js'
+import { WalletRepository } from '@wallets/persistence/mongo/WalletRepository.js'
+import { WalletRouter } from '@wallets/routes/wallets/WalletRouter.js'
 import cors from 'cors'
 import express from 'express'
 import gracefulShutdown from 'http-graceful-shutdown'
@@ -54,7 +54,7 @@ async function startServer() {
 
   const bookReturnHandler = new BookReturnHandler(walletRepository, eventBus)
 
-  await SetupEventSubscriptions(
+  await WalletEventSubscriptions(
     eventBus,
     walletProjectionHandler,
     paymentHandler,

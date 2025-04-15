@@ -6,8 +6,8 @@ import {
   WALLET_DELETED,
 } from '@book-library-tool/event-store'
 import { Errors, logger } from '@book-library-tool/shared'
-import { Wallet } from '@entities/Wallet.js'
-import { IWalletRepository } from '@repositories/IWalletRepository.js'
+import { Wallet } from '@wallets/entities/Wallet.js'
+import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
 
 /**
  * Repository implementation for wallet write operations following CQRS principles

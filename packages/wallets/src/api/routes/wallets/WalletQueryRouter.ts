@@ -1,7 +1,7 @@
 import { schemas, validateParams } from '@book-library-tool/api'
-import { GetWalletController } from '@controllers/wallets/GetWalletController.js'
-import { GetWalletHandler } from '@queries/GetWalletHandler.js'
-import type { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepository.js'
+import { GetWalletController } from '@wallets/controllers/wallets/GetWalletController.js'
+import { GetWalletHandler } from '@wallets/queries/GetWalletHandler.js'
+import type { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
 import { Router } from 'express'
 
 /**
@@ -10,7 +10,7 @@ import { Router } from 'express'
  */
 export function createWalletQueryRouter(
   walletProjectionRepository: IWalletProjectionRepository,
-) {
+): Router {
   const router = Router()
 
   // Create handlers

@@ -1,5 +1,5 @@
 import type { ReservationsHistoryQuery, UserId } from '@book-library-tool/sdk'
-import { GetReservationHistoryHandler } from '@queries/GetReservationHistoryHandler.js'
+import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class GetReservationHistoryController {

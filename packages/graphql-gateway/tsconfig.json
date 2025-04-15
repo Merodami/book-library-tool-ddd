@@ -1,0 +1,43 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      // API
+      "@graphql-gateway/controllers/*": ["src/api/controllers/*"],
+      "@graphql-gateway/routes/*": ["src/api/routes/*"],
+
+      // Application
+      "@graphql-gateway/dto/*": ["src/application/dtos/*"],
+      "@graphql-gateway/use_cases/*": ["src/application/use_cases/*"],
+      "@graphql-gateway/commands/*": ["src/application/use_cases/commands/*"],
+      "@graphql-gateway/queries/*": ["src/application/use_cases/queries/*"],
+
+      // Domain
+      "@graphql-gateway/entities/*": ["src/domain/entities/*"],
+      "@graphql-gateway/repositories/*": ["src/domain/repositories/*"],
+      "@graphql-gateway/value_objects/*": ["src/domain/value_objects/*"],
+
+      // Infrastructure
+      "@graphql-gateway/database/*": ["src/infrastructure/database/*"],
+      "@graphql-gateway/persistence/*": ["src/infrastructure/persistence/*"],
+      "@graphql-gateway/event-store/*": ["src/infrastructure/event-store/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../redis"
+    }
+  ]
+}

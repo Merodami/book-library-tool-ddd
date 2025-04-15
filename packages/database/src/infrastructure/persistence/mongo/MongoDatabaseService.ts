@@ -1,6 +1,6 @@
 import { logger } from '@book-library-tool/shared'
 import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
-import { CacheService } from '@cache/mongo/CacheService.js'
+import { CacheService } from '@database/cache/mongo/CacheService.js'
 import {
   Collection,
   Db,

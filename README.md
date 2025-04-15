@@ -41,6 +41,13 @@ This system is built using several modern architectural patterns to ensure scala
 - **Eventual Consistency**: Services maintain consistency through event propagation
 - **Message Durability**: Events are persisted to ensure reliability
 
+### Caching & Performance
+
+- **In-Memory Caching**: Intelligent caching system with TTL support for frequently accessed data
+- **Resource Management**: Automatic cleanup of resources on application shutdown
+- **Cache Invalidation**: Support for selective cache invalidation by collection
+- **Performance Metrics**: Tracking of cache hits, misses, and query performance
+
 ### Microservices
 
 - **Books Service**: Manages book references and catalog
@@ -54,10 +61,12 @@ This system is built using several modern architectural patterns to ensure scala
 - **Add a Reference**: Create a new book reference in the system.
 - **Get a Reference**: Retrieve information for a specific book reference by ID.
 - **Delete a Reference**: Remove an existing book reference from the catalog.
+- **Caching**: Frequently accessed book data is cached for improved performance.
 
 ### Catalog Search
 
 - Search for books by publication year, title, or author.
+- Results are cached with configurable TTL for improved response times.
 
 ### Reservation & Borrowing System
 
@@ -78,6 +87,23 @@ This system is built using several modern architectural patterns to ensure scala
 - A late fee of **€0.20/day** applies for overdue books. (See [env](./.env.local) variable LATE_FEE_PER_DAY)
 - If late fees reach the retail price of the book, the user effectively buys it.
 
+## Technical Implementation Details
+
+### Database Layer
+
+- **MongoDB Integration**: Robust connection management with retry logic for transient failures
+- **Connection Pooling**: Configurable pool sizes and timeouts
+- **Resource Cleanup**: Automatic cleanup of resources on application shutdown
+- **Performance Monitoring**: Tracking of query performance and error rates
+
+### Caching System
+
+- **In-Memory Cache**: Efficient caching of frequently accessed data
+- **TTL Support**: Configurable time-to-live for cache entries
+- **Automatic Cleanup**: Regular cleanup of expired cache entries
+- **Graceful Shutdown**: Proper resource cleanup on application termination
+- **Cache Invalidation**: Support for selective cache invalidation by collection
+
 ## Contents
 
 - [Book Library Tool](#book-library-tool)
@@ -87,6 +113,7 @@ This system is built using several modern architectural patterns to ensure scala
     - [CQRS (Command Query Responsibility Segregation)](#cqrs-command-query-responsibility-segregation)
     - [Event Sourcing](#event-sourcing)
     - [Event-Driven Architecture](#event-driven-architecture)
+    - [Caching \& Performance](#caching--performance)
     - [Microservices](#microservices)
   - [Key Functionalities](#key-functionalities)
     - [References (Books) Management](#references-books-management)
@@ -94,10 +121,15 @@ This system is built using several modern architectural patterns to ensure scala
     - [Reservation \& Borrowing System](#reservation--borrowing-system)
     - [Reminders](#reminders)
     - [Wallet \& Fees](#wallet--fees)
+  - [Technical Implementation Details](#technical-implementation-details)
+    - [Database Layer](#database-layer)
+    - [Caching System](#caching-system)
   - [Contents](#contents)
   - [ToDo](#todo)
   - [API Endpoints](#api-endpoints)
+    - [Services](#services)
     - [Books](#books)
+    - [Catalog](#catalog)
     - [Reservations](#reservations)
     - [Wallets](#wallets)
   - [Installation](#installation)
@@ -137,25 +169,46 @@ yarn api:docs
 
 On the API docs you will find schema description, examples and a execution UI.
 
-> **Note**: If API token authentication is enabled, include `Authorization: Bearer <token>` in the request header.
+> **Note**: All API endpoints require authentication. Include `Authorization: Bearer <token>` in the request header.
+
+### Services
+
+- **Books Service**: `http://localhost:3001`
+- **Reservations Service**: `http://localhost:3002`
+- **Reminder Service**: `http://localhost:3003`
 
 ### Books
 
 - **POST** `/books`  
   Creates a new book reference.
 
-  - Required body fields: `id`, `title`, `author`, `publicationYear`, `publisher`
+  - Required body fields: `isbn`, `title`, `author`, `publicationYear`, `publisher`, `price`
 
-- **GET** `/books/{referenceId}`  
-  Retrieves a book reference by its `referenceId`.
+- **GET** `/books/{isbn}`
+  Retrieves a book reference by its `isbn`.
 
-- **DELETE** `/books/{referenceId}`  
-  Deletes a book reference by its `referenceId`.
+- **PATCH** `/books/{isbn}`
+  Updates a book reference by its `isbn`.
+
+- **DELETE** `/books/{isbn}`
+  Deletes a book reference by its `isbn`.
+
+### Catalog
+
+- **GET** `/catalog`  
+  Retrieves a list of books with optional search parameters.
+
+  - Query Parameters:
+    - `title`: Search by book title
+    - `author`: Search by author name
+    - `publicationYear`: Search by publication year
+    - `page`: Page number (default: 1)
+    - `limit`: Items per page (default: 10, max: 100)
 
 ### Reservations
 
 - **POST** `/reservations`  
-  Creates a new reservation (requires `userId` and `referenceId` in the body).
+  Creates a new reservation (requires `userId` and `isbn` in the body).
 
 - **GET** `/reservations/user/{userId}`  
   Retrieves reservation history for a specific `userId`.
@@ -169,13 +222,9 @@ On the API docs you will find schema description, examples and a execution UI.
   Retrieves wallet details (e.g., `balance`, `updatedAt`) for the specified `userId`.
 
 - **POST** `/wallets/{userId}/balance`  
-  Modifies the user’s wallet balance.
+  Modifies the user's wallet balance.
 
   - Required body field: `amount` (number)
-
-- **PATCH** `/wallets/{userId}/late-return`  
-  Applies a late fee based on `daysLate` and `retailPrice`.
-  - If fees exceed the book’s price, the user effectively buys the book.
 
 ## Installation
 

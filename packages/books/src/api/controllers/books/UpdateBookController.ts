@@ -1,5 +1,4 @@
-import type { BookUpdateRequest } from '@book-library-tool/sdk'
-import { Errors } from '@book-library-tool/shared'
+import type { UpdateBookCommand } from '@commands/UpdateBookCommand.js'
 import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
@@ -21,39 +20,26 @@ export class UpdateBookController {
     try {
       const { isbn } = req.params
       const { title, author, publicationYear, publisher, price } =
-        req.body as BookUpdateRequest
+        req.body as UpdateBookCommand
 
-      if (
-        title === undefined ||
-        title === null ||
-        author === undefined ||
-        author === null ||
-        publicationYear === undefined ||
-        publicationYear === null ||
-        publisher === undefined ||
-        publisher === null ||
-        price === undefined ||
-        price === null
-      ) {
-        throw new Errors.ApplicationError(
-          400,
-          'INVALID_BOOK_UPDATE_REQUEST',
-          'Missing required fields in the request body',
-        )
-      }
-
-      await this.updateBookHandler.execute({
+      const command: UpdateBookCommand = {
         isbn,
         title,
         author,
         publicationYear,
         publisher,
         price,
-      })
+      }
 
-      res.status(200).json({ message: 'Book updated successfully' })
-    } catch (err) {
-      next(err)
+      // Call the handler directly to update the book
+      await this.updateBookHandler.execute(command)
+
+      // Respond with a 200 status code
+      res
+        .status(200)
+        .json({ message: 'Book updated successfully', book: command })
+    } catch (error) {
+      next(error)
     }
   }
 }

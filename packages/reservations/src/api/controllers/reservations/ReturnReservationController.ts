@@ -1,5 +1,5 @@
 import type { ReservationReturnParams } from '@book-library-tool/sdk'
-import { BookReturnHandler } from '@commands/BookReturnHandler.js'
+import { BookReturnHandler } from '@reservations/commands/BookReturnHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class ReturnReservationController {

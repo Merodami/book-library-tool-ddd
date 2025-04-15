@@ -1,4 +1,4 @@
-import { MongoDatabaseService } from '@persistence/mongo/MongoDatabaseService.js'
+import { MongoDatabaseService } from '@database/persistence/mongo/MongoDatabaseService.js'
 import { Db } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 

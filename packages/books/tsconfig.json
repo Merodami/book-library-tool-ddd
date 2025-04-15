@@ -9,9 +9,6 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      // Main
-      "@books/*": ["src/*"],
-
       // API
       "@controllers/*": ["src/api/controllers/*"],
       "@routes/*": ["src/api/routes/*"],

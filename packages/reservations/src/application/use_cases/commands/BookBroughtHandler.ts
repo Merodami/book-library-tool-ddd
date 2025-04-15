@@ -1,9 +1,8 @@
 import { EventBus } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
-import { Reservation } from '@entities/Reservation.js'
-import { IReservationRepository } from '@repositories/IReservationRepository.js'
-
-import { BookBroughtCommand } from './BookBroughtCommand.js'
+import { BookBroughtCommand } from '@reservations/commands/BookBroughtCommand.js'
+import { Reservation } from '@reservations/entities/Reservation.js'
+import { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
 
 /**
  * Handler for processing book purchase scenarios in the reservation system.

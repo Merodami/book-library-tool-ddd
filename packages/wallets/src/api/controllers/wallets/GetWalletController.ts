@@ -1,4 +1,4 @@
-import { GetWalletHandler } from '@queries/GetWalletHandler.js'
+import { GetWalletHandler } from '@wallets/queries/GetWalletHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 /**

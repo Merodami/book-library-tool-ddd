@@ -1,9 +1,9 @@
 import { schemas, validateBody, validateParams } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
-import { UpdateWalletBalanceHandler } from '@commands/UpdateWalletBalanceHandler.js'
-import { UpdateWalletBalanceController } from '@controllers/wallets/UpdateWalletBalanceController.js'
-import type { IWalletProjectionRepository } from '@repositories/IWalletProjectionRepository.js'
-import type { IWalletRepository } from '@repositories/IWalletRepository.js'
+import { UpdateWalletBalanceHandler } from '@wallets/commands/UpdateWalletBalanceHandler.js'
+import { UpdateWalletBalanceController } from '@wallets/controllers/wallets/UpdateWalletBalanceController.js'
+import type { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
+import type { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
 import { Router } from 'express'
 
 /**
@@ -14,7 +14,7 @@ export function createWalletCommandRouter(
   walletRepository: IWalletRepository,
   walletProjectionRepository: IWalletProjectionRepository,
   eventBus: EventBus,
-) {
+): Router {
   const router = Router()
 
   // Create command handlers

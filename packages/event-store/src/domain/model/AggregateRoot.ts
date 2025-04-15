@@ -1,9 +1,9 @@
-import type { DomainEvent } from '@events/DomainEvent.js'
+import type { DomainEvent } from '@event-store/events/DomainEvent.js'
 import { v4 as uuidv4 } from 'uuid'
 
 /**
  * AggregateRoot provides a common foundation for all domain aggregates.
- * It automatically generates an internal UUID if one isn’t supplied, tracks version,
+ * It automatically generates an internal UUID if one isn't supplied, tracks version,
  * and manages a collection of domain events raised during business operations.
  */
 export abstract class AggregateRoot {
@@ -17,7 +17,7 @@ export abstract class AggregateRoot {
   }
 
   /**
-   * Adds a domain event to the aggregate’s event collection.
+   * Adds a domain event to the aggregate's event collection.
    * Typically called from within the aggregate methods.
    */
   protected addDomainEvent(event: DomainEvent): void {
@@ -32,7 +32,7 @@ export abstract class AggregateRoot {
   }
 
   /**
-   * Clears the aggregate’s domain events.
+   * Clears the aggregate's domain events.
    * Typically called after the events have been persisted and published.
    */
   public clearDomainEvents(): void {

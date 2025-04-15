@@ -1,6 +1,6 @@
 import { PaginationQuery, Reservation } from '@book-library-tool/sdk'
 import { PaginatedResult } from '@book-library-tool/types'
-import type { IReservationProjectionRepository } from '@repositories/IReservationProjectionRepository.js'
+import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
 
 /**
  * Handles queries for a user's reservation history.

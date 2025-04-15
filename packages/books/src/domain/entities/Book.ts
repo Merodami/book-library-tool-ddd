@@ -59,6 +59,7 @@ export class Book extends AggregateRoot {
     this.createdAt = createdAt
     this.updatedAt = updatedAt
     this.deletedAt = deletedAt
+    this.version = 0
   }
 
   /**

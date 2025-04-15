@@ -3,34 +3,6 @@ import { Static, Type } from '@sinclair/typebox'
 import { PaginationMetadataSchema } from './shared.js'
 
 // --------------------------------
-// Query Schemas
-// --------------------------------
-
-/**
- * Catalog Search Query Schema (Used for the request validation)
- */
-export const CatalogSearchQuerySchema = Type.Partial(
-  Type.Object({
-    title: Type.String({ minLength: 1 }),
-    author: Type.String({ minLength: 1 }),
-    publicationYear: Type.Number(),
-    page: Type.Optional(Type.Number({ minimum: 1, default: 1 })),
-    limit: Type.Optional(
-      Type.Number({
-        minimum: 1,
-        maximum: Number(process.env.PAGINATION_MAX_LIMIT) || 100,
-        default: Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10,
-      }),
-    ),
-  }),
-  { $id: '#/components/schemas/CatalogSearchQuery' },
-)
-export type CatalogSearchQuery = Static<typeof CatalogSearchQuerySchema>
-export const CatalogSearchQueryRef = Type.Ref(
-  '#/components/schemas/CatalogSearchQuery',
-)
-
-// --------------------------------
 // Request Schemas
 // --------------------------------
 

@@ -7,9 +7,9 @@ import {
   WALLET_LATE_FEE_APPLIED,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
-import { ProcessWalletPaymentHandler } from '@commands/ProcessWalletPaymentHandler.js'
-import { WalletProjectionHandler } from '@event-store/WalletProjectionHandler.js'
-import { BookReturnHandler } from '@use_cases/commands/BookReturnHandler.js'
+import { ProcessWalletPaymentHandler } from '@wallets/commands/ProcessWalletPaymentHandler.js'
+import { WalletProjectionHandler } from '@wallets/event-store/WalletProjectionHandler.js'
+import { BookReturnHandler } from '@wallets/use_cases/commands/BookReturnHandler.js'
 
 /**
  * Sets up event subscriptions for wallet-related events.
@@ -23,7 +23,7 @@ import { BookReturnHandler } from '@use_cases/commands/BookReturnHandler.js'
  * - Handling book returns and late fee applications
  * - Managing error scenarios and logging
  */
-export function SetupEventSubscriptions(
+export function WalletEventSubscriptions(
   eventBus: EventBus,
   projectionHandler: WalletProjectionHandler,
   paymentHandler: ProcessWalletPaymentHandler,
