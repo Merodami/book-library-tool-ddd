@@ -1,9 +1,6 @@
 import type { EventBus } from '@book-library-tool/event-store'
 import { Errors } from '@book-library-tool/shared'
-import {
-  ErrorCode,
-  getDefaultMessageForError,
-} from '@book-library-tool/shared/src/errorCodes.js'
+import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
 import type { CreateBookCommand } from '@commands/CreateBookCommand.js'
 import { Book } from '@entities/Book.js'
 import type { IBookRepository } from '@repositories/IBookRepository.js'
@@ -29,7 +26,7 @@ export class CreateBookHandler {
       throw new Errors.ApplicationError(
         400,
         ErrorCode.BOOK_ALREADY_EXISTS,
-        getDefaultMessageForError(ErrorCode.BOOK_ALREADY_EXISTS),
+        `Book with ISBN ${command.isbn} already exists.`,
       )
     }
 

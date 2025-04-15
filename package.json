@@ -1,8 +1,8 @@
 {
   "name": "book-library-tool",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "author": "merodami/GenIA",
+  "author": "merodami",
   "type": "module",
   "scripts": {
     "depcheck": "nx run-many --target=depcheck --all --parallel=100",
