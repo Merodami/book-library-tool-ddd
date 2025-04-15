@@ -237,5 +237,5 @@ export function createError(
   const statusCode = getStatusCodeForError(code)
   const errorMessage = message || getDefaultMessageForError(code)
 
-  return new ApplicationError(statusCode, code, errorMessage)
+  return new ApplicationError(statusCode, errorMessage)
 }

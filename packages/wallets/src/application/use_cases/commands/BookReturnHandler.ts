@@ -1,5 +1,9 @@
-import { EventBus, WALLET_NOT_FOUND } from '@book-library-tool/event-store'
+import { EventBus } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
+import {
+  ErrorCode,
+  getDefaultMessageForError,
+} from '@book-library-tool/shared/src/errorCodes.js'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
 import { BookReturnCommand } from '@wallets/commands/BookReturnCommand.js'
 import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
@@ -50,13 +54,13 @@ export class BookReturnHandler {
 
         throw new ApplicationError(
           404,
-          WALLET_NOT_FOUND,
-          `Wallet not found for user ${command.userId}`,
+          ErrorCode.WALLET_NOT_FOUND,
+          getDefaultMessageForError(ErrorCode.WALLET_NOT_FOUND),
         )
       }
 
       // Get fee per day from environment or use default
-      const feePerDay = parseInt(process.env.LATE_FEE_PER_DAY ?? '0.2')
+      const feePerDay = parseInt(process.env.LATE_FEE_PER_DAY ?? '0.2', 10)
       logger.debug(`Using late fee per day: ${feePerDay}€`)
 
       // Apply late fee to existing wallet

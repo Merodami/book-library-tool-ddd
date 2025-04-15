@@ -61,7 +61,8 @@ export class ValidateReservationHandler {
 
       // Check active reservations count only once
       const maxReservations = parseInt(
-        process.env.BOOK_MAX_RESERVATION_USER ?? '3',
+        process.env.MAX_RESERVATIONS_PER_USER ?? '3',
+        10,
       )
       let exceedsLimit = false
 

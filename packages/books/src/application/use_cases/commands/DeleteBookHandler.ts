@@ -1,5 +1,5 @@
 import { EventBus } from '@book-library-tool/event-store'
-import { Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
 
@@ -26,7 +26,7 @@ export class DeleteBookHandler {
     if (!aggregateId) {
       throw new Errors.ApplicationError(
         404,
-        'BOOK_NOT_FOUND',
+        ErrorCode.BOOK_NOT_FOUND,
         `Book with isbn ${command.isbn} not found.`,
       )
     }
@@ -37,7 +37,7 @@ export class DeleteBookHandler {
     if (!events || events.length === 0) {
       throw new Errors.ApplicationError(
         404,
-        'BOOK_NOT_FOUND',
+        ErrorCode.BOOK_NOT_FOUND,
         `Book with isbn ${command.isbn} not found.`,
       )
     }
@@ -47,7 +47,7 @@ export class DeleteBookHandler {
     if (currentBook.isDeleted()) {
       throw new Errors.ApplicationError(
         410,
-        'BOOK_ALREADY_DELETED',
+        ErrorCode.BOOK_ALREADY_DELETED,
         `Book with isbn ${command.isbn} already deleted.`,
       )
     }

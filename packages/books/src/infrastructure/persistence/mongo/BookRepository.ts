@@ -4,7 +4,7 @@ import {
   BOOK_DELETED,
   type DomainEvent,
 } from '@book-library-tool/event-store'
-import { Errors, logger } from '@book-library-tool/shared'
+import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
 
@@ -84,7 +84,7 @@ export class BookRepository
       const msg = err instanceof Error ? err.message : String(err)
       throw new Errors.ApplicationError(
         500,
-        'BOOK_LOOKUP_FAILED',
+        ErrorCode.BOOK_LOOKUP_FAILED,
         `Failed to retrieve active book for ISBN ${isbn}: ${msg}`,
       )
     }

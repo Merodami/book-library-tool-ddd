@@ -24,7 +24,7 @@ export const paramPaginationLimit = {
   schema: {
     type: 'integer',
     minimum: 1,
-    maximum: parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100'),
-    default: parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10'),
+    maximum: parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100', 10),
+    default: parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10', 10),
   },
 }

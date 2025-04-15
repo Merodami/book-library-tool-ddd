@@ -89,7 +89,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
     if (!aggregateId) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_AGGREGATE_ID',
+        ErrorCode.INVALID_AGGREGATE_ID,
         'Aggregate ID is required',
       )
     }
@@ -144,7 +144,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
       if (error.code === 11000) {
         throw new Errors.ApplicationError(
           409,
-          'DUPLICATE_EVENT',
+          ErrorCode.DUPLICATE_EVENT,
           `Duplicate event detected for aggregate ${aggregateId}`,
         )
       }
@@ -157,7 +157,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
 
       throw new Errors.ApplicationError(
         500,
-        'EVENT_SAVE_FAILED',
+        ErrorCode.EVENT_SAVE_FAILED,
         `Failed to save events for aggregate ${aggregateId}: ${message}`,
       )
     }
@@ -222,7 +222,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
     if (!aggregateId) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_AGGREGATE_ID',
+        ErrorCode.INVALID_AGGREGATE_ID,
         'Aggregate ID is required',
       )
     }
@@ -236,7 +236,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
       const message = error instanceof Error ? error.message : String(error)
       throw new Errors.ApplicationError(
         500,
-        'EVENT_RETRIEVAL_FAILED',
+        ErrorCode.EVENT_LOOKUP_FAILED,
         `Failed to retrieve events for aggregate ${aggregateId}: ${message}`,
       )
     }

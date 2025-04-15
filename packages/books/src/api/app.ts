@@ -59,8 +59,17 @@ async function startServer() {
     .disable('x-powered-by')
     .use(cors({ exposedHeaders: ['Date', 'Content-Disposition'] }))
     .use(express.json())
-    .use(apiTokenAuth({ secret: process.env.JWT_SECRET || 'default-secret' }))
+    .use((req, res, next) => {
+      // Skip authentication for health check endpoints
+      if (req.path === '/health' || req.path.startsWith('/health/')) {
+        return next()
+      }
 
+      // Apply token-based authentication for all other routes
+      return apiTokenAuth({
+        secret: process.env.JWT_SECRET || 'default-secret',
+      })(req, res, next)
+    })
   // Setup health check endpoints
   setupServiceHealthCheck(
     app,

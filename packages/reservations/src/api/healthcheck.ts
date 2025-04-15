@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@book-library-tool/sdk'
 import {
   buildHealthReport,
   createSystemHealthCheck,
@@ -5,7 +6,6 @@ import {
   Errors,
   executeHealthChecks,
   getCriticalDependencies,
-  getDefaultMessageForError,
   HealthCheckDependency,
   logger,
   ServiceHealthCheckOptions,
@@ -52,9 +52,7 @@ export function setupServiceHealthCheck(
         throw new Errors.ApplicationError(
           500,
           ErrorCode.HEALTH_CHECK_DEPENDENCIES_MISSING,
-          getDefaultMessageForError(
-            ErrorCode.HEALTH_CHECK_DEPENDENCIES_MISSING,
-          ),
+          getErrorMessage(ErrorCode.HEALTH_CHECK_DEPENDENCIES_MISSING),
         )
       }
 
@@ -93,9 +91,7 @@ export function setupServiceHealthCheck(
         throw new Errors.ApplicationError(
           500,
           ErrorCode.HEALTH_CHECK_DEPENDENCIES_MISSING,
-          getDefaultMessageForError(
-            ErrorCode.HEALTH_CHECK_DEPENDENCIES_MISSING,
-          ),
+          getErrorMessage(ErrorCode.HEALTH_CHECK_DEPENDENCIES_MISSING),
         )
       }
 

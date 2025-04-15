@@ -127,7 +127,7 @@ async function startServer(): Promise<ServerResult> {
         check: async () => {
           try {
             const response = await fetch(
-              `${process.env.RESERVATIONS_SERVICE_URL ?? 'http://localhost:3002'}/health/liveness`,
+              `${process.env.RESERVATIONS_API_URL ?? 'http://localhost:3002'}/health/liveness`,
               {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },

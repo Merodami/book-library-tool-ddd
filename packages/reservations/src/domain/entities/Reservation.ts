@@ -13,7 +13,7 @@ import {
   RESERVATION_RETAIL_PRICE_UPDATED,
   RESERVATION_RETURNED,
 } from '@book-library-tool/event-store'
-import { Errors, logger } from '@book-library-tool/shared'
+import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { randomUUID } from 'crypto'
 
@@ -92,7 +92,7 @@ export class Reservation extends AggregateRoot {
       ? new Date(props.dueDate)
       : new Date(
           now.getTime() +
-            parseInt(process.env.BOOK_RETURN_DUE_DATE_DAYS ?? '5') *
+            parseInt(process.env.BOOK_RETURN_DUE_DATE_DAYS ?? '5', 10) *
               24 *
               60 *
               60 *
@@ -102,7 +102,7 @@ export class Reservation extends AggregateRoot {
     // Calculate fee based on environment setting or default to 3
     const feeCharged = props.feeCharged
       ? Number(props.feeCharged)
-      : parseInt(process.env.BOOK_RESERVATION_FEE ?? '3')
+      : parseInt(process.env.BOOK_RESERVATION_FEE ?? '3', 10)
 
     // Generate a temporary reservationId for validation
     const reservationId = props.reservationId || randomUUID()
@@ -337,7 +337,11 @@ export class Reservation extends AggregateRoot {
       const errorCode = `RESERVATION_CANNOT_BE_${actionName.toUpperCase()}`
       const errorMessage = `Reservation with id ${this.reservationId} cannot be ${actionName.toLowerCase()} in its current status.`
 
-      throw new Errors.ApplicationError(400, errorCode, errorMessage)
+      throw new Errors.ApplicationError(
+        400,
+        ErrorCode[errorCode as keyof typeof ErrorCode],
+        errorMessage,
+      )
     }
   }
 
@@ -512,7 +516,7 @@ export class Reservation extends AggregateRoot {
     if (retailPrice <= 0) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_RETAIL_PRICE',
+        ErrorCode.RESERVATION_INVALID_RETAIL_PRICE,
         'Retail price must be greater than zero.',
       )
     }

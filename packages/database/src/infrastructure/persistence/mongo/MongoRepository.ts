@@ -160,7 +160,8 @@ export class MongoRepository<T extends Document>
   ): Promise<PaginatedResult<T>> {
     const page = pagination.page ?? 1
     const limit =
-      pagination.limit ?? parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10')
+      pagination.limit ??
+      parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10', 10)
     const total = await this.count(criteria)
     const totalPages = Math.ceil(total / limit)
 

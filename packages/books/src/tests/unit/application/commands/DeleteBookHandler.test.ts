@@ -1,5 +1,5 @@
 import { EventBus } from '@book-library-tool/event-store'
-import { Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { DeleteBookCommand } from '@commands/DeleteBookCommand.js'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
@@ -79,7 +79,7 @@ describe('DeleteBookHandler', () => {
     await expect(handler.execute(validCommand)).rejects.toThrow(
       new Errors.ApplicationError(
         404,
-        'BOOK_NOT_FOUND',
+        ErrorCode.BOOK_NOT_FOUND,
         `Book with isbn ${validCommand.isbn} not found.`,
       ),
     )
@@ -104,7 +104,7 @@ describe('DeleteBookHandler', () => {
     await expect(handler.execute(validCommand)).rejects.toThrow(
       new Errors.ApplicationError(
         404,
-        'BOOK_NOT_FOUND',
+        ErrorCode.BOOK_NOT_FOUND,
         `Book with isbn ${validCommand.isbn} not found.`,
       ),
     )
@@ -142,7 +142,7 @@ describe('DeleteBookHandler', () => {
     await expect(handler.execute(validCommand)).rejects.toThrow(
       new Errors.ApplicationError(
         410,
-        'BOOK_ALREADY_DELETED',
+        ErrorCode.BOOK_ALREADY_DELETED,
         `Book with isbn ${validCommand.isbn} already deleted.`,
       ),
     )

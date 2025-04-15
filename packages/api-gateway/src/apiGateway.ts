@@ -46,7 +46,7 @@ async function startGateway(): Promise<http.Server> {
   // Set up routes and services
   setupHealthCheckRoutes(app, healthCheck, config)
   setupProxyRoutes(app, isLocalDev)
-  await registerServiceHealthChecks(healthCheck, isLocalDev)
+  await registerServiceHealthChecks(healthCheck)
 
   // Add error handling middleware
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -151,8 +151,13 @@ function setupProxyRoutes(app: Express, isLocalDev: boolean): void {
     },
     {
       path: '/api/reservations',
-      target: process.env.RESERVATIONS_SERVICE_URL ?? 'http://localhost:3002',
+      target: process.env.RESERVATIONS_API_URL ?? 'http://localhost:3002',
       pathRewrite: { '^/api/reservations': '/reservations' },
+    },
+    {
+      path: '/api/wallets',
+      target: process.env.WALLETS_API_URL ?? 'http://localhost:3003',
+      pathRewrite: { '^/api/wallets': '/wallets' },
     },
   ]
 
@@ -200,7 +205,6 @@ function setupProxyRoutes(app: Express, isLocalDev: boolean): void {
  */
 async function registerServiceHealthChecks(
   healthCheck: HealthCheck,
-  isLocalDev: boolean,
 ): Promise<void> {
   // Define services to check
   const serviceChecks = [
@@ -214,7 +218,11 @@ async function registerServiceHealthChecks(
     },
     {
       name: 'reservations-service',
-      url: process.env.RESERVATIONS_SERVICE_URL ?? 'http://localhost:3002',
+      url: process.env.RESERVATIONS_API_URL ?? 'http://localhost:3002',
+    },
+    {
+      name: 'wallets-service',
+      url: process.env.WALLETS_API_URL ?? 'http://localhost:3003',
     },
   ]
 
@@ -231,6 +239,7 @@ async function registerServiceHealthChecks(
       } catch (error) {
         if (isLocalDev) {
           logger.warn(`${service.name} health check failed`)
+          logger.warn(error)
         }
         return false
       }
