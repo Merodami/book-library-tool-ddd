@@ -152,11 +152,11 @@ class BooksResolver {
   async book(
     _: unknown,
     { isbn }: { isbn: string },
-    { bookLoader }: GraphQLContext,
+    context: GraphQLContext,
     info: GraphQLResolveInfo,
   ): Promise<Book | null> {
     try {
-      if (!bookLoader) {
+      if (!context.bookLoader) {
         throw new GraphQLError('Book loader not available', {
           extensions: {
             code: 'SERVICE_UNAVAILABLE',
@@ -168,7 +168,7 @@ class BooksResolver {
       const requestedFields = getRequestedFields(info)
 
       // Use the loader to get the book
-      const book = await bookLoader.load(isbn)
+      const book = await context.bookLoader.load(isbn)
 
       // If no book found, return null
       if (!book) {
@@ -177,8 +177,22 @@ class BooksResolver {
 
       // Filter fields based on the query
       if (requestedFields.length > 0) {
+        // Always include required fields
+        const requiredFields = [
+          'id',
+          'title',
+          'author',
+          'isbn',
+          'publicationYear',
+          'publisher',
+          'price',
+        ]
+        const fieldsToInclude = [
+          ...new Set([...requestedFields, ...requiredFields]),
+        ]
+
         return Object.fromEntries(
-          Object.entries(book).filter(([key]) => requestedFields.includes(key)),
+          Object.entries(book).filter(([key]) => fieldsToInclude.includes(key)),
         ) as Book
       }
 
@@ -307,13 +321,26 @@ export const createResolvers = () => {
 
   return {
     Query: {
-      books: resolver.books.bind(resolver),
-      book: resolver.book.bind(resolver),
+      books: (
+        parent: unknown,
+        args: any,
+        context: GraphQLContext,
+        info: GraphQLResolveInfo,
+      ) => resolver.books(parent, args, context, info),
+      book: (
+        parent: unknown,
+        args: any,
+        context: GraphQLContext,
+        info: GraphQLResolveInfo,
+      ) => resolver.book(parent, args, context, info),
     },
     Mutation: {
-      createBook: resolver.createBook.bind(resolver),
-      updateBook: resolver.updateBook.bind(resolver),
-      deleteBook: resolver.deleteBook.bind(resolver),
+      createBook: (parent: unknown, args: any, context: GraphQLContext) =>
+        resolver.createBook(parent, args, context),
+      updateBook: (parent: unknown, args: any, context: GraphQLContext) =>
+        resolver.updateBook(parent, args, context),
+      deleteBook: (parent: unknown, args: any, context: GraphQLContext) =>
+        resolver.deleteBook(parent, args, context),
     },
   }
 }

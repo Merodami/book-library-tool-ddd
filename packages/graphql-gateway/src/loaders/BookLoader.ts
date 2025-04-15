@@ -27,12 +27,13 @@ export class BookLoader {
         const booksMap = new Map<string, Book>()
         response.books.forEach((book: Book) => {
           const plainBook = {
+            id: book.isbn,
             isbn: book.isbn,
             title: book.title,
             author: book.author,
             publicationYear: book.publicationYear,
             publisher: book.publisher,
-            price: book.price,
+            price: book.price || 0,
             createdAt: book.createdAt,
             updatedAt: book.updatedAt,
           }

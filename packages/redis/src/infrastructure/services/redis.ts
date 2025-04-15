@@ -43,7 +43,7 @@ export class RedisService implements CacheService {
     this.client = new Redis({
       host: config?.host || redisConfig.host,
       port: config?.port || redisConfig.port,
-      lazyConnect: true,
+      lazyConnect: false,
       retryStrategy: (times: number) => {
         const delay = Math.min(
           times * redisConfig.retryDelay,
@@ -132,8 +132,17 @@ export class RedisService implements CacheService {
    * Establishes a connection to Redis
    */
   public async connect(): Promise<void> {
-    await this.client.ping()
-    logger.info('Redis connection initialized')
+    try {
+      logger.info('Attempting to connect to Redis...')
+      await this.client.ping()
+      logger.info('Redis connection initialized successfully')
+      logger.info(
+        `Redis configuration: host=${this.client.options.host}, port=${this.client.options.port}`,
+      )
+    } catch (error) {
+      logger.error('Failed to initialize Redis connection:', error)
+      throw error
+    }
   }
 
   /**
@@ -157,17 +166,23 @@ export class RedisService implements CacheService {
   public async get<T>(key: string): Promise<T | null> {
     const startTime = Date.now()
     try {
+      logger.debug(`Attempting to get value for key: ${key}`)
       const value = await this.client.get(key)
       this.metrics.operations.get++
       this.updateLatency(Date.now() - startTime)
-      if (!value) return null
+
+      if (!value) {
+        logger.debug(`No value found for key: ${key}`)
+        return null
+      }
 
       try {
         const parsed = JSON.parse(value)
-        // Allow any valid JSON value, not just objects
+        logger.debug(`Successfully retrieved and parsed value for key: ${key}`)
         return parsed as T
       } catch (parseError) {
         logger.error(`Error parsing cached value for key "${key}":`, parseError)
+        logger.error(`Raw value that failed to parse: ${value}`)
         return null
       }
     } catch (error) {
@@ -191,14 +206,16 @@ export class RedisService implements CacheService {
   ): Promise<boolean> {
     const startTime = Date.now()
     try {
+      logger.debug(`Attempting to set value for key: ${key} with TTL: ${ttl}s`)
       const serializedValue = JSON.stringify(value)
       const result = await this.client.setex(key, ttl, serializedValue)
       this.metrics.operations.set++
       this.updateLatency(Date.now() - startTime)
+      logger.debug(`Successfully set value for key: ${key}`)
       return result === 'OK'
     } catch (error) {
       this.metrics.errors++
-      logger.error(`Error caching value for key "${key}":`, error)
+      logger.error(`Error setting cached value for key "${key}":`, error)
       return false
     }
   }

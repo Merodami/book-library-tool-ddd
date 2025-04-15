@@ -46,6 +46,9 @@ interface GetBooksOptions {
 interface GetBooksResult {
   books: GraphQLBook[]
   total: number
+  page: number
+  limit: number
+  hasMore: boolean
 }
 
 /**
@@ -80,7 +83,15 @@ export class BooksService {
       const queryParams: Record<string, any> = {
         page: Math.floor(skip / limit) + 1,
         limit,
-        fields,
+        fields: [
+          'id',
+          'title',
+          'author',
+          'isbn',
+          'publicationYear',
+          'publisher',
+          'price',
+        ],
       }
 
       // Add filter parameters if provided
@@ -112,8 +123,8 @@ export class BooksService {
 
       // Add sort parameters if provided
       if (sort) {
-        queryParams.sortBy = sort.field
-        queryParams.sortOrder = sort.order
+        queryParams.sortBy = sort.field.toLowerCase()
+        queryParams.sortOrder = sort.order.toLowerCase()
       }
 
       // Call the API and get the response
@@ -121,13 +132,13 @@ export class BooksService {
 
       // Create plain objects to avoid circular references
       const books = response.data.map((book: any) => ({
-        id: book.id,
+        id: book.isbn,
         isbn: book.isbn,
         title: book.title,
         author: book.author,
         publicationYear: book.publicationYear,
         publisher: book.publisher,
-        price: book.price,
+        price: book.price || 0,
         createdAt: book.createdAt,
         updatedAt: book.updatedAt,
       }))
@@ -135,6 +146,9 @@ export class BooksService {
       return {
         books,
         total: response.pagination.total,
+        page: response.pagination.page,
+        limit: response.pagination.limit,
+        hasMore: response.pagination.hasNext,
       }
     } catch (error) {
       console.error('Error in getBooks:', error)

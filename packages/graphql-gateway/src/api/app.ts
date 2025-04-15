@@ -37,13 +37,21 @@ async function startServer(): Promise<ServerResult> {
   const config = loadConfig()
 
   // Initialize Redis Service
+  logger.info('Initializing Redis service...')
   const redisService = new RedisService({
     host: config.redis.host,
     port: config.redis.port,
     defaultTTL: config.redis.defaultTTL,
   })
 
-  await redisService.connect()
+  try {
+    logger.info('Connecting to Redis...')
+    await redisService.connect()
+    logger.info('Redis connection established successfully')
+  } catch (error) {
+    logger.error('Failed to connect to Redis:', error)
+    throw error
+  }
 
   // Initialize Express app and configure middleware
   const app = express()
@@ -148,6 +156,7 @@ async function startServer(): Promise<ServerResult> {
 
   // Start the HTTP server
   const SERVER_PORT = process.env.GRAPHQL_SERVER_PORT || 4000
+
   httpServer.listen(SERVER_PORT, () => {
     logger.info(`GraphQL server listening on port ${SERVER_PORT}`)
   })

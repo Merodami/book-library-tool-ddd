@@ -151,7 +151,11 @@ export function Cache(options?: number | CacheOptions) {
     } = cacheOptions
 
     descriptor.value = async function (...args: any[]) {
-      const context = args[args.length - 1] as GraphQLContext
+      // In GraphQL resolvers, context is the third argument
+      const context = args[2] as GraphQLContext
+      console.log(`[Cache] Context available: ${!!context}`)
+      console.log(`[Cache] RedisService in context: ${!!context?.redisService}`)
+
       if (!context?.redisService) {
         console.log(
           `[Cache] Redis not available, skipping cache for ${String(propertyKey)}`,
@@ -159,14 +163,28 @@ export function Cache(options?: number | CacheOptions) {
         return originalMethod.apply(this, args)
       }
 
-      const cacheKey = keyGenerator(target, propertyKey, args)
-      console.log(`[Cache] Checking cache for key: ${cacheKey}`)
-
       try {
+        // Check Redis connection status
+        console.log(`[Cache] Checking Redis health for ${String(propertyKey)}`)
+        const health = await context.redisService.checkHealth()
+        console.log(`[Cache] Redis health status: ${health.status}`)
+        console.log(`[Cache] Redis health details:`, health.details)
+
+        if (health.status !== 'healthy') {
+          console.log(
+            `[Cache] Redis not healthy (status: ${health.status}), skipping cache for ${String(propertyKey)}`,
+          )
+          return originalMethod.apply(this, args)
+        }
+
+        const cacheKey = keyGenerator(target, propertyKey, args)
+        console.log(`[Cache] Checking cache for key: ${cacheKey}`)
+
         const cachedValue = await context.redisService.get<string>(cacheKey)
         if (cachedValue) {
           console.log(`[Cache] Cache HIT for key: ${cacheKey}`)
-          return JSON.parse(cachedValue)
+          console.log(`[Cache] Cached value: ${cachedValue}`)
+          return deserialize(JSON.parse(cachedValue))
         }
 
         console.log(`[Cache] Cache MISS for key: ${cacheKey}`)
@@ -174,13 +192,16 @@ export function Cache(options?: number | CacheOptions) {
         const serializedResult = serializer(result)
 
         if (serializedResult !== undefined) {
-          await context.redisService.set(
-            cacheKey,
-            JSON.stringify(serializedResult),
-            ttl || 3600,
-          )
+          const valueToCache = JSON.stringify(serializedResult)
+          console.log(`[Cache] Caching value for key: ${cacheKey}`)
+          console.log(`[Cache] Value to cache: ${valueToCache}`)
+          await context.redisService.set(cacheKey, valueToCache, ttl || 3600)
           console.log(
             `[Cache] Cached result for key: ${cacheKey} with TTL: ${ttl || 3600}s`,
+          )
+        } else {
+          console.log(
+            `[Cache] Skipping cache for key: ${cacheKey} - result is undefined`,
           )
         }
 
@@ -259,4 +280,33 @@ export async function clearClassCache(
     )
     throw error
   }
+}
+
+function deserialize(value: any): any {
+  if (value === null || value === undefined) {
+    return value
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(deserialize)
+  }
+
+  if (typeof value === 'object') {
+    if (value.__type === 'Date') {
+      return new Date(value.value)
+    }
+
+    const deserialized: Record<string, any> = {}
+    for (const [key, val] of Object.entries(value)) {
+      Object.defineProperty(deserialized, key, {
+        value: deserialize(val),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      })
+    }
+    return deserialized
+  }
+
+  return value
 }
