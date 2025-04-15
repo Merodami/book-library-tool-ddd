@@ -15,15 +15,15 @@
     "@book-library-tool/shared": "workspace:^",
     "@book-library-tool/types": "workspace:^",
     "cors": "^2.8.5",
-    "express": "5.1.0",
+    "express": "^5.1.0",
     "http-graceful-shutdown": "^3.1.14"
   },
   "devDependencies": {
-    "@types/cors": "2.8.17",
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "depcheck": "^1.4.7",
     "fast-csv": "^5.0.2",
-    "he": "1.2.0",
+    "he": "^1.2.0",
     "typescript": "^5.8.3"
   },
   "depcheck": {

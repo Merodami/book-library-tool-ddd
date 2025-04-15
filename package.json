@@ -51,7 +51,7 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sonarjs": "^3.0.2",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "express": "5.1.0",
+    "express": "^5.1.0",
     "fix-esm-import-path": "^1.10.1",
     "fkill-cli": "^8.0.0",
     "husky": "^9.1.7",

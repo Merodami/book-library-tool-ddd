@@ -1,6 +1,6 @@
 import { Express } from 'express'
 
-import { Config } from '../config/index.js'
+import { GraphQLConfig } from '../config/index.js'
 
 interface HealthStatus {
   status: 'healthy' | 'unhealthy'
@@ -15,10 +15,10 @@ interface HealthStatus {
 
 export class HealthCheck {
   private status: HealthStatus
-  private config: Config
+  private config: GraphQLConfig
   private checkInterval: NodeJS.Timeout
 
-  constructor(config: Config) {
+  constructor(config: GraphQLConfig) {
     this.config = config
     this.status = this.getInitialStatus()
     this.checkInterval = setInterval(

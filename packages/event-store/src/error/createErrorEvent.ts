@@ -25,8 +25,7 @@ export function createErrorEvent(
       error: {
         message: error.message,
         name: error.name,
-        stack:
-          process.env.ENVIRONMENT === 'development' ? error.stack : undefined,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       },
       timestamp: new Date().toISOString(),
     },

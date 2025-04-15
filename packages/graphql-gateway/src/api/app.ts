@@ -6,14 +6,13 @@ import { RedisService } from '@book-library-tool/redis'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { mergeTypeDefs } from '@graphql-tools/merge'
 import { makeExecutableSchema } from '@graphql-tools/schema'
+import { ApiGateway } from '@library/api-gateway'
 import cors from 'cors'
-import express, { Express, RequestHandler } from 'express'
-import rateLimit from 'express-rate-limit'
+import express, { RequestHandler } from 'express'
 import http from 'http'
 import gracefulShutdown from 'http-graceful-shutdown'
 
 import { loadConfig } from '../config/index.js'
-import { HealthCheck } from '../health/index.js'
 import { BookLoader } from '../loaders/BookLoader.js'
 import { plugins } from '../middleware/index.js'
 import { BooksService } from '../modules/books/index.js'
@@ -27,7 +26,7 @@ import { GraphQLContext } from '../types/context.js'
 
 interface ServerResult {
   httpServer: http.Server
-  app: Express
+  app: express.Express
 }
 
 async function startServer(): Promise<ServerResult> {
@@ -36,54 +35,28 @@ async function startServer(): Promise<ServerResult> {
   // Load configuration
   const config = loadConfig()
 
+  // Initialize API Gateway
+  const apiGateway = new ApiGateway()
+  const app = apiGateway.app
+
   // Initialize Redis Service
   logger.info('Initializing Redis service...')
-  const redisService = new RedisService({
-    host: config.redis.host,
-    port: config.redis.port,
-    defaultTTL: config.redis.defaultTTL,
-  })
+  const redisService = new RedisService()
 
   try {
     logger.info('Connecting to Redis...')
     await redisService.connect()
     logger.info('Redis connection established successfully')
+
+    // Register Redis health check
+    apiGateway.registerHealthCheck('redis', async () => {
+      const health = await redisService.checkHealth()
+      return health.status === 'healthy' || health.status === 'degraded'
+    })
   } catch (error) {
     logger.error('Failed to connect to Redis:', error)
     throw error
   }
-
-  // Initialize Express app and configure middleware
-  const app = express()
-    .disable('x-powered-by')
-    .use(
-      cors({
-        exposedHeaders: ['Date', 'Content-Disposition'],
-      }),
-    )
-    .use(express.json())
-
-  // Initialize health check
-  const healthCheck = new HealthCheck(config)
-  healthCheck.register(app)
-
-  // Apply rate limiting
-  const limiter = rateLimit({
-    windowMs: config.rateLimit.windowMs,
-    max: config.rateLimit.max,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      errors: [
-        {
-          message: 'Rate limit exceeded',
-          extensions: {
-            code: 'RATE_LIMIT_EXCEEDED',
-          },
-        },
-      ],
-    },
-  })
 
   // Create service clients
   const booksService = new BooksService()
@@ -124,7 +97,7 @@ async function startServer(): Promise<ServerResult> {
 
   // Create Apollo Server
   const server = new ApolloServer({
-    schema: makeExecutableSchema({ typeDefs, resolvers }),
+    schema,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       ...(plugins as any[]), // Type assertion needed due to mixed plugin types
@@ -134,12 +107,23 @@ async function startServer(): Promise<ServerResult> {
   // Start Apollo Server
   await server.start()
 
-  // Apply GraphQL middleware with rate limiting
+  // Apply rate limiting to GraphQL endpoint
+  apiGateway.applyRateLimiting('/graphql', {
+    errors: [
+      {
+        message: 'Rate limit exceeded',
+        extensions: {
+          code: 'RATE_LIMIT_EXCEEDED',
+        },
+      },
+    ],
+  })
+
+  // Apply GraphQL middleware
   app.use(
     '/graphql',
     cors<cors.CorsRequest>(),
     express.json(),
-    limiter,
     expressMiddleware(server, {
       context: async ({ req }: ExpressContextFunctionArgument) => ({
         req: req as unknown as GraphQLContext['req'],
@@ -169,7 +153,7 @@ async function startServer(): Promise<ServerResult> {
       logger.info('Shutting down Apollo Server')
       await server.stop()
       await redisService.disconnect()
-      healthCheck.stop()
+      apiGateway.stop()
       logger.info('Apollo Server stopped')
     },
     finally: () => {
