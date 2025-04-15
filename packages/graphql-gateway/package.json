@@ -5,7 +5,8 @@
   "description": "GraphQL Gateway for Book Library Tool",
   "author": "merodami",
   "type": "module",
-  "main": "src/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "dependencies": {
     "@apollo/server": "^4.12.0",
     "@book-library-tool/api-gateway": "workspace:^",

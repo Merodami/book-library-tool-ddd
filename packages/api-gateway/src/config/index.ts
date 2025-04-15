@@ -1,18 +1,4 @@
-export interface ApiGatewayConfig {
-  rateLimit: {
-    windowMs: number
-    max: number
-  }
-  security: {
-    enableHelmet: boolean
-    enableCors: boolean
-    enableCompression: boolean
-  }
-  healthCheck: {
-    path: string
-    interval: number
-  }
-}
+import { ApiGatewayConfig } from '../types/index.js'
 
 export function loadConfig(
   overrides?: Partial<ApiGatewayConfig>,

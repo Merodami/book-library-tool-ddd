@@ -1,7 +1,8 @@
+import { ErrorCode } from '@book-library-tool/shared'
 import { RequestHandler } from 'express'
 import rateLimit from 'express-rate-limit'
 
-import { ApiGatewayConfig } from '../config'
+import { ApiGatewayConfig } from '../types/index.js'
 
 /**
  * Creates a rate limiter middleware based on the provided configuration
@@ -21,7 +22,7 @@ export function createRateLimiter(
     message: customMessage || {
       error: {
         message: 'Rate limit exceeded',
-        code: 'RATE_LIMIT_EXCEEDED',
+        code: ErrorCode.RATE_LIMIT_EXCEEDED,
       },
     },
   })

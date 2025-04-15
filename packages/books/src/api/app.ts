@@ -13,6 +13,9 @@ import cors from 'cors'
 import express from 'express'
 import gracefulShutdown from 'http-graceful-shutdown'
 
+// Import the health check setup function from the file in the same folder
+import { setupServiceHealthCheck } from './healthcheck.js'
+
 async function startServer() {
   // Create and connect the database service (write and projection share the same DB context)
   const dbService = new MongoDatabaseService(
@@ -58,6 +61,35 @@ async function startServer() {
     .use(express.json())
     .use(apiTokenAuth({ secret: process.env.JWT_SECRET || 'default-secret' }))
 
+  // Setup health check endpoints
+  setupServiceHealthCheck(
+    app,
+    [
+      {
+        name: 'database',
+        check: async () => {
+          const health = await dbService.checkHealth()
+
+          return health.status === 'UP'
+        },
+        details: { type: 'MongoDB' },
+      },
+      {
+        name: 'event-bus',
+        check: async () => {
+          const health = await eventBus.checkHealth()
+
+          return health.status === 'UP'
+        },
+        details: { type: 'RabbitMQ' },
+      },
+    ],
+    {
+      serviceName: process.env.BOOK_SERVICE_NAME || 'book_service',
+      version: process.env.npm_package_version || '1.0.0',
+    },
+  )
+
   /**
    * Set up book routes:
    *
@@ -93,6 +125,9 @@ async function startServer() {
   const SERVER_PORT = process.env.BOOKS_SERVICE_SERVER_PORT || 3001
   const server = app.listen(SERVER_PORT, () => {
     logger.info(`App listening on port ${SERVER_PORT}`)
+    logger.info(
+      `Health check available at http://localhost:${SERVER_PORT}/health`,
+    )
   })
 
   // Configure graceful shutdown to close connections gracefully.
@@ -101,8 +136,16 @@ async function startServer() {
     timeout: 10000,
     onShutdown: async () => {
       logger.info('Closing DB connection...')
+
       await dbService.disconnect()
+
       logger.info('DB connection closed.')
+
+      logger.info('Closing EventBus connection...')
+
+      await eventBus.shutdown()
+
+      logger.info('EventBus connection closed.')
     },
     finally: () => {
       logger.info('Server gracefully shut down.')

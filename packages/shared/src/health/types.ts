@@ -22,6 +22,19 @@ export interface SystemHealth {
   uptime?: number
 }
 
+export interface HealthCheckDependency {
+  name: string
+  check: HealthCheckFunction
+  details?: Record<string, any>
+}
+
+export interface ServiceHealthCheckOptions {
+  serviceName: string
+  version?: string
+  healthPath?: string
+  memoryThreshold?: number // Percentage of free memory below which is considered unhealthy
+}
+
 export type HealthCheckFunction = () => Promise<boolean> | boolean
 
 export interface HealthCheckOptions {

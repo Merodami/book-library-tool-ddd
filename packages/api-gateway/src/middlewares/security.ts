@@ -3,7 +3,7 @@ import cors from 'cors'
 import { RequestHandler } from 'express'
 import helmet from 'helmet'
 
-import { ApiGatewayConfig } from '../config'
+import { ApiGatewayConfig } from '../types/index.js'
 
 /**
  * Creates CORS middleware with default configuration

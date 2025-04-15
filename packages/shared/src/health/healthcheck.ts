@@ -1,4 +1,3 @@
-// packages/shared/src/health/healthcheck.ts
 import logger from '../logger.js'
 import {
   HealthCheckFunction,
@@ -11,7 +10,7 @@ import {
 const DEFAULT_OPTIONS: HealthCheckOptions = {
   name: 'service',
   path: '/health',
-  cacheTime: parseInt(process.env.HEALTHCHECK_CACHE_TIME ?? '5000', 10),
+  cacheTime: parseInt(process.env.HEALTH_CHECK_CACHE_TIME ?? '5000', 10),
   logResults: false,
 }
 
