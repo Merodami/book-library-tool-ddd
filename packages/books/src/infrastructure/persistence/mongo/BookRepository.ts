@@ -5,8 +5,8 @@ import {
   type DomainEvent,
 } from '@book-library-tool/event-store'
 import { Errors, logger } from '@book-library-tool/shared'
-import { Book } from '@books/entities/Book.js'
-import { IBookRepository } from '@books/repositories/IBookRepository.js'
+import { Book } from '@entities/Book.js'
+import { IBookRepository } from '@repositories/IBookRepository.js'
 
 /**
  * Event-sourced repository implementation for the Book aggregate.

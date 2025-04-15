@@ -3,7 +3,17 @@ import { OpenAPIV3 } from 'openapi-types'
 import {
   paramBookId,
   paramCatalogAuthor,
+  paramCatalogFields,
+  paramCatalogISBN,
+  paramCatalogPrice,
+  paramCatalogPriceMax,
+  paramCatalogPriceMin,
   paramCatalogPublicationYear,
+  paramCatalogPublicationYearMax,
+  paramCatalogPublicationYearMin,
+  paramCatalogPublisher,
+  paramCatalogSortBy,
+  paramCatalogSortOrder,
   paramCatalogTitle,
   paramPaginationLimit,
   paramPaginationPage,
@@ -15,7 +25,6 @@ import {
   BookIdSchema,
   BookSchema,
   BookUpdateRequestSchema,
-  CatalogSearchQuerySchema,
   ErrorResponseSchema,
   LateReturnRequestSchema,
   PaginatedBookResponseSchema,
@@ -53,11 +62,21 @@ export const OpenAPISpec = {
       get: {
         summary: 'Search for books in the catalog',
         description:
-          'Allows searching for books by title, author, or publicationYear with pagination support.',
+          'Allows searching for books with various filters, sorting, and field selection. Supports exact matches, partial matches, and range queries.',
         parameters: [
           paramCatalogTitle,
           paramCatalogAuthor,
           paramCatalogPublicationYear,
+          paramCatalogISBN,
+          paramCatalogPublisher,
+          paramCatalogPrice,
+          paramCatalogPublicationYearMin,
+          paramCatalogPublicationYearMax,
+          paramCatalogPriceMin,
+          paramCatalogPriceMax,
+          paramCatalogSortBy,
+          paramCatalogSortOrder,
+          paramCatalogFields,
           paramPaginationPage,
           paramPaginationLimit,
         ],
@@ -70,11 +89,32 @@ export const OpenAPISpec = {
                 schema: { $ref: '#/components/schemas/PaginatedBookResponse' },
                 examples: {
                   paginatedBooks: {
-                    summary: 'Example paginated book results',
+                    summary:
+                      'Example paginated book results with field selection',
                     value: {
                       data: [
                         {
-                          id: '0515125628',
+                          title: 'The Target',
+                          author: 'Catherine Coulter',
+                          isbn: '0515125628',
+                        },
+                      ],
+                      pagination: {
+                        total: 25,
+                        page: 1,
+                        limit: 10,
+                        pages: 3,
+                        hasNext: true,
+                        hasPrev: false,
+                      },
+                    },
+                  },
+                  fullResults: {
+                    summary: 'Example with all fields',
+                    value: {
+                      data: [
+                        {
+                          isbn: '0515125628',
                           title: 'The Target',
                           author: 'Catherine Coulter',
                           publicationYear: 1999,
@@ -119,20 +159,32 @@ export const OpenAPISpec = {
                 schema: { $ref: '#/components/schemas/ErrorResponse' },
                 examples: {
                   invalidYear: {
-                    summary: 'Invalid publication year',
+                    summary: 'Invalid publication year range',
                     value: {
                       error: 'ValidationError',
-                      message: 'Invalid publicationYear parameter.',
+                      message:
+                        'publicationYearMin must be less than publicationYearMax',
                     },
                   },
-                  invalidPagination: {
-                    summary: 'Invalid pagination parameters',
+                  invalidPrice: {
+                    summary: 'Invalid price range',
                     value: {
                       error: 'ValidationError',
-                      message: [
-                        'page must be a positive integer',
-                        'limit must not exceed 100',
-                      ],
+                      message: 'priceMin must be less than priceMax',
+                    },
+                  },
+                  invalidSort: {
+                    summary: 'Invalid sort parameters',
+                    value: {
+                      error: 'ValidationError',
+                      message: 'sortBy must be a valid field name',
+                    },
+                  },
+                  invalidFields: {
+                    summary: 'Invalid field selection',
+                    value: {
+                      error: 'ValidationError',
+                      message: 'fields must contain valid field names',
                     },
                   },
                 },
@@ -283,6 +335,90 @@ export const OpenAPISpec = {
                     value: {
                       error: 'ValidationError',
                       message: 'Book not found.',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        security: [{ ApiTokenAuth: [] }],
+      },
+      patch: {
+        summary: 'Update a book reference',
+        parameters: [paramBookId],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/BookUpdateRequest' },
+              examples: {
+                updateBook: {
+                  summary: 'Update book details',
+                  value: {
+                    title: 'The Target - Updated Edition',
+                    author: 'Catherine Coulter',
+                    publicationYear: 2000,
+                    publisher: 'Jove Books',
+                    price: 29.99,
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Book updated successfully',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Book' },
+                examples: {
+                  updatedBook: {
+                    summary: 'Book updated successfully',
+                    value: {
+                      id: '0515125628',
+                      title: 'The Target - Updated Edition',
+                      author: 'Catherine Coulter',
+                      publicationYear: 2000,
+                      publisher: 'Jove Books',
+                      price: 29.99,
+                      createdAt: '2025-04-01T19:10:25.821Z',
+                      updatedAt: '2025-04-02T10:15:30.456Z',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Bad Request',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                examples: {
+                  invalidData: {
+                    summary: 'Invalid update data',
+                    value: {
+                      error: 'ValidationError',
+                      message: ['publicationYear must be a number'],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Book not found',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                examples: {
+                  bookNotFound: {
+                    summary: 'Book not found',
+                    value: {
+                      error: 'ValidationError',
+                      message: 'Book with ISBN 9999999999 not found.',
                     },
                   },
                 },
@@ -881,7 +1017,38 @@ export const OpenAPISpec = {
       PaginatedResult: PaginatedResultSchema,
 
       // Query schemas
-      CatalogSearchQuery: CatalogSearchQuerySchema,
+      CatalogSearchQuery: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', minLength: 1 },
+          author: { type: 'string', minLength: 1 },
+          isbn: { type: 'string', minLength: 1 },
+          publicationYear: { type: 'number' },
+          publisher: { type: 'string', minLength: 1 },
+          price: { type: 'number' },
+          available: { type: 'boolean' },
+          publicationYearMin: { type: 'number' },
+          publicationYearMax: { type: 'number' },
+          priceMin: { type: 'number' },
+          priceMax: { type: 'number' },
+          skip: { type: 'number', minimum: 0 },
+          limit: {
+            type: 'number',
+            minimum: 1,
+            maximum: Number(process.env.PAGINATION_MAX_LIMIT) || 100,
+            default: Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10,
+          },
+          sortBy: { type: 'string' },
+          sortOrder: {
+            type: 'string',
+            enum: ['ASC', 'DESC'],
+          },
+          fields: {
+            type: 'array',
+            items: { type: 'string' },
+          },
+        },
+      },
     },
     parameters: {
       paramPaginationLimit,

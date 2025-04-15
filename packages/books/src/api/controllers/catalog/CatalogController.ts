@@ -1,49 +1,44 @@
-import { CatalogSearchQuery } from '@book-library-tool/sdk'
-import { GetAllBooksHandler } from '@books/use_cases/queries/GetAllBooksHandler.js'
-import { NextFunction, Request, Response } from 'express'
+import { CatalogSearchQuerySchema } from '@book-library-tool/api/src/schemas/catalog.js'
+import { validateQuery } from '@book-library-tool/api/src/src/validation.js'
+import type { CatalogSearchQuery } from '@book-library-tool/sdk'
+import { Request } from 'express'
+
+import { GetAllBooksHandler } from '../../../application/use_cases/queries/GetAllBooksHandler.js'
+
+type ExtendedCatalogSearchQuery = Omit<CatalogSearchQuery, 'fields'> & {
+  fields?: string[]
+}
 
 export class CatalogController {
-  constructor(private readonly catalogService: GetAllBooksHandler) {
+  constructor(private readonly getAllBooksHandler: GetAllBooksHandler) {
     this.getAllBooks = this.getAllBooks.bind(this)
   }
 
   /**
-   * GET /books
-   * Retrieves all books in the catalog.
-   * Expects query parameters for pagination:
-   * - page: number
-   * - limit: number
-   * Returns a paginated list of books.
+   * Handles GET requests for the catalog.
+   * Returns a paginated list of books with optional field selection.
    */
   async getAllBooks(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    try {
-      const { title, author, publicationYear, page, limit } =
-        req.query as CatalogSearchQuery
+    req: Request<unknown, unknown, unknown, ExtendedCatalogSearchQuery>,
+  ) {
+    // Validate query parameters using the schema
+    const validate = validateQuery(CatalogSearchQuerySchema)
+    validate(req as any, null as any, () => {})
 
-      // Validate and parse query parameters
-      const newPage = page ? Math.floor(Number(page)) || 1 : 1
-      const newLimit = limit
-        ? Math.floor(Number(limit)) ||
-          Number(process.env.PAGINATION_DEFAULT_LIMIT) ||
-          10
-        : 10
+    const query = req.query
 
-      // Delegate to the service; the service will enforce business rules.
-      const books = await this.catalogService.execute({
-        title,
-        author,
-        publicationYear,
-        page: newPage,
-        limit: newLimit,
-      })
-
-      res.status(200).json(books)
-    } catch (error) {
-      next(error)
+    // Convert query to CatalogSearchQuery format
+    const { fields: _, ...rest } = query
+    const searchQuery: CatalogSearchQuery = {
+      ...rest,
+      fields: query.fields,
     }
+
+    const response = await this.getAllBooksHandler.execute(
+      searchQuery,
+      query.fields,
+    )
+
+    return response
   }
 }

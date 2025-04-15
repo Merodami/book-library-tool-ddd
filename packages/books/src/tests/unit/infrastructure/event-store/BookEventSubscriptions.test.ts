@@ -1,3 +1,10 @@
+/**
+ * @file BookEventSubscriptions.test.ts
+ * @description Unit tests for the BookEventSubscriptions module.
+ * This module handles the subscription and processing of book-related domain events.
+ * It tests the integration between the event bus and book projection handler.
+ */
+
 import {
   BOOK_CREATED,
   BOOK_DELETED,
@@ -8,11 +15,14 @@ import {
   RESERVATION_BOOK_VALIDATION,
   RESERVATION_BOOK_VALIDATION_FAILED,
 } from '@book-library-tool/event-store'
-import { BookEventSubscriptions } from '@books/event-store/BookEventSubscriptions.js'
-import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
+import { BookEventSubscriptions } from '@event-store/BookEventSubscriptions.js'
+import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Mock the logger - must be done before importing
+/**
+ * Mock the logger module to prevent actual logging during tests.
+ * This must be done before importing the logger.
+ */
 vi.mock('@book-library-tool/shared', () => {
   return {
     logger: {
@@ -27,7 +37,10 @@ vi.mock('@book-library-tool/shared', () => {
 // Import the mocked logger
 import { logger } from '@book-library-tool/shared'
 
-// Mock createErrorEvent
+/**
+ * Mock the event store module to provide test implementations of event types
+ * and error event creation functionality.
+ */
 vi.mock('@book-library-tool/event-store', () => {
   return {
     BOOK_CREATED: 'BOOK_CREATED',
@@ -51,8 +64,20 @@ vi.mock('@book-library-tool/event-store', () => {
   }
 })
 
+/**
+ * Test suite for BookEventSubscriptions
+ *
+ * This suite tests the following aspects:
+ * 1. Event subscription setup
+ * 2. Event handling for different event types
+ * 3. Error handling and recovery
+ * 4. Integration with the projection handler
+ */
 describe('BookEventSubscriptions', () => {
-  // Create mocks for dependencies
+  /**
+   * Mock implementation of the event bus interface.
+   * Provides test implementations of all required methods.
+   */
   const mockEventBus = {
     init: vi.fn().mockResolvedValue(undefined),
     publish: vi.fn().mockResolvedValue(undefined),
@@ -65,6 +90,10 @@ describe('BookEventSubscriptions', () => {
     checkHealth: vi.fn().mockResolvedValue({ status: 'UP', details: {} }),
   }
 
+  /**
+   * Mock implementation of the book projection handler.
+   * Provides test implementations of all event handling methods.
+   */
   const mockProjectionHandler = {
     handleBookCreated: vi.fn().mockResolvedValue(undefined),
     handleBookUpdated: vi.fn().mockResolvedValue(undefined),
@@ -72,11 +101,16 @@ describe('BookEventSubscriptions', () => {
     handleReservationValidateBook: vi.fn(),
   }
 
-  // Reset mocks before each test
+  /**
+   * Reset all mocks before each test to ensure clean state.
+   */
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
+  /**
+   * Tests that the subscription setup correctly registers handlers for all required event types.
+   */
   it('should subscribe to all required event types', () => {
     // Act
     BookEventSubscriptions(
@@ -104,6 +138,10 @@ describe('BookEventSubscriptions', () => {
     )
   })
 
+  /**
+   * Tests the handling of BOOK_CREATED events.
+   * Verifies that the correct handler is called with the event data.
+   */
   it('should handle BOOK_CREATED events correctly', async () => {
     // Arrange
     BookEventSubscriptions(
@@ -145,6 +183,10 @@ describe('BookEventSubscriptions', () => {
     )
   })
 
+  /**
+   * Tests the handling of BOOK_UPDATED events.
+   * Verifies that the correct handler is called with the event data.
+   */
   it('should handle BOOK_UPDATED events correctly', async () => {
     // Arrange
     BookEventSubscriptions(
@@ -195,6 +237,10 @@ describe('BookEventSubscriptions', () => {
     )
   })
 
+  /**
+   * Tests the handling of BOOK_DELETED events.
+   * Verifies that the correct handler is called with the event data.
+   */
   it('should handle BOOK_DELETED events correctly', async () => {
     // Arrange
     BookEventSubscriptions(
@@ -231,6 +277,10 @@ describe('BookEventSubscriptions', () => {
     )
   })
 
+  /**
+   * Tests the handling of RESERVATION_BOOK_VALIDATION events.
+   * Verifies that the validation handler is called and the result is published.
+   */
   it('should handle RESERVATION_BOOK_VALIDATION events correctly', async () => {
     // Arrange
     BookEventSubscriptions(
@@ -288,6 +338,10 @@ describe('BookEventSubscriptions', () => {
     expect(mockEventBus.publish).toHaveBeenCalledWith(mockValidationResultEvent)
   })
 
+  /**
+   * Tests error handling for BOOK_CREATED events.
+   * Verifies that errors are logged but don't crash the application.
+   */
   it('should handle errors when handling BOOK_CREATED events', async () => {
     // Arrange
     BookEventSubscriptions(
@@ -328,6 +382,10 @@ describe('BookEventSubscriptions', () => {
     )
   })
 
+  /**
+   * Tests error handling for RESERVATION_BOOK_VALIDATION events.
+   * Verifies that validation errors result in error events being published.
+   */
   it('should handle errors in RESERVATION_BOOK_VALIDATION by publishing an error event', async () => {
     // Arrange
     BookEventSubscriptions(

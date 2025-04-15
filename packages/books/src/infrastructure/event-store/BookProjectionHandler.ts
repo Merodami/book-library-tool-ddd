@@ -3,7 +3,7 @@ import {
   DomainEvent,
 } from '@book-library-tool/event-store'
 import { ErrorCode } from '@book-library-tool/shared'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
 
 /**
  * Event handler that maintains the read model for books in MongoDB.
@@ -21,15 +21,14 @@ export class BookProjectionHandler {
    */
   async handleBookCreated(event: DomainEvent): Promise<void> {
     await this.repository.saveProjection({
-      id: event.aggregateId,
       isbn: event.payload.isbn,
       title: event.payload.title,
       author: event.payload.author,
       publicationYear: event.payload.publicationYear,
       publisher: event.payload.publisher,
       price: event.payload.price,
-      version: event.version,
-      updatedAt: new Date(event.timestamp),
+      createdAt: event.timestamp.toISOString(),
+      updatedAt: event.timestamp.toISOString(),
     })
   }
 
@@ -54,13 +53,9 @@ export class BookProjectionHandler {
     if (event.payload.updated.isbn) updates.isbn = event.payload.updated.isbn
 
     // Add updatedAt to the updates
-    updates.updatedAt = new Date(event.timestamp)
+    updates.updatedAt = event.timestamp.toISOString()
 
-    await this.repository.updateProjection(
-      event.aggregateId,
-      updates,
-      event.version,
-    )
+    await this.repository.updateProjection(event.aggregateId, updates)
   }
 
   /**
@@ -71,11 +66,7 @@ export class BookProjectionHandler {
    * @param event - The domain event containing the book deletion data
    */
   async handleBookDeleted(event: DomainEvent): Promise<void> {
-    await this.repository.markAsDeleted(
-      event.aggregateId,
-      event.version,
-      new Date(event.timestamp),
-    )
+    await this.repository.markAsDeleted(event.aggregateId, event.timestamp)
   }
 
   /**
@@ -99,16 +90,16 @@ export class BookProjectionHandler {
     const validationResultEvent: DomainEvent = {
       eventType: BOOK_VALIDATION_RESULT,
       aggregateId: isbn,
+      version: 1,
+      schemaVersion: 1,
+      timestamp: new Date(),
       payload: {
-        reservationId: reservationId,
-        isbn: isbn,
+        reservationId,
+        isbn,
         isValid: !!book,
         reason: book ? null : ErrorCode.BOOK_NOT_FOUND,
         retailPrice: book ? book.price : null,
       },
-      timestamp: new Date(),
-      version: 1,
-      schemaVersion: 1,
     }
 
     return validationResultEvent

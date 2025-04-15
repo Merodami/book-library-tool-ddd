@@ -3,47 +3,66 @@ import type {
   CatalogSearchQuery,
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
+import { BookUpdateRequest } from '@book-library-tool/sdk'
+import { ObjectId } from 'mongodb'
+
+interface BookProjection {
+  _id: ObjectId
+  isbn: string
+  title: string
+  author: string
+  publicationYear: number
+  publisher: string
+  price: number
+  deletedAt?: Date
+  createdAt?: Date
+  updatedAt?: Date
+}
 
 export interface IBookProjectionRepository {
   /**
-   * Retrieve all book projections.
+   * Retrieve all book projections with optional field selection.
    *
-   * @returns A promise that resolves to an array of Book objects.
+   * @param query - The search query parameters
+   * @param fields - Optional array of fields to return. If not provided, returns all fields.
+   * @returns A promise that resolves to a paginated response of Book objects
    */
-  getAllBooks(query: CatalogSearchQuery): Promise<PaginatedBookResponse>
+  getAllBooks(
+    query: CatalogSearchQuery,
+    fields?: string[],
+  ): Promise<PaginatedBookResponse>
 
   /**
-   * Retrieve a single book projection by its ISBN.
+   * Retrieve a single book projection by its ISBN with optional field selection.
    *
-   * @param isbn - The ISBN of the book.
-   * @returns A promise that resolves to a Book object if found, or null otherwise.
+   * @param isbn - The ISBN of the book
+   * @param fields - Optional array of fields to return. If not provided, returns all fields.
+   * @returns A promise that resolves to a Book object if found, or null otherwise
    */
-  getBookByISBN(isbn: string): Promise<Book | null>
+  getBookByISBN(isbn: string, fields?: string[]): Promise<Book | null>
 
   /**
    * Save a new book projection.
    *
    * @param bookProjection - The book projection to save
    */
-  saveProjection(bookProjection: any): Promise<void>
+  saveProjection(bookProjection: Book): Promise<void>
 
   /**
    * Update an existing book projection.
    *
    * @param id - The ID of the book to update
    * @param updates - The updates to apply
-   * @param version - The new version number
    */
-  updateProjection(id: string, updates: any, version: number): Promise<void>
+  updateProjection(id: string, updates: BookUpdateRequest): Promise<void>
 
   /**
    * Mark a book as deleted.
    *
    * @param id - The ID of the book to mark as deleted
-   * @param version - The new version number
    * @param timestamp - The timestamp of the deletion
    */
-  markAsDeleted(id: string, version: number, timestamp: Date): Promise<void>
+  markAsDeleted(id: string, timestamp: Date): Promise<void>
 
   /**
    * Find a book by ISBN for reservation validation.
@@ -51,5 +70,5 @@ export interface IBookProjectionRepository {
    * @param isbn - The ISBN of the book to find
    * @returns The book data if found, null otherwise
    */
-  findBookForReservation(isbn: string): Promise<any | null>
+  findBookForReservation(isbn: string): Promise<BookProjection | null>
 }

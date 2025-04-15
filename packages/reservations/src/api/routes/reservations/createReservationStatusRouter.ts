@@ -13,7 +13,7 @@ import { Router } from 'express'
  */
 export function createReservationStatusRouter(
   reservationProjectionRepository: IReservationProjectionRepository,
-) {
+): Router {
   const router = Router()
 
   // Instantiate the query handler directly:

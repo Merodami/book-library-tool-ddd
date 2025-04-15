@@ -14,7 +14,7 @@ export function WalletRouter(
   walletRepository: IWalletRepository,
   walletProjectionRepository: IWalletProjectionRepository,
   eventBus: EventBus,
-) {
+): Router {
   const router = Router()
 
   // Mount query router (read operations)

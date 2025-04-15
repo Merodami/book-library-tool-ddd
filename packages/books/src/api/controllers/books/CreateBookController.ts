@@ -1,5 +1,5 @@
-import type { BookCreateRequest } from '@book-library-tool/sdk'
-import { CreateBookHandler } from '@books/commands/CreateBookHandler.js'
+import type { CreateBookCommand } from '@commands/CreateBookCommand.js'
+import { CreateBookHandler } from '@commands/CreateBookHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class CreateBookController {
@@ -19,10 +19,10 @@ export class CreateBookController {
   ): Promise<void> {
     try {
       const { isbn, title, author, publicationYear, publisher, price } =
-        req.body as BookCreateRequest
+        req.body as CreateBookCommand
 
       // Build the command
-      const newBook: BookCreateRequest = {
+      const command: CreateBookCommand = {
         isbn,
         title,
         author,
@@ -32,12 +32,12 @@ export class CreateBookController {
       }
 
       // Call the handler directly to create the book
-      await this.createBookHandler.execute(newBook)
+      await this.createBookHandler.execute(command)
 
       // Respond with a 201 status code
       res
         .status(201)
-        .json({ message: 'Book created successfully', book: newBook })
+        .json({ message: 'Book created successfully', book: command })
     } catch (error) {
       next(error)
     }

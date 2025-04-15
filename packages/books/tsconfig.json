@@ -10,24 +10,24 @@
     "baseUrl": ".",
     "paths": {
       // API
-      "@books/controllers/*": ["src/api/controllers/*"],
-      "@books/routes/*": ["src/api/routes/*"],
+      "@controllers/*": ["src/api/controllers/*"],
+      "@routes/*": ["src/api/routes/*"],
 
       // Application
-      "@books/dto/*": ["src/application/dtos/*"],
-      "@books/use_cases/*": ["src/application/use_cases/*"],
-      "@books/commands/*": ["src/application/use_cases/commands/*"],
-      "@books/queries/*": ["src/application/use_cases/queries/*"],
+      "@dto/*": ["src/application/dtos/*"],
+      "@use_cases/*": ["src/application/use_cases/*"],
+      "@commands/*": ["src/application/use_cases/commands/*"],
+      "@queries/*": ["src/application/use_cases/queries/*"],
 
       // Domain
-      "@books/entities/*": ["src/domain/entities/*"],
-      "@books/repositories/*": ["src/domain/repositories/*"],
-      "@books/value_objects/*": ["src/domain/value_objects/*"],
+      "@entities/*": ["src/domain/entities/*"],
+      "@repositories/*": ["src/domain/repositories/*"],
+      "@value_objects/*": ["src/domain/value_objects/*"],
 
       // Infrastructure
-      "@books/database/*": ["src/infrastructure/database/*"],
-      "@books/persistence/*": ["src/infrastructure/persistence/*"],
-      "@books/event-store/*": ["src/infrastructure/event-store/*"]
+      "@database/*": ["src/infrastructure/database/*"],
+      "@persistence/*": ["src/infrastructure/persistence/*"],
+      "@event-store/*": ["src/infrastructure/event-store/*"]
     }
   },
   "include": ["src", "scripts"],

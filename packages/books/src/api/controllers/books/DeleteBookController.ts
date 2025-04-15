@@ -1,4 +1,4 @@
-import { DeleteBookHandler } from '@books/commands/DeleteBookHandler.js'
+import { DeleteBookHandler } from '@commands/DeleteBookHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
 export class DeleteBookController {

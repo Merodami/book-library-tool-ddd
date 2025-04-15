@@ -1,9 +1,9 @@
 import { EventBus } from '@book-library-tool/event-store'
 import { Errors } from '@book-library-tool/shared'
-import { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
-import { Book } from '@books/entities/Book.js'
-import { IBookRepository } from '@books/repositories/IBookRepository.js'
-import { CreateBookHandler } from '@books/use_cases/commands/CreateBookHandler.js'
+import { CreateBookCommand } from '@commands/CreateBookCommand.js'
+import { Book } from '@entities/Book.js'
+import { IBookRepository } from '@repositories/IBookRepository.js'
+import { CreateBookHandler } from '@use_cases/commands/CreateBookHandler.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('CreateBookHandler', () => {

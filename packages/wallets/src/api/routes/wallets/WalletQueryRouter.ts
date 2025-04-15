@@ -10,7 +10,7 @@ import { Router } from 'express'
  */
 export function createWalletQueryRouter(
   walletProjectionRepository: IWalletProjectionRepository,
-) {
+): Router {
   const router = Router()
 
   // Create handlers

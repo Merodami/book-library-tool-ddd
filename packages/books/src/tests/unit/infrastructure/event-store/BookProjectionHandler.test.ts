@@ -3,8 +3,8 @@ import {
   DomainEvent,
 } from '@book-library-tool/event-store'
 import { ErrorCode } from '@book-library-tool/shared'
-import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
+import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Create a mock for the repository
@@ -62,15 +62,14 @@ describe('BookProjectionHandler', () => {
       // Assert
       expect(mockRepository.saveProjection).toHaveBeenCalledTimes(1)
       expect(mockRepository.saveProjection).toHaveBeenCalledWith({
-        id: 'book-123',
         isbn: '978-1234567890',
         title: 'Test Book',
         author: 'Test Author',
         publicationYear: 2023,
         publisher: 'Test Publisher',
         price: 29.99,
-        version: 1,
-        updatedAt: expect.any(Date),
+        createdAt: event.timestamp.toISOString(),
+        updatedAt: event.timestamp.toISOString(),
       })
     })
   })
@@ -108,18 +107,14 @@ describe('BookProjectionHandler', () => {
 
       // Assert
       expect(mockRepository.updateProjection).toHaveBeenCalledTimes(1)
-      expect(mockRepository.updateProjection).toHaveBeenCalledWith(
-        'book-123',
-        {
-          title: 'New Title',
-          author: 'New Author',
-          publicationYear: 2023,
-          publisher: 'New Publisher',
-          price: 29.99,
-          updatedAt: expect.any(Date),
-        },
-        2,
-      )
+      expect(mockRepository.updateProjection).toHaveBeenCalledWith('book-123', {
+        title: 'New Title',
+        author: 'New Author',
+        publicationYear: 2023,
+        publisher: 'New Publisher',
+        price: 29.99,
+        updatedAt: event.timestamp.toISOString(),
+      })
     })
 
     it('should only update fields that have changed', async () => {
@@ -151,14 +146,10 @@ describe('BookProjectionHandler', () => {
 
       // Assert
       expect(mockRepository.updateProjection).toHaveBeenCalledTimes(1)
-      expect(mockRepository.updateProjection).toHaveBeenCalledWith(
-        'book-123',
-        {
-          title: 'New Title',
-          updatedAt: expect.any(Date),
-        },
-        2,
-      )
+      expect(mockRepository.updateProjection).toHaveBeenCalledWith('book-123', {
+        title: 'New Title',
+        updatedAt: event.timestamp.toISOString(),
+      })
     })
   })
 
@@ -183,8 +174,7 @@ describe('BookProjectionHandler', () => {
       expect(mockRepository.markAsDeleted).toHaveBeenCalledTimes(1)
       expect(mockRepository.markAsDeleted).toHaveBeenCalledWith(
         'book-123',
-        3,
-        expect.any(Date),
+        event.timestamp,
       )
     })
   })

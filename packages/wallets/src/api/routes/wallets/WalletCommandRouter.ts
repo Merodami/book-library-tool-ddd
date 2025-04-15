@@ -14,7 +14,7 @@ export function createWalletCommandRouter(
   walletRepository: IWalletRepository,
   walletProjectionRepository: IWalletProjectionRepository,
   eventBus: EventBus,
-) {
+): Router {
   const router = Router()
 
   // Create command handlers

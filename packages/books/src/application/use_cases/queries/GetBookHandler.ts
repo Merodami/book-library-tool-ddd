@@ -1,6 +1,6 @@
 import { Book } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
 
 import { GetBookQuery } from './GetBookQuery.js'
 

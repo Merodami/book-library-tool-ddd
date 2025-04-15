@@ -1,9 +1,12 @@
-// packages/books/src/infrastructure/persistence/mongo/MongoBookProjectionRepository.ts
 import { MongoDatabaseService } from '@book-library-tool/database'
-import type { Book, PaginatedBookResponse } from '@book-library-tool/sdk'
+import type {
+  Book,
+  BookUpdateRequest,
+  PaginatedBookResponse,
+} from '@book-library-tool/sdk'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
-import { GetAllBooksQuery } from '@books/queries/GetAllBooksQuery.js'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { GetAllBooksQuery } from '@queries/GetAllBooksQuery.js'
+import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
 import type { Collection } from 'mongodb'
 
 /**
@@ -140,22 +143,17 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    *
    * @param id - The aggregate ID of the book to update
    * @param updates - Partial book data to update
-   * @param version - The new version number
    */
   async updateProjection(
     id: string,
-    updates: any,
-    version: number,
+    updates: BookUpdateRequest,
   ): Promise<void> {
     await this.collection.updateOne(
-      {
-        id,
-        version: { $lt: version },
-      },
+      { id },
       {
         $set: {
           ...updates,
-          version,
+          updatedAt: new Date(),
         },
       },
     )
@@ -165,20 +163,14 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * Marks a book as deleted by setting the deletedAt timestamp.
    *
    * @param id - The aggregate ID of the book to mark as deleted
-   * @param version - The new version number
    * @param timestamp - The timestamp when the book was deleted
    */
-  async markAsDeleted(
-    id: string,
-    version: number,
-    timestamp: Date,
-  ): Promise<void> {
+  async markAsDeleted(id: string, timestamp: Date): Promise<void> {
     await this.collection.updateOne(
       { id },
       {
         $set: {
-          deletedAt: new Date(),
-          version,
+          deletedAt: timestamp,
           updatedAt: timestamp,
         },
       },

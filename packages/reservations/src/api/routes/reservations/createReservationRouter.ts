@@ -31,7 +31,7 @@ export function createReservationRouter(
   reservationRepository: IReservationRepository,
   reservationProjectionRepository: IReservationProjectionRepository,
   eventBus: EventBus,
-) {
+): Router {
   const router = Router()
 
   // Instantiate individual command handlers:
