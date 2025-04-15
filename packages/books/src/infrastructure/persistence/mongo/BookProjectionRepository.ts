@@ -4,6 +4,7 @@ import type {
   BookUpdateRequest,
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
+import { ErrorCode, getDefaultMessageForError } from '@book-library-tool/shared'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
 import { GetAllBooksQuery } from '@queries/GetAllBooksQuery.js'
 import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
@@ -121,8 +122,8 @@ export class BookProjectionRepository implements IBookProjectionRepository {
     if (doc && doc.deletedAt) {
       throw new ApplicationError(
         404,
-        'BOOK_NOT_FOUND',
-        `Book with ISBN ${isbn} not found.`,
+        ErrorCode.BOOK_NOT_FOUND,
+        getDefaultMessageForError(ErrorCode.BOOK_NOT_FOUND),
       )
     }
 

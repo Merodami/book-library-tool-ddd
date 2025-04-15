@@ -1,5 +1,5 @@
 import { EventBus } from '@book-library-tool/event-store'
-import { Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { UpdateBookCommand } from '@commands/UpdateBookCommand.js'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
@@ -28,7 +28,7 @@ export class UpdateBookHandler {
     if (!aggregateId) {
       throw new Errors.ApplicationError(
         404,
-        'BOOK_NOT_FOUND',
+        ErrorCode.BOOK_NOT_FOUND,
         `Book with ISBN ${command.isbn} not found.`,
       )
     }

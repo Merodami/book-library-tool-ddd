@@ -132,7 +132,7 @@ export class RabbitMQEventBus implements EventBus {
   private async setupQueues(): Promise<void> {
     const deadLetterExchange = `${this.exchangeName}.deadletter`
     const alternateExchange = `${this.exchangeName}.alternate`
-    const environment = process.env.ENVIRONMENT || 'development'
+    const environment = process.env.NODE_ENV || 'development'
 
     // Create the main service queue
     const queueName = `${this.serviceName}.${environment}.queue`
@@ -515,7 +515,7 @@ export class RabbitMQEventBus implements EventBus {
       appId: this.serviceName,
       headers: {
         'x-source-service': this.serviceName,
-        'x-environment': process.env.ENVIRONMENT || 'production',
+        'x-environment': process.env.NODE_ENV || 'production',
         'x-correlation-id': event.metadata?.correlationId || 'none',
         'x-event-version': event.version || '1.0',
       },

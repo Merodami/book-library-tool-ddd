@@ -10,7 +10,7 @@ export type Context = {
 let getContext = (): Context => ({})
 
 // Determine environment.
-const isDevelopment = process.env.ENVIRONMENT === 'development'
+const isDevelopment = process.env.NODE_ENV === 'development'
 
 // Configure pino options.
 // In development, use pino-pretty for colorized, human-friendly logs.

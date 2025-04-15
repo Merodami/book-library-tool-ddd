@@ -2,7 +2,7 @@ import type {
   CatalogSearchQuery,
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
-import { Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
 
 export class GetAllBooksHandler {
@@ -28,7 +28,7 @@ export class GetAllBooksHandler {
     if (!books || books.data.length === 0) {
       throw new Errors.ApplicationError(
         404,
-        'BOOK_NOT_FOUND',
+        ErrorCode.BOOK_NOT_FOUND,
         `No books found.`,
       )
     }

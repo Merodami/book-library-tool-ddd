@@ -1,5 +1,5 @@
 import type { Reservation } from '@book-library-tool/sdk'
-import { Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
 
@@ -26,7 +26,7 @@ export class GetReservationStatusHandler {
     if (!query.reservationId) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_QUERY',
+        ErrorCode.INVALID_QUERY,
         'Reservation ID is required',
       )
     }
@@ -41,7 +41,7 @@ export class GetReservationStatusHandler {
     if (!reservation) {
       throw new Errors.ApplicationError(
         404,
-        'RESERVATION_NOT_FOUND',
+        ErrorCode.RESERVATION_NOT_FOUND,
         `Reservation with ID ${query.reservationId} not found`,
       )
     }

@@ -5,7 +5,7 @@ import {
   WALLET_CREATED,
   WALLET_DELETED,
 } from '@book-library-tool/event-store'
-import { Errors, logger } from '@book-library-tool/shared'
+import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Wallet } from '@wallets/entities/Wallet.js'
 import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
 
@@ -98,7 +98,7 @@ export class WalletRepository
     if (!wallet || !wallet.id) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_WALLET',
+        ErrorCode.WALLET_NOT_FOUND,
         'Invalid wallet provided to updateWallet',
       )
     }
@@ -120,7 +120,7 @@ export class WalletRepository
         logger.warn(`Concurrency conflict detected for wallet ${wallet.id}`)
         throw new Errors.ApplicationError(
           409,
-          'CONCURRENCY_CONFLICT',
+          ErrorCode.CONCURRENCY_CONFLICT,
           `Concurrent update detected for wallet ${wallet.id}`,
         )
       }

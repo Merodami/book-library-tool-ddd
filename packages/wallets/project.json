@@ -2,7 +2,6 @@
   "name": "@book-library-tool/wallets",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
-    "@book-library-tool/types",
     "@book-library-tool/api",
     "@book-library-tool/auth",
     "@book-library-tool/shared",

@@ -278,7 +278,7 @@ export class MongoDatabaseService {
 
       const limit = possibleLimit
         ? Math.floor(Number(possibleLimit))
-        : Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
+        : parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10', 10)
 
       const page = possiblePage ? Math.floor(Number(possiblePage)) : 1
 
@@ -329,6 +329,40 @@ export class MongoDatabaseService {
       this.metrics.errorCount++
       this.metrics.queryTime += Date.now() - startTime
       throw error
+    }
+  }
+
+  /**
+   * Checks the health of the MongoDB connection.
+   * @returns Promise resolving to a health status object
+   */
+  async checkHealth(): Promise<{ status: string; details: any }> {
+    if (!this.client || !this.db) {
+      return {
+        status: 'DOWN',
+        details: { reason: 'Not initialized or connection lost' },
+      }
+    }
+
+    try {
+      // Test connection by executing a ping command
+      await this.client.db().admin().ping()
+
+      return {
+        status: 'UP',
+        details: {
+          dbName: this.dbName,
+          metrics: this.getMetrics(),
+        },
+      }
+    } catch (error) {
+      return {
+        status: 'DOWN',
+        details: {
+          reason: error instanceof Error ? error.message : String(error),
+          dbName: this.dbName,
+        },
+      }
     }
   }
 }

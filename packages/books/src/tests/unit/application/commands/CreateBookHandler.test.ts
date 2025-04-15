@@ -1,5 +1,5 @@
 import { EventBus } from '@book-library-tool/event-store'
-import { Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { CreateBookCommand } from '@commands/CreateBookCommand.js'
 import { Book } from '@entities/Book.js'
 import { IBookRepository } from '@repositories/IBookRepository.js'
@@ -77,7 +77,7 @@ describe('CreateBookHandler', () => {
     await expect(handler.execute(validCommand)).rejects.toThrow(
       new Errors.ApplicationError(
         400,
-        'BOOK_ALREADY_EXISTS',
+        ErrorCode.BOOK_ALREADY_EXISTS,
         `Book with ISBN ${validCommand.isbn} already exists.`,
       ),
     )

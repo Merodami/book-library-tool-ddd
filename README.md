@@ -6,6 +6,52 @@ The library has a vast collection of book references (100 million entries) and 5
 
 Users can search for books, make reservations, borrow books, and manage their wallet balances.
 
+## Contents
+
+- [Book Library Tool](#book-library-tool)
+  - [Contents](#contents)
+  - [Architecture](#architecture)
+    - [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
+    - [Hexagonal Architecture](#hexagonal-architecture)
+    - [CQRS (Command Query Responsibility Segregation)](#cqrs-command-query-responsibility-segregation)
+    - [Event Sourcing](#event-sourcing)
+    - [Event-Driven Architecture](#event-driven-architecture)
+    - [Microservices](#microservices)
+  - [Key Functionalities](#key-functionalities)
+    - [References (Books) Management](#references-books-management)
+    - [Catalog Search](#catalog-search)
+    - [Reservation \& Borrowing System](#reservation--borrowing-system)
+    - [Reminders](#reminders)
+    - [Wallet \& Fees](#wallet--fees)
+  - [Technical Implementation](#technical-implementation)
+    - [Database Layer](#database-layer)
+    - [Caching System](#caching-system)
+      - [Redis Implementation](#redis-implementation)
+      - [GraphQL Caching](#graphql-caching)
+      - [Cache Configuration](#cache-configuration)
+      - [Cache Invalidation](#cache-invalidation)
+  - [API Endpoints](#api-endpoints)
+    - [Services](#services)
+    - [Books](#books)
+    - [Catalog](#catalog)
+    - [Reservations](#reservations)
+    - [Wallets](#wallets)
+  - [Installation](#installation)
+    - [Prerequisites](#prerequisites)
+    - [Description](#description)
+    - [Setup](#setup)
+      - [For development](#for-development)
+    - [Setting up husky (Run automatically lint + test on commit)](#setting-up-husky-run-automatically-lint--test-on-commit)
+    - [API Changes](#api-changes)
+    - [Environment](#environment)
+    - [Auth configuration](#auth-configuration)
+    - [Git hooks](#git-hooks)
+    - [Testing](#testing)
+      - [Unit tests](#unit-tests)
+  - [ToDo](#todo)
+  - [Troubleshooting](#troubleshooting)
+    - [Ports already in use](#ports-already-in-use)
+
 ## Architecture
 
 This system is built using several modern architectural patterns to ensure scalability, maintainability, and resilience:
@@ -41,13 +87,6 @@ This system is built using several modern architectural patterns to ensure scala
 - **Eventual Consistency**: Services maintain consistency through event propagation
 - **Message Durability**: Events are persisted to ensure reliability
 
-### Caching & Performance
-
-- **In-Memory Caching**: Intelligent caching system with TTL support for frequently accessed data
-- **Resource Management**: Automatic cleanup of resources on application shutdown
-- **Cache Invalidation**: Support for selective cache invalidation by collection
-- **Performance Metrics**: Tracking of cache hits, misses, and query performance
-
 ### Microservices
 
 - **Books Service**: Manages book references and catalog
@@ -68,7 +107,7 @@ This system is built using several modern architectural patterns to ensure scala
 - Search for books by publication year, title, or author.
 - Results are cached with configurable TTL for improved response times.
 
-### Reservation & Borrowing System
+### Reservation \& Borrowing System
 
 - Users can borrow up to 3 different books at once.
 - For each reference, 4 copies exist.
@@ -81,13 +120,13 @@ This system is built using several modern architectural patterns to ensure scala
 - **Upcoming Due**: Users receive an email 2 days before their due date.
 - **Late Return**: Users receive an email reminder 7 days after the due date if they haven't returned the book.
 
-### Wallet & Fees
+### Wallet \& Fees
 
 - Each user has a wallet to pay for reservations and late fees.
 - A late fee of **€0.20/day** applies for overdue books. (See [env](./.env.local) variable LATE_FEE_PER_DAY)
 - If late fees reach the retail price of the book, the user effectively buys it.
 
-## Technical Implementation Details
+## Technical Implementation
 
 ### Database Layer
 
@@ -98,66 +137,86 @@ This system is built using several modern architectural patterns to ensure scala
 
 ### Caching System
 
-- **In-Memory Cache**: Efficient caching of frequently accessed data
-- **TTL Support**: Configurable time-to-live for cache entries
-- **Automatic Cleanup**: Regular cleanup of expired cache entries
-- **Graceful Shutdown**: Proper resource cleanup on application termination
+The system implements a sophisticated caching layer with multiple strategies to ensure optimal performance:
+
+- **In-Memory Caching**: Intelligent caching system with TTL support for frequently accessed data
+- **Resource Management**: Automatic cleanup of resources on application shutdown
 - **Cache Invalidation**: Support for selective cache invalidation by collection
+- **Performance Metrics**: Tracking of cache hits, misses, and query performance
 
-## Contents
+#### Redis Implementation
 
-- [Book Library Tool](#book-library-tool)
-  - [Architecture](#architecture)
-    - [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
-    - [Hexagonal Architecture](#hexagonal-architecture)
-    - [CQRS (Command Query Responsibility Segregation)](#cqrs-command-query-responsibility-segregation)
-    - [Event Sourcing](#event-sourcing)
-    - [Event-Driven Architecture](#event-driven-architecture)
-    - [Caching \& Performance](#caching--performance)
-    - [Microservices](#microservices)
-  - [Key Functionalities](#key-functionalities)
-    - [References (Books) Management](#references-books-management)
-    - [Catalog Search](#catalog-search)
-    - [Reservation \& Borrowing System](#reservation--borrowing-system)
-    - [Reminders](#reminders)
-    - [Wallet \& Fees](#wallet--fees)
-  - [Technical Implementation Details](#technical-implementation-details)
-    - [Database Layer](#database-layer)
-    - [Caching System](#caching-system)
-  - [Contents](#contents)
-  - [ToDo](#todo)
-  - [API Endpoints](#api-endpoints)
-    - [Services](#services)
-    - [Books](#books)
-    - [Catalog](#catalog)
-    - [Reservations](#reservations)
-    - [Wallets](#wallets)
-  - [Installation](#installation)
-    - [Prerequisites](#prerequisites)
-    - [Description](#description)
-    - [Setup](#setup)
-      - [For development](#for-development)
-    - [Setting up husky (Run automatically lint + test on commit)](#setting-up-husky-run-automatically-lint--test-on-commit)
-    - [API Changes](#api-changes)
-    - [Environment](#environment)
-    - [Auth configuration](#auth-configuration)
-    - [Git hooks](#git-hooks)
-    - [Testing](#testing)
-      - [Unit tests](#unit-tests)
-  - [Troubleshooting](#troubleshooting)
-    - [Ports already in use](#ports-already-in-use)
+Redis provides the primary caching mechanism with the following features:
 
-## ToDo
+- **Method-Level Caching**: Using the `@Cache` decorator to cache method results
+- **Configurable TTL**: Cache entries can have different time-to-live values
+- **Automatic Serialization**: Complex objects are automatically serialized for storage
+- **Health Checks**: Redis connection health monitoring
+- **Error Handling**: Graceful fallback when Redis is unavailable
 
-Sadly I don't have more time assigned to this implementation.
+Example usage:
 
-- Request caching mechanism
+```typescript
+@Cache(60) // Cache for 60 seconds
+async getBooks() {
+  // Method implementation
+}
+```
 
-- A cronjob for the email feature or alternatively, for more complex scenarios (e.g., job persistence, retries, or distributed tasks), use packages like Agenda or even use a cloud scheduler (like AWS CloudWatch Events triggering an AWS Lambda function).
+#### GraphQL Caching
 
-- Use of @testcontainers for emulate real database interactions on tests.
+The GraphQL layer implements multiple caching strategies:
 
-- Implementation of MailHog/MailTrap (to test email sending locally, currently is a console log).
+1. **Resolver-Level Caching**:
+
+   - Individual resolvers can be cached using the `@Cache` decorator
+   - Cache keys are generated based on query parameters
+   - Automatic cache invalidation on mutations
+
+2. **Response Caching**:
+
+   - Apollo Server's built-in response caching
+   - Configurable max-age for different types of queries
+   - Cache control directives support
+
+3. **DataLoader Caching**:
+   - Batch loading of related data
+   - Request-level caching of loaded entities
+   - Automatic cache invalidation on updates
+
+Example resolver with caching:
+
+```typescript
+@Cache(300) // Cache for 5 minutes
+async book(_, { isbn }, context) {
+  return context.bookLoader.load(isbn);
+}
+```
+
+#### Cache Configuration
+
+The caching system can be configured through environment variables:
+
+```env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DEFAULT_TTL=3600
+```
+
+#### Cache Invalidation
+
+Cache invalidation is handled automatically for:
+
+- Book creation/updates/deletion
+- Reservation changes
+- User data modifications
+
+Manual cache invalidation is also supported:
+
+```typescript
+await invalidateCache(target, methodName, context)
+await clearClassCache(target, context)
+```
 
 ## API Endpoints
 
@@ -397,6 +456,18 @@ yarn test
 ```
 
 Note, `--watch` is optional. All use vitest.
+
+## ToDo
+
+Sadly I don't have more time assigned to this implementation.
+
+- Request caching mechanism
+
+- A cronjob for the email feature or alternatively, for more complex scenarios (e.g., job persistence, retries, or distributed tasks), use packages like Agenda or even use a cloud scheduler (like AWS CloudWatch Events triggering an AWS Lambda function).
+
+- Use of @testcontainers for emulate real database interactions on tests.
+
+- Implementation of MailHog/MailTrap (to test email sending locally, currently is a console log).
 
 ## Troubleshooting
 

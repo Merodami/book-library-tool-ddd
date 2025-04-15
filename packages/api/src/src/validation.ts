@@ -1,4 +1,4 @@
-import { Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { TSchema } from '@sinclair/typebox'
 import { Ajv } from 'ajv'
 import ajvErrorsImport from 'ajv-errors'
@@ -41,7 +41,7 @@ export const validateBody = (schema: object) => {
     if (!validate(req.body)) {
       throw new Errors.ApplicationError(
         400,
-        'VALIDATION_ERROR',
+        ErrorCode.VALIDATION_ERROR,
         formatApiErrors(validate.errors),
       )
     }
@@ -61,7 +61,7 @@ export const validateQuery = (schema: object) => {
     if (!validate(req.query)) {
       throw new Errors.ApplicationError(
         400,
-        'VALIDATION_ERROR',
+        ErrorCode.VALIDATION_ERROR,
         formatApiErrors(validate.errors),
       )
     }
@@ -81,7 +81,7 @@ export const validateParams = (schema: object) => {
     if (!validate(req.params)) {
       throw new Errors.ApplicationError(
         400,
-        'VALIDATION_ERROR',
+        ErrorCode.VALIDATION_ERROR,
         formatApiErrors(validate.errors),
       )
     }
@@ -107,7 +107,7 @@ export function makeValidator<T extends TSchema>(schema: T) {
       // You can throw the array directly or format it as a JSON string
       throw new Errors.ApplicationError(
         400,
-        'VALIDATION_ERROR',
+        ErrorCode.VALIDATION_ERROR,
         formatErrors(validate.errors),
       )
     }

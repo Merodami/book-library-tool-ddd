@@ -4,7 +4,7 @@ import {
   RESERVATION_CONFIRMED,
 } from '@book-library-tool/event-store'
 import type { ReservationRequest } from '@book-library-tool/sdk'
-import { Errors, logger } from '@book-library-tool/shared'
+import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Reservation } from '@reservations/entities/Reservation.js'
 import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
@@ -52,7 +52,7 @@ export class ReservationRepository
     if (!userId || !isbn) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_RESERVATION_DATA',
+        ErrorCode.RESERVATION_INVALID_DATA,
         'User ID and ISBN are required',
       )
     }
@@ -63,7 +63,7 @@ export class ReservationRepository
     if (existingReservation) {
       throw new Errors.ApplicationError(
         400,
-        'DUPLICATE_RESERVATION',
+        ErrorCode.RESERVATION_DUPLICATE_RESERVATION,
         `User ${userId} already has an active reservation for book ${isbn}`,
       )
     }
@@ -101,7 +101,7 @@ export class ReservationRepository
     if (!reservation) {
       throw new Errors.ApplicationError(
         404,
-        'RESERVATION_NOT_FOUND',
+        ErrorCode.RESERVATION_NOT_FOUND,
         `Reservation with ID ${reservationId} not found`,
       )
     }
@@ -109,7 +109,7 @@ export class ReservationRepository
     if (!this.isReservationActive(reservation)) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_RESERVATION_STATUS',
+        ErrorCode.RESERVATION_INVALID_STATUS,
         `Reservation is not active. Current status: ${reservation.status}`,
       )
     }
@@ -143,7 +143,7 @@ export class ReservationRepository
     if (!reservation) {
       throw new Errors.ApplicationError(
         404,
-        'RESERVATION_NOT_FOUND',
+        ErrorCode.RESERVATION_NOT_FOUND,
         `Reservation with ID ${reservationId} not found`,
       )
     }
@@ -151,7 +151,7 @@ export class ReservationRepository
     if (!this.isReservationActive(reservation)) {
       throw new Errors.ApplicationError(
         400,
-        'INVALID_RESERVATION_STATUS',
+        ErrorCode.RESERVATION_INVALID_STATUS,
         `Reservation is not active. Current status: ${reservation.status}`,
       )
     }
@@ -211,7 +211,7 @@ export class ReservationRepository
 
       throw new Errors.ApplicationError(
         500,
-        'RESERVATION_RETRIEVAL_FAILED',
+        ErrorCode.RESERVATION_RETRIEVAL_FAILED,
         `Failed to retrieve active reservation for user ${userId} and book ${isbn}: ${message}`,
       )
     }
@@ -252,7 +252,7 @@ export class ReservationRepository
 
       throw new Errors.ApplicationError(
         500,
-        'RESERVATION_RETRIEVAL_FAILED',
+        ErrorCode.RESERVATION_RETRIEVAL_FAILED,
         `Failed to retrieve reservation with ID ${aggregateId}: ${message}`,
       )
     }

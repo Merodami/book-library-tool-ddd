@@ -46,7 +46,7 @@ export const CatalogSearchQuerySchema = Type.Object(
     limit: Type.Optional(
       Type.Number({
         minimum: 1,
-        maximum: Number(process.env.PAGINATION_MAX_LIMIT) || 100,
+        maximum: parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100', 10),
         default: 10,
       }),
     ),
