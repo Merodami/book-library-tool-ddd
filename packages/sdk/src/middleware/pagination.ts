@@ -9,8 +9,8 @@ import { NextFunction, Request as ExpressRequest, Response } from 'express'
 export const paginationMiddleware = () => {
   return (req: ExpressRequest, res: Response, next: NextFunction): void => {
     // Apply limit constraints from environment variables or default values.
-    let limit: number = Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
-    const maxLimit: number = Number(process.env.PAGINATION_MAX_LIMIT) || 100
+    let limit: number = parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10')
+    const maxLimit: number = parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100')
 
     try {
       // Extract and compute the page number. Ensure it is at least 1.

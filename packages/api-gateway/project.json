@@ -1,13 +1,7 @@
 {
-  "name": "@book-library-tool/wallets",
+  "name": "@book-library-tool/api-gateway",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "@book-library-tool/api",
-    "@book-library-tool/auth",
-    "@book-library-tool/shared",
-    "@book-library-tool/database",
-    "@book-library-tool/event-store"
-  ],
+  "implicitDependencies": [],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -34,7 +28,7 @@
     "local": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsx --watch ./src/api/app.ts",
+        "command": "tsx --watch ./src/index.ts",
         "cwd": "{projectRoot}"
       }
     }

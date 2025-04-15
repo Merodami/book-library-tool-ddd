@@ -278,7 +278,7 @@ export class MongoDatabaseService {
 
       const limit = possibleLimit
         ? Math.floor(Number(possibleLimit))
-        : Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10
+        : parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10')
 
       const page = possiblePage ? Math.floor(Number(possiblePage)) : 1
 

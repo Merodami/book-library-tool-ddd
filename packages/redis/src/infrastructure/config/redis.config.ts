@@ -36,11 +36,11 @@ export class RedisConfigService {
    */
   private loadConfig(): RedisConfig {
     const host = process.env.REDIS_HOST || 'localhost'
-    const port = parseInt(process.env.REDIS_PORT || '6379', 10)
-    const defaultTTL = parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10)
-    const retryDelay = parseInt(process.env.REDIS_RETRY_DELAY || '50', 10)
+    const port = parseInt(process.env.REDIS_PORT ?? '6379', 10)
+    const defaultTTL = parseInt(process.env.REDIS_DEFAULT_TTL ?? '3600', 10)
+    const retryDelay = parseInt(process.env.REDIS_RETRY_DELAY ?? '50', 10)
     const maxRetryDelay = parseInt(
-      process.env.REDIS_MAX_RETRY_DELAY || '2000',
+      process.env.REDIS_MAX_RETRY_DELAY ?? '2000',
       10,
     )
     const scanCount = 100 // Default value for SCAN operation

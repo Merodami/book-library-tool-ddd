@@ -6,7 +6,7 @@ import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
 
 const WALLET_PAYMENT_SUCCESS = 'WALLET_PAYMENT_SUCCESS'
 const WALLET_PAYMENT_DECLINED = 'WALLET_PAYMENT_DECLINED'
-const RESERVATION_FEE = Number(process.env.BOOK_RESERVATION_FEE) || 3
+const RESERVATION_FEE = parseInt(process.env.BOOK_RESERVATION_FEE ?? '3')
 
 /**
  * Command handler for processing wallet payments.

@@ -13,7 +13,6 @@
     "@book-library-tool/sdk": "workspace:^",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "express-rate-limit": "^7.5.0",
     "graphql": "^16.10.0",
     "graphql-query-complexity": "^1.1.0",
     "graphql-tag": "^2.12.6",

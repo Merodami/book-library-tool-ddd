@@ -92,7 +92,7 @@ export class Reservation extends AggregateRoot {
       ? new Date(props.dueDate)
       : new Date(
           now.getTime() +
-            (Number(process.env.BOOK_RETURN_DUE_DATE_DAYS) || 5) *
+            parseInt(process.env.BOOK_RETURN_DUE_DATE_DAYS ?? '5') *
               24 *
               60 *
               60 *
@@ -102,7 +102,7 @@ export class Reservation extends AggregateRoot {
     // Calculate fee based on environment setting or default to 3
     const feeCharged = props.feeCharged
       ? Number(props.feeCharged)
-      : Number(process.env.BOOK_RESERVATION_FEE) || 3
+      : parseInt(process.env.BOOK_RESERVATION_FEE ?? '3')
 
     // Generate a temporary reservationId for validation
     const reservationId = props.reservationId || randomUUID()

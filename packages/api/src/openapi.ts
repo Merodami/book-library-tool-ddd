@@ -1035,8 +1035,8 @@ export const OpenAPISpec = {
           limit: {
             type: 'number',
             minimum: 1,
-            maximum: Number(process.env.PAGINATION_MAX_LIMIT) || 100,
-            default: Number(process.env.PAGINATION_DEFAULT_LIMIT) || 10,
+            maximum: parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100'),
+            default: parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10'),
           },
           sortBy: { type: 'string' },
           sortOrder: {

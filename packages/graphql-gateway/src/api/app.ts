@@ -2,11 +2,11 @@ import { ApolloServer } from '@apollo/server'
 import { expressMiddleware } from '@apollo/server/express4'
 import { ExpressContextFunctionArgument } from '@apollo/server/express4'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
+import { ApiGateway } from '@book-library-tool/api-gateway'
 import { RedisService } from '@book-library-tool/redis'
 import { errorMiddleware, logger } from '@book-library-tool/shared'
 import { mergeTypeDefs } from '@graphql-tools/merge'
 import { makeExecutableSchema } from '@graphql-tools/schema'
-import { ApiGateway } from '@library/api-gateway'
 import cors from 'cors'
 import express, { RequestHandler } from 'express'
 import http from 'http'
@@ -151,9 +151,13 @@ async function startServer(): Promise<ServerResult> {
     timeout: 10000,
     onShutdown: async () => {
       logger.info('Shutting down Apollo Server')
+
       await server.stop()
+
       await redisService.disconnect()
+
       apiGateway.stop()
+
       logger.info('Apollo Server stopped')
     },
     finally: () => {
