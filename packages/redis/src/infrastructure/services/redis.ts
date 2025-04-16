@@ -116,7 +116,7 @@ export class RedisService implements CacheService {
           errors: this.errorCount,
         },
       }
-    } catch (error) {
+    } catch {
       return {
         status: 'unhealthy',
         details: {

@@ -69,7 +69,7 @@ export function createReservationRouter(
 
   router.get(
     '/user/:userId',
-    validateParams(schemas.UserIdSchema),
+    validateParams(schemas.UserIdParameterSchema),
     validateQuery(schemas.ReservationsHistoryQuerySchema),
     paginationMiddleware(),
     getReservationHistoryController.getReservationHistory.bind(
@@ -79,7 +79,7 @@ export function createReservationRouter(
 
   router.patch(
     '/:reservationId/return',
-    validateParams(schemas.ReservationReturnParamsSchema),
+    validateParams(schemas.ReservationIdParameterSchema),
     returnReservationController.returnReservation.bind(
       returnReservationController,
     ),

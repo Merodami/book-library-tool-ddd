@@ -71,7 +71,7 @@ export function createBookRouter(
    */
   router.patch(
     '/:isbn',
-    validateParams(schemas.BookIdSchema),
+    validateParams(schemas.BookIdParameterSchema),
     validateBody(schemas.BookUpdateRequestSchema),
     updateBookController.updateBook,
   )
@@ -86,7 +86,7 @@ export function createBookRouter(
    */
   router.delete(
     '/:isbn',
-    validateParams(schemas.BookIdSchema),
+    validateParams(schemas.BookIdParameterSchema),
     deleteBookController.deleteBook,
   )
 
@@ -100,7 +100,7 @@ export function createBookRouter(
    */
   router.get(
     '/:isbn',
-    validateParams(schemas.BookIdSchema),
+    validateParams(schemas.BookIdParameterSchema),
     getBookController.getBook,
   )
 

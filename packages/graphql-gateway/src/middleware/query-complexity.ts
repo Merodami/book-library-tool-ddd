@@ -1,3 +1,4 @@
+import { ErrorCode, logger } from '@book-library-tool/shared'
 import { GraphQLError } from 'graphql'
 import { ValidationRule } from 'graphql/validation'
 import { createComplexityRule, simpleEstimator } from 'graphql-query-complexity'
@@ -21,7 +22,7 @@ export const createQueryComplexityPlugin = (): ValidationRule => {
         `Query complexity of ${actual} exceeds maximum allowed complexity of ${max}`,
         {
           extensions: {
-            code: 'COMPLEXITY_LIMIT_EXCEEDED',
+            code: ErrorCode.COMPLEXITY_LIMIT_EXCEEDED,
             complexity: actual,
             maxComplexity: max,
           },
@@ -29,7 +30,7 @@ export const createQueryComplexityPlugin = (): ValidationRule => {
       )
     },
     onComplete: (complexity: number) => {
-      console.log('Query Complexity:', complexity)
+      logger.debug('Query Complexity:', complexity)
     },
   })
 }

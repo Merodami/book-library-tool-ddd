@@ -1,12 +1,21 @@
+import { OpenAPIV3 } from 'openapi-types'
+
+// --------------------------------
+// OpenAPI Parameters
+// --------------------------------
+
 /**
  * Book Parameter for OpenAPI
  */
-export const paramBookId = {
+export const paramBookId: OpenAPIV3.ParameterObject = {
   in: 'path',
   name: 'isbn',
-  description: 'The book identifier',
+  description: 'The book ISBN',
   required: true,
-  schema: { type: 'string', minLength: 1 },
+  schema: {
+    type: 'string',
+    format: 'isbn',
+  },
   examples: {
     bookId1: {
       summary: 'Book reference id example',

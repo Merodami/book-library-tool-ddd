@@ -1,3 +1,5 @@
+import { logger } from '@book-library-tool/shared'
+
 import { GraphQLContext } from '../types/context.js'
 
 /**
@@ -153,54 +155,57 @@ export function Cache(options?: number | CacheOptions) {
     descriptor.value = async function (...args: any[]) {
       // In GraphQL resolvers, context is the third argument
       const context = args[2] as GraphQLContext
-      console.log(`[Cache] Context available: ${!!context}`)
-      console.log(`[Cache] RedisService in context: ${!!context?.redisService}`)
+      logger.debug(`[Cache] Context available: ${!!context}`)
+      logger.debug(
+        `[Cache] RedisService in context: ${!!context?.redisService}`,
+      )
 
       if (!context?.redisService) {
-        console.log(
+        logger.debug(
           `[Cache] Redis not available, skipping cache for ${String(propertyKey)}`,
         )
+
         return originalMethod.apply(this, args)
       }
 
       try {
         // Check Redis connection status
-        console.log(`[Cache] Checking Redis health for ${String(propertyKey)}`)
+        logger.debug(`[Cache] Checking Redis health for ${String(propertyKey)}`)
         const health = await context.redisService.checkHealth()
-        console.log(`[Cache] Redis health status: ${health.status}`)
-        console.log(`[Cache] Redis health details:`, health.details)
+        logger.debug(`[Cache] Redis health status: ${health.status}`)
+        logger.debug(`[Cache] Redis health details:`, health.details)
 
         if (health.status !== 'healthy') {
-          console.log(
+          logger.debug(
             `[Cache] Redis not healthy (status: ${health.status}), skipping cache for ${String(propertyKey)}`,
           )
           return originalMethod.apply(this, args)
         }
 
         const cacheKey = keyGenerator(target, propertyKey, args)
-        console.log(`[Cache] Checking cache for key: ${cacheKey}`)
+        logger.debug(`[Cache] Checking cache for key: ${cacheKey}`)
 
         const cachedValue = await context.redisService.get<string>(cacheKey)
         if (cachedValue) {
-          console.log(`[Cache] Cache HIT for key: ${cacheKey}`)
-          console.log(`[Cache] Cached value: ${cachedValue}`)
+          logger.debug(`[Cache] Cache HIT for key: ${cacheKey}`)
+          logger.debug(`[Cache] Cached value: ${cachedValue}`)
           return deserialize(JSON.parse(cachedValue))
         }
 
-        console.log(`[Cache] Cache MISS for key: ${cacheKey}`)
+        logger.debug(`[Cache] Cache MISS for key: ${cacheKey}`)
         const result = await originalMethod.apply(this, args)
         const serializedResult = serializer(result)
 
         if (serializedResult !== undefined) {
           const valueToCache = JSON.stringify(serializedResult)
-          console.log(`[Cache] Caching value for key: ${cacheKey}`)
-          console.log(`[Cache] Value to cache: ${valueToCache}`)
+          logger.debug(`[Cache] Caching value for key: ${cacheKey}`)
+          logger.debug(`[Cache] Value to cache: ${valueToCache}`)
           await context.redisService.set(cacheKey, valueToCache, ttl || 3600)
-          console.log(
+          logger.debug(
             `[Cache] Cached result for key: ${cacheKey} with TTL: ${ttl || 3600}s`,
           )
         } else {
-          console.log(
+          logger.debug(
             `[Cache] Skipping cache for key: ${cacheKey} - result is undefined`,
           )
         }

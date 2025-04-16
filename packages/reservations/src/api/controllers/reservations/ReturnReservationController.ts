@@ -1,4 +1,4 @@
-import type { ReservationReturnParams } from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
 import { BookReturnHandler } from '@reservations/commands/BookReturnHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
@@ -19,7 +19,7 @@ export class ReturnReservationController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { reservationId } = req.params as ReservationReturnParams
+      const { reservationId } = req.params as schemas.ReservationIdParameter
 
       // Execute the command directly through the handler
       await this.returnReservationHandler.execute({

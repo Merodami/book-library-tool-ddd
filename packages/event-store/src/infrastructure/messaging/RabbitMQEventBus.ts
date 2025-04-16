@@ -12,7 +12,8 @@ import { v4 as uuidv4 } from 'uuid'
 export class RabbitMQEventBus implements EventBus {
   private connection!: any
   private channel!: any
-  private readonly exchangeName = process.env.EVENTS_EXCHANGE || 'events'
+  private readonly exchangeName =
+    process.env.RABBIT_MQ_EVENTS_EXCHANGE || 'events'
   private queueName!: string
 
   // Registry for event handlers

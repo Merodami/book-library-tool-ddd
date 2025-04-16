@@ -75,7 +75,7 @@ export class BooksService {
     ],
   }: GetBooksOptions = {}): Promise<GetBooksResult> {
     try {
-      if (!apiBooks?.default?.getCatalog) {
+      if (!apiBooks?.books?.searchCatalog) {
         throw new GraphQLError('Books API client not available')
       }
 
@@ -128,7 +128,7 @@ export class BooksService {
       }
 
       // Call the API and get the response
-      const response = await apiBooks.default.getCatalog(queryParams)
+      const response = await apiBooks.books.searchCatalog(queryParams)
 
       // Create plain objects to avoid circular references
       const books = response.data.map((book: any) => ({
@@ -166,11 +166,11 @@ export class BooksService {
    */
   async getBook(isbn: string, fields?: string[]): Promise<GraphQLBook | null> {
     try {
-      if (!apiBooks?.default?.getCatalog) {
+      if (!apiBooks?.books?.searchCatalog) {
         throw new GraphQLError('Books API client not available')
       }
 
-      const result = await apiBooks.default.getCatalog({
+      const result = await apiBooks.books.searchCatalog({
         isbn,
         fields: fields || [
           'title',
@@ -180,7 +180,7 @@ export class BooksService {
           'publisher',
           'price',
         ],
-        limit: 1,
+        // limit: 1,
       })
 
       if (!result?.data?.length) {
@@ -216,7 +216,7 @@ export class BooksService {
    */
   async createBook(book: BookCreateRequest): Promise<GraphQLBook> {
     try {
-      if (!apiBooks?.default?.postBooks) {
+      if (!apiBooks?.books?.addBook) {
         throw new GraphQLError('Books API client not available')
       }
 
@@ -229,7 +229,7 @@ export class BooksService {
         })
       }
 
-      const createdBook = await apiBooks.default.postBooks({
+      const createdBook = await apiBooks.books.addBook({
         requestBody: book,
       })
 
@@ -259,11 +259,11 @@ export class BooksService {
     book: BookUpdateRequest,
   ): Promise<GraphQLBook> {
     try {
-      if (!apiBooks?.default?.patchBooks) {
+      if (!apiBooks?.books?.updateBook) {
         throw new GraphQLError('Books API client not available')
       }
 
-      const updatedBook = await apiBooks.default.patchBooks({
+      const updatedBook = await apiBooks.books.updateBook({
         isbn,
         requestBody: book,
       })
@@ -291,11 +291,11 @@ export class BooksService {
    */
   async deleteBook(isbn: string): Promise<void> {
     try {
-      if (!apiBooks?.default?.deleteBooks) {
+      if (!apiBooks?.books?.deleteBook) {
         throw new GraphQLError('Books API client not available')
       }
 
-      await apiBooks.default.deleteBooks({ isbn })
+      await apiBooks.books.deleteBook({ isbn })
     } catch (error) {
       console.error('Error in deleteBook:', error)
       throw new GraphQLError(

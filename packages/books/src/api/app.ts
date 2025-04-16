@@ -95,7 +95,6 @@ async function startServer() {
     ],
     {
       serviceName: process.env.BOOK_SERVICE_NAME || 'book_service',
-      version: process.env.npm_package_version || '1.0.0',
     },
   )
 

@@ -1,7 +1,9 @@
+import { OpenAPIV3 } from 'openapi-types'
+
 /**
  * Page Parameter for OpenAPI
  */
-export const paramPaginationPage = {
+export const paramPaginationPage: OpenAPIV3.ParameterObject = {
   in: 'query',
   name: 'page',
   description: 'Page number (starting from 1)',
@@ -16,7 +18,7 @@ export const paramPaginationPage = {
 /**
  * Limit Parameter for OpenAPI
  */
-export const paramPaginationLimit = {
+export const paramPaginationLimit: OpenAPIV3.ParameterObject = {
   in: 'query',
   name: 'limit',
   description: 'Number of items per page (max 100)',
@@ -27,4 +29,9 @@ export const paramPaginationLimit = {
     maximum: parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100', 10),
     default: parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10', 10),
   },
+}
+
+export const PaginationParameters = {
+  page: paramPaginationPage,
+  limit: paramPaginationLimit,
 }

@@ -116,7 +116,6 @@ async function startServer() {
     ],
     {
       serviceName: process.env.WALLET_SERVICE_NAME || 'wallet_service',
-      version: process.env.npm_package_version || '1.0.0',
     },
   )
 

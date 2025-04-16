@@ -1,22 +1,31 @@
 import { Static, Type } from '@sinclair/typebox'
 
-import { PaginationMetadataSchema } from './shared.js'
+import { PaginationMetadataSchema } from './pagination.js'
+
+// --------------------------------
+// Parameter Schemas
+// --------------------------------
+
+/**
+ * Book Parameter Schema
+ */
+export const BookIdParameterSchema = Type.Object(
+  {
+    isbn: Type.String({ minLength: 1 }),
+  },
+  {
+    $id: '#/components/parameters/BookIdParameter',
+    description: 'The book ISBN',
+  },
+)
+export type BookIdParameter = Static<typeof BookIdParameterSchema>
+export const BookIdParameterRef = Type.Ref(
+  '#/components/parameters/BookIdParameter',
+)
 
 // --------------------------------
 // Request Schemas
 // --------------------------------
-
-/**
- * Book Reference ID Schema
- */
-export const BookIdSchema = Type.Object(
-  {
-    isbn: Type.String({ minLength: 1 }),
-  },
-  { $id: '#/components/schemas/BookId' },
-)
-export type BookId = Static<typeof BookIdSchema>
-export const BookIdRef = Type.Ref('#/components/schemas/BookId')
 
 /**
  * Add Book Reference Request Schema

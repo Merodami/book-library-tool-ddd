@@ -32,7 +32,7 @@ export function createWalletCommandRouter(
   // Define command routes
   router.post(
     '/:userId/balance',
-    validateParams(schemas.UserIdSchema),
+    validateParams(schemas.BookIdParameterSchema),
     validateBody(schemas.WalletBalanceRequestSchema),
     updateWalletBalanceController.updateWalletBalance,
   )

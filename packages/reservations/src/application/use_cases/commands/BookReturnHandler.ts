@@ -1,5 +1,5 @@
+import { schemas } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
-import type { ReservationReturnParams } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
 
@@ -19,7 +19,7 @@ export class BookReturnHandler {
    * @param command - Contains the reservationId to return
    * @returns The ID of the updated reservation
    */
-  async execute(command: ReservationReturnParams): Promise<void> {
+  async execute(command: schemas.ReservationIdParameter): Promise<void> {
     // Validate command data
     if (!command.reservationId) {
       throw new Errors.ApplicationError(

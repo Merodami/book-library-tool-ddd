@@ -55,6 +55,7 @@ export enum ErrorCode {
   EVENT_SAVE_FAILED = 'EVENT_SAVE_FAILED',
   EVENT_LOOKUP_FAILED = 'EVENT_LOOKUP_FAILED',
   INVALID_QUERY = 'INVALID_QUERY',
+  COMPLEXITY_LIMIT_EXCEEDED = 'COMPLEXITY_LIMIT_EXCEEDED',
 
   // Rate limit errors
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
@@ -74,6 +75,7 @@ export function getStatusCodeForError(code: ErrorCode): number {
     case ErrorCode.BOOK_ALREADY_EXISTS:
     case ErrorCode.RESERVATION_ALREADY_EXISTS:
     case ErrorCode.DUPLICATE_ENTITY:
+    case ErrorCode.COMPLEXITY_LIMIT_EXCEEDED:
       return 409
 
     case ErrorCode.BOOK_VALIDATION_FAILED:
