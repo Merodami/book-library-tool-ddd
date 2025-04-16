@@ -16,6 +16,10 @@ import {
   paramCatalogSortOrder,
   paramCatalogTitle,
 } from '../parameters/catalog.js'
+import {
+  paramPaginationLimit,
+  paramPaginationPage,
+} from '../parameters/pagination.js'
 import { registry } from '../schemaRegistry.js'
 
 /**
@@ -44,6 +48,8 @@ export const BooksAPISpec: Partial<OpenAPIV3.Document> = {
           paramCatalogSortBy,
           paramCatalogSortOrder,
           paramCatalogFields,
+          paramPaginationPage,
+          paramPaginationLimit,
         ],
         responses: {
           '200': {

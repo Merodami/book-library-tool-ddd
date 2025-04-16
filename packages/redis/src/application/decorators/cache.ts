@@ -1,24 +1,5 @@
-import { CacheService } from '../../domain/repositories/cache.js'
-
-export interface CacheOptions {
-  ttl?: number
-  prefix?: string
-  bypassable?: boolean
-  condition?: (result: any) => boolean
-  cacheIfTruthy?: boolean
-  cacheIfHasItems?: boolean
-  cacheNullValues?: boolean
-  hashFunction?: (args: any[]) => string
-  localTtl?: number
-}
-
-export interface CacheStats {
-  hits: number
-  misses: number
-  errors: number
-  avgHitTime: number
-  avgMissTime: number
-}
+import { ICacheService } from '../../domain/repositories/ICacheService.js'
+import { CacheOptions, CacheStats } from '../../domain/types/cache.js'
 
 /**
  * Cache Decorator
@@ -42,7 +23,7 @@ export function Cache(options: CacheOptions = {}) {
     }
 
     descriptor.value = async function (...args: any[]) {
-      const cacheService = (this as any).cacheService as CacheService
+      const cacheService = (this as any).cacheService as ICacheService
       if (!cacheService) {
         throw new Error('CacheService not found in context')
       }
@@ -53,10 +34,12 @@ export function Cache(options: CacheOptions = {}) {
       try {
         if (options.bypassable && args.some((arg) => arg?.force === true)) {
           const result = await originalMethod.apply(this, args)
+
           return result
         }
 
         const cachedValue = await cacheService.get(key)
+
         if (cachedValue !== null) {
           const hitTime = Date.now() - startTime
           stats.hits++
@@ -72,6 +55,7 @@ export function Cache(options: CacheOptions = {}) {
         }
 
         const missTime = Date.now() - startTime
+
         stats.misses++
         stats.avgMissTime =
           (stats.avgMissTime * (stats.misses - 1) + missTime) / stats.misses
@@ -79,6 +63,7 @@ export function Cache(options: CacheOptions = {}) {
         return result
       } catch (error) {
         stats.errors++
+
         throw error
       }
     }
@@ -97,7 +82,9 @@ function generateCacheKey(
   options: CacheOptions,
 ): string {
   const prefix = options.prefix || `${target.constructor.name}:${propertyKey}`
+
   const hashFunction = options.hashFunction || defaultHashFunction
+
   return `${prefix}:${hashFunction(args)}`
 }
 
@@ -112,11 +99,21 @@ function defaultHashFunction(args: any[]): string {
  * Determines whether a result should be cached based on the provided options
  */
 function shouldCache(result: any, options: CacheOptions): boolean {
-  if (options.condition && !options.condition(result)) return false
-  if (options.cacheIfTruthy && !result) return false
-  if (options.cacheIfHasItems && Array.isArray(result) && result.length === 0)
+  if (options.condition && !options.condition(result)) {
     return false
-  if (!options.cacheNullValues && (result === null || result === undefined))
+  }
+
+  if (options.cacheIfTruthy && !result) {
     return false
+  }
+
+  if (options.cacheIfHasItems && Array.isArray(result) && result.length === 0) {
+    return false
+  }
+
+  if (!options.cacheNullValues && (result === null || result === undefined)) {
+    return false
+  }
+
   return true
 }

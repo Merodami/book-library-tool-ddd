@@ -97,6 +97,7 @@ export class BookProjectionRepository implements IBookProjectionRepository {
 
   private buildTextSearchQuery(query: CatalogSearchQuery): Partial<DbQuery> {
     const textSearch: Partial<DbQuery> = {}
+
     if (query.title) {
       textSearch.title = { $regex: query.title, $options: 'i' }
     }
@@ -117,18 +118,28 @@ export class BookProjectionRepository implements IBookProjectionRepository {
   ): Partial<DbQuery> {
     if (min || max) {
       const range: { $gte?: number; $lte?: number } = {}
-      if (min) range.$gte = min
-      if (max) range.$lte = max
+
+      if (min) {
+        range.$gte = min
+      }
+
+      if (max) {
+        range.$lte = max
+      }
+
       return { [field]: range }
     }
+
     if (exact) {
       return { [field]: exact }
     }
+
     return {}
   }
 
   private buildProjection(fields?: string[]): Partial<Record<AllowedField, 1>> {
     const projection: Partial<Record<AllowedField, 1>> = {}
+
     if (fields?.length) {
       for (const field of fields) {
         if (ALLOWED_FIELDS.includes(field as AllowedField)) {
@@ -136,6 +147,7 @@ export class BookProjectionRepository implements IBookProjectionRepository {
         }
       }
     }
+
     return projection
   }
 

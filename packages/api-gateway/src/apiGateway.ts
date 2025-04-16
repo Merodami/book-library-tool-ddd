@@ -1,5 +1,11 @@
-import { errorMiddleware, HealthCheck, logger } from '@book-library-tool/shared'
-import express, { Express, NextFunction, Request, Response } from 'express'
+import {
+  ErrorCode,
+  errorMiddleware,
+  Errors,
+  HealthCheck,
+  logger,
+} from '@book-library-tool/shared'
+import express, { Express, Request, Response } from 'express'
 import http from 'http'
 
 import { loadConfig } from './config/index.js'
@@ -38,21 +44,23 @@ async function startGateway(): Promise<http.Server> {
   await registerServiceHealthChecks(healthCheck, isLocalDev)
 
   // Add error handling middleware
-  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  app.use((err: Error) => {
     logger.error('API Gateway error:', err)
 
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: isLocalDev ? err.message : 'An unexpected error occurred',
-    })
+    throw new Errors.ApplicationError(
+      500,
+      ErrorCode.INTERNAL_ERROR,
+      isLocalDev ? err.message : 'An unexpected error occurred',
+    )
   })
 
   // 404 handler for unmatched routes
-  app.use((req: Request, res: Response) => {
-    res.status(404).json({
-      error: 'Not Found',
-      message: `The requested resource '${req.path}' was not found`,
-    })
+  app.use((req: Request) => {
+    throw new Errors.ApplicationError(
+      404,
+      ErrorCode.URL_NOT_FOUND,
+      `The requested resource '${req.path}' was not found`,
+    )
   })
 
   app.use(errorMiddleware)

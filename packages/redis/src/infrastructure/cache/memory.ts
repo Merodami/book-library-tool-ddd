@@ -1,4 +1,4 @@
-import { CacheService } from '../../domain/repositories/cache.js'
+import { ICacheService } from '../../domain/repositories/ICacheService.js'
 
 /**
  * Memory Cache Implementation
@@ -7,7 +7,7 @@ import { CacheService } from '../../domain/repositories/cache.js'
  * It's useful for development and testing purposes, or when a simple
  * in-memory cache is sufficient.
  */
-export class MemoryCacheService implements CacheService {
+export class MemoryCacheService implements ICacheService {
   private cache: Map<string, { value: any; expiresAt: number }> = new Map()
   private defaultTTL: number
 

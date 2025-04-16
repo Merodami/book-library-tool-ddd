@@ -1,4 +1,4 @@
-import { RedisConfig } from '../../domain/types.js'
+import { RedisConfig } from '../../domain/types/cache.js'
 
 /**
  * Redis Configuration Service

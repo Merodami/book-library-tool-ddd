@@ -82,6 +82,7 @@ export class BookRepository
       return null
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
+
       throw new Errors.ApplicationError(
         500,
         ErrorCode.BOOK_LOOKUP_FAILED,

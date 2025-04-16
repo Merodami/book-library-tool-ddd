@@ -1,4 +1,3 @@
-import { schemas, validateQuery } from '@book-library-tool/api'
 import type { CatalogSearchQuery } from '@book-library-tool/sdk'
 import { GetAllBooksHandler } from '@queries/GetAllBooksHandler.js'
 import { Request } from 'express'
@@ -19,14 +18,11 @@ export class CatalogController {
   async getAllBooks(
     req: Request<unknown, unknown, unknown, ExtendedCatalogSearchQuery>,
   ) {
-    // Validate query parameters using the schema
-    const validate = validateQuery(schemas.CatalogSearchQuerySchema)
-    validate(req as any, null as any, () => {})
-
-    const query = req.query
+    const query = req.query as ExtendedCatalogSearchQuery
 
     // Convert query to CatalogSearchQuery format
     const { fields: _, ...rest } = query
+
     const searchQuery: CatalogSearchQuery = {
       ...rest,
       fields: query.fields,

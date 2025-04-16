@@ -59,6 +59,9 @@ export enum ErrorCode {
 
   // Rate limit errors
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
+
+  // Not found errors
+  URL_NOT_FOUND = 'URL_NOT_FOUND',
 }
 
 /**
@@ -70,6 +73,7 @@ export function getStatusCodeForError(code: ErrorCode): number {
     case ErrorCode.RESERVATION_NOT_FOUND:
     case ErrorCode.WALLET_NOT_FOUND:
     case ErrorCode.USER_NOT_FOUND:
+    case ErrorCode.URL_NOT_FOUND:
       return 404
 
     case ErrorCode.BOOK_ALREADY_EXISTS:
@@ -181,6 +185,9 @@ export function getDefaultMessageForError(code: ErrorCode): string {
 
     case ErrorCode.HEALTH_CHECK_DEPENDENCIES_MISSING:
       return 'No health check dependencies configured'
+
+    case ErrorCode.URL_NOT_FOUND:
+      return 'The requested URL was not found'
 
     default:
       return 'An error occurred'
