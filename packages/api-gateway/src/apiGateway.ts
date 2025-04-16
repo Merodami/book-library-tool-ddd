@@ -1,26 +1,15 @@
-// api-gateway/src/index.ts
 import { HealthCheck, logger } from '@book-library-tool/shared'
 import express, { Express, NextFunction, Request, Response } from 'express'
 import http from 'http'
-import {
-  createProxyMiddleware,
-  Options as ProxyOptions,
-} from 'http-proxy-middleware'
 
 import { loadConfig } from './config/index.js'
+import { registerServiceHealthChecks } from './health/registerServiceHealthChecks.js'
 import { createSecurityMiddlewares } from './middlewares/security.js'
+import { setupProxyRoutes } from './routes/setupProxyRoutes.js'
 import { ApiGatewayConfig } from './types/index.js'
 
 // Determine if running in development environment
 const isLocalDev = process.env.NODE_ENV === 'development'
-
-// Type definition for service route configuration
-interface ServiceRoute {
-  path: string
-  target: string
-  pathRewrite?: Record<string, string>
-  additionalOptions?: Partial<ProxyOptions>
-}
 
 /**
  * Start the API Gateway server
@@ -37,7 +26,7 @@ async function startGateway(): Promise<http.Server> {
   // Health check initialization
   const healthCheck = new HealthCheck({
     name: 'api-gateway',
-    version: process.env.npm_package_version || '1.0.0',
+    version: process.env.APP_VERSION || '0.0.0',
     cacheTime: parseInt(process.env.HEALTHCHECK_CACHE_TIME ?? '5000', 10),
     path: config.healthCheck.path,
     logResults: isLocalDev,
@@ -46,11 +35,12 @@ async function startGateway(): Promise<http.Server> {
   // Set up routes and services
   setupHealthCheckRoutes(app, healthCheck, config)
   setupProxyRoutes(app, isLocalDev)
-  await registerServiceHealthChecks(healthCheck)
+  await registerServiceHealthChecks(healthCheck, isLocalDev)
 
   // Add error handling middleware
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     logger.error('API Gateway error:', err)
+
     res.status(500).json({
       error: 'Internal Server Error',
       message: isLocalDev ? err.message : 'An unexpected error occurred',
@@ -97,6 +87,7 @@ function setupHealthCheckRoutes(
     try {
       const health = await healthCheck.getHealth()
       const statusCode = health.status === 'unhealthy' ? 503 : 200
+
       res.status(statusCode).json(health)
     } catch (error) {
       logger.error('Error getting health status:', error)
@@ -132,119 +123,6 @@ function setupHealthCheckRoutes(
       }
     },
   )
-}
-
-/**
- * Set up proxy routes to backend services
- */
-function setupProxyRoutes(app: Express, isLocalDev: boolean): void {
-  // Define service routes
-  const serviceRoutes: ServiceRoute[] = [
-    {
-      path: '/graphql',
-      target: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4000',
-    },
-    {
-      path: '/api/books',
-      target: process.env.BOOKS_API_URL ?? 'http://localhost:3001',
-      pathRewrite: { '^/api/books': '/books' },
-    },
-    {
-      path: '/api/reservations',
-      target: process.env.RESERVATIONS_API_URL ?? 'http://localhost:3002',
-      pathRewrite: { '^/api/reservations': '/reservations' },
-    },
-    {
-      path: '/api/wallets',
-      target: process.env.WALLETS_API_URL ?? 'http://localhost:3003',
-      pathRewrite: { '^/api/wallets': '/wallets' },
-    },
-  ]
-
-  // Create proxy for each service
-  for (const route of serviceRoutes) {
-    try {
-      // Fix: Use proper type definitions for proxy options
-      const options: ProxyOptions = {
-        target: route.target,
-        changeOrigin: true,
-        pathRewrite: route.pathRewrite,
-        ...route.additionalOptions,
-        // Remove the onError handler and use a middleware for error handling instead
-      }
-
-      const proxyMiddleware = createProxyMiddleware(options)
-
-      // Add error handling middleware after proxy
-      app.use(route.path, (req, res, next) => {
-        proxyMiddleware(req, res, (err) => {
-          if (err) {
-            logger.error(`Proxy error for ${route.path}:`, err)
-            if (!res.headersSent) {
-              res.status(500).json({
-                error: 'Service Unavailable',
-              })
-            }
-            return
-          }
-          next()
-        })
-      })
-
-      if (isLocalDev) {
-        logger.info(`Proxy route: ${route.path} → ${route.target}`)
-      }
-    } catch (error) {
-      logger.error(`Failed to setup proxy for ${route.path}:`, error)
-    }
-  }
-}
-
-/**
- * Register health checks for backend services
- */
-async function registerServiceHealthChecks(
-  healthCheck: HealthCheck,
-): Promise<void> {
-  // Define services to check
-  const serviceChecks = [
-    {
-      name: 'graphql-gateway',
-      url: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4000',
-    },
-    {
-      name: 'books-service',
-      url: process.env.BOOKS_API_URL ?? 'http://localhost:3001',
-    },
-    {
-      name: 'reservations-service',
-      url: process.env.RESERVATIONS_API_URL ?? 'http://localhost:3002',
-    },
-    {
-      name: 'wallets-service',
-      url: process.env.WALLETS_API_URL ?? 'http://localhost:3003',
-    },
-  ]
-
-  // Register each service health check
-  for (const service of serviceChecks) {
-    healthCheck.register(service.name, async () => {
-      try {
-        const response = await fetch(`${service.url}/health/liveness`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(3000),
-        })
-        return response.ok
-      } catch (error) {
-        if (isLocalDev) {
-          logger.warn(`${service.name} health check failed`)
-          logger.warn(error)
-        }
-        return false
-      }
-    })
-  }
 }
 
 /**

@@ -10,7 +10,6 @@ import { ReservationProjectionHandler } from '@reservations/event-store/Reservat
 import { ReservationProjectionRepository } from '@reservations/persistence/mongo/ReservationProjectionRepository.js'
 import { ReservationRepository } from '@reservations/persistence/mongo/ReservationRepository.js'
 import { createReservationRouter } from '@reservations/routes/reservations/createReservationRouter.js'
-import { createReservationStatusRouter } from '@reservations/routes/reservations/createReservationStatusRouter.js'
 import cors from 'cors'
 import express from 'express'
 import gracefulShutdown from 'http-graceful-shutdown'
@@ -131,7 +130,6 @@ async function startServer() {
     {
       serviceName:
         process.env.RESERVATION_SERVICE_NAME || 'reservation_service',
-      version: process.env.npm_package_version || '1.0.0',
     },
   )
 
@@ -149,19 +147,6 @@ async function startServer() {
       reservationProjectionRepository,
       eventBus,
     )(req, res, next)
-  })
-
-  /**
-   * Set up reservation status routes:
-   *
-   * These routes primarily handle queries about reservation status
-   */
-  app.use('/reservation-status', (req, res, next) => {
-    return createReservationStatusRouter(reservationProjectionRepository)(
-      req,
-      res,
-      next,
-    )
   })
 
   // Global error-handling middleware.

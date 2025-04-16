@@ -1,26 +1,27 @@
 import { Static, Type } from '@sinclair/typebox'
 
-import { PaginationMetadataSchema } from './shared.js'
+import { PaginationMetadataSchema } from './pagination.js'
 
 // --------------------------------
-// Common Schema Components
-// --------------------------------
-
-// --------------------------------
-// Request Schemas
+// Parameter Schemas
 // --------------------------------
 
 /**
- * User ID Schema
+ * User Parameter Schema
  */
-export const UserIdSchema = Type.Object(
+export const UserIdParameterSchema = Type.Object(
   {
     userId: Type.String({ format: 'uuid' }),
   },
-  { $id: '#/components/schemas/UserId' },
+  {
+    $id: '#/components/parameters/UserIdParameter',
+    description: 'User identifier (UUID)',
+  },
 )
-export type UserId = Static<typeof UserIdSchema>
-export const UserIdRef = Type.Ref('#/components/schemas/UserId')
+export type UserIdParameter = Static<typeof UserIdParameterSchema>
+export const UserIdParameterRef = Type.Ref(
+  '#/components/parameters/UserIdParameter',
+)
 
 // --------------------------------
 // Response Schemas

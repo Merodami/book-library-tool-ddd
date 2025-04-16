@@ -1,4 +1,4 @@
-import { Reservation } from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
 import { GetReservationStatusHandler } from '@reservations/queries/GetReservationStatusHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
@@ -21,7 +21,10 @@ export class GetReservationStatusController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { reservationId } = req.params as Pick<Reservation, 'reservationId'>
+      const { reservationId } = req.params as Pick<
+        schemas.ReservationDTO,
+        'reservationId'
+      >
 
       // Call the handler directly
       const reservationStatus = await this.getReservationStatusHandler.execute({

@@ -1,9 +1,7 @@
-import { CatalogSearchQuerySchema } from '@book-library-tool/api/src/schemas/catalog.js'
-import { validateQuery } from '@book-library-tool/api/src/src/validation.js'
+import { schemas, validateQuery } from '@book-library-tool/api'
 import type { CatalogSearchQuery } from '@book-library-tool/sdk'
+import { GetAllBooksHandler } from '@queries/GetAllBooksHandler.js'
 import { Request } from 'express'
-
-import { GetAllBooksHandler } from '../../../application/use_cases/queries/GetAllBooksHandler.js'
 
 type ExtendedCatalogSearchQuery = Omit<CatalogSearchQuery, 'fields'> & {
   fields?: string[]
@@ -22,7 +20,7 @@ export class CatalogController {
     req: Request<unknown, unknown, unknown, ExtendedCatalogSearchQuery>,
   ) {
     // Validate query parameters using the schema
-    const validate = validateQuery(CatalogSearchQuerySchema)
+    const validate = validateQuery(schemas.CatalogSearchQuerySchema)
     validate(req as any, null as any, () => {})
 
     const query = req.query

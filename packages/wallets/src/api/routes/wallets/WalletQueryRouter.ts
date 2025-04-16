@@ -22,7 +22,7 @@ export function createWalletQueryRouter(
   // Define query routes
   router.get(
     '/:userId',
-    validateParams(schemas.UserIdSchema),
+    validateParams(schemas.UserIdParameterSchema),
     getWalletController.getWallet,
   )
 

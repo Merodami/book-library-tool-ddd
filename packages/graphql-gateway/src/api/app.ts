@@ -148,7 +148,6 @@ async function startServer(): Promise<ServerResult> {
     ],
     {
       serviceName: 'graphql-gateway',
-      version: process.env.npm_package_version || '0.0.0',
       healthPath: process.env.HEALTH_CHECK_PATH ?? '/health',
     },
   )

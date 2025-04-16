@@ -27,7 +27,7 @@ export function createReservationStatusRouter(
   // Routes configuration
   router.get(
     '/reservation/:reservationId',
-    validateParams(schemas.ReservationReturnParamsSchema),
+    validateParams(schemas.ReservationIdParameterSchema),
     controller.getReservationStatus,
   )
 

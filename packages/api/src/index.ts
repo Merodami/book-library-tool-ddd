@@ -5,4 +5,4 @@ export {
   validateBody,
   validateParams,
   validateQuery,
-} from './src/validation.js'
+} from './util/validation.js'

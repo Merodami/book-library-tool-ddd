@@ -1,4 +1,5 @@
 import { GraphQLRequestContext } from '@apollo/server'
+import { logger } from '@book-library-tool/shared'
 import { GraphQLError } from 'graphql'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -26,7 +27,7 @@ export const ApolloServerPluginLogging = {
       variables,
     }
 
-    console.log('GraphQL Request:', JSON.stringify(logEntry, null, 2))
+    logger.debug('GraphQL Request:', JSON.stringify(logEntry, null, 2))
 
     return {
       async willSendResponse(requestContext: GraphQLRequestContext<any>) {
@@ -35,7 +36,8 @@ export const ApolloServerPluginLogging = {
           ...logEntry,
           duration,
         }
-        console.log('GraphQL Response:', JSON.stringify(responseLog, null, 2))
+
+        logger.debug('GraphQL Response:', JSON.stringify(responseLog, null, 2))
       },
       async didEncounterErrors(requestContext: GraphQLRequestContext<any>) {
         const errorLog: LogEntry = {

@@ -1,10 +1,11 @@
 import { Type } from '@sinclair/typebox'
+import { OpenAPIV3 } from 'openapi-types'
 
 /**
  * Title Parameter for OpenAPI
  * Allows filtering books by their title. Supports partial matches and is case-insensitive.
  */
-export const paramCatalogTitle = {
+export const paramCatalogTitle: OpenAPIV3.ParameterObject = {
   name: 'title',
   in: 'query',
   description: 'Filter by title (case-insensitive, supports partial matches)',
@@ -21,7 +22,7 @@ export const paramCatalogTitle = {
  * Author Parameter for OpenAPI
  * Enables filtering books by author name. Supports partial matches and is case-insensitive.
  */
-export const paramCatalogAuthor = {
+export const paramCatalogAuthor: OpenAPIV3.ParameterObject = {
   name: 'author',
   in: 'query',
   description: 'Filter by author (case-insensitive, supports partial matches)',
@@ -38,15 +39,20 @@ export const paramCatalogAuthor = {
  * Publication Year Parameter for OpenAPI
  * Filters books by their exact publication year.
  */
-export const paramCatalogPublicationYear = {
+export const paramCatalogPublicationYear: OpenAPIV3.ParameterObject = {
   name: 'publicationYear',
   in: 'query',
   description: 'Filter by exact publication year',
-  schema: Type.Number(),
+  schema: {
+    type: 'number',
+    format: 'int32',
+    minimum: 0,
+    maximum: new Date().getFullYear(),
+  },
   examples: {
     yearExample: {
-      summary: 'Search by publication year',
-      value: 1999,
+      summary: 'Filter books published in 2020',
+      value: 2020,
     },
   },
 }
@@ -55,7 +61,7 @@ export const paramCatalogPublicationYear = {
  * ISBN Parameter for OpenAPI
  * Filters books by their International Standard Book Number.
  */
-export const paramCatalogISBN = {
+export const paramCatalogISBN: OpenAPIV3.ParameterObject = {
   name: 'isbn',
   in: 'query',
   description: 'Filter by ISBN (exact match)',
@@ -72,7 +78,7 @@ export const paramCatalogISBN = {
  * Publisher Parameter for OpenAPI
  * Filters books by their publisher. Supports partial matches and is case-insensitive.
  */
-export const paramCatalogPublisher = {
+export const paramCatalogPublisher: OpenAPIV3.ParameterObject = {
   name: 'publisher',
   in: 'query',
   description:
@@ -90,11 +96,15 @@ export const paramCatalogPublisher = {
  * Price Parameter for OpenAPI
  * Filters books by their exact price.
  */
-export const paramCatalogPrice = {
+export const paramCatalogPrice: OpenAPIV3.ParameterObject = {
   name: 'price',
   in: 'query',
   description: 'Filter by exact price',
-  schema: Type.Number(),
+  schema: {
+    type: 'number',
+    format: 'float',
+    minimum: 0,
+  },
   examples: {
     priceExample: {
       summary: 'Search by exact price',
@@ -107,11 +117,16 @@ export const paramCatalogPrice = {
  * Publication Year Range Parameters for OpenAPI
  * Filters books within a range of publication years.
  */
-export const paramCatalogPublicationYearMin = {
+export const paramCatalogPublicationYearMin: OpenAPIV3.ParameterObject = {
   name: 'publicationYearMin',
   in: 'query',
   description: 'Minimum publication year in range filter',
-  schema: Type.Number(),
+  schema: {
+    type: 'number',
+    format: 'int32',
+    minimum: 0,
+    maximum: new Date().getFullYear(),
+  },
   examples: {
     yearMinExample: {
       summary: 'Search books published after year',
@@ -120,11 +135,16 @@ export const paramCatalogPublicationYearMin = {
   },
 }
 
-export const paramCatalogPublicationYearMax = {
+export const paramCatalogPublicationYearMax: OpenAPIV3.ParameterObject = {
   name: 'publicationYearMax',
   in: 'query',
   description: 'Maximum publication year in range filter',
-  schema: Type.Number(),
+  schema: {
+    type: 'number',
+    format: 'int32',
+    minimum: 0,
+    maximum: new Date().getFullYear(),
+  },
   examples: {
     yearMaxExample: {
       summary: 'Search books published before year',
@@ -137,11 +157,15 @@ export const paramCatalogPublicationYearMax = {
  * Price Range Parameters for OpenAPI
  * Filters books within a price range.
  */
-export const paramCatalogPriceMin = {
+export const paramCatalogPriceMin: OpenAPIV3.ParameterObject = {
   name: 'priceMin',
   in: 'query',
   description: 'Minimum price in range filter',
-  schema: Type.Number(),
+  schema: {
+    type: 'number',
+    format: 'float',
+    minimum: 0,
+  },
   examples: {
     priceMinExample: {
       summary: 'Search books above minimum price',
@@ -150,11 +174,15 @@ export const paramCatalogPriceMin = {
   },
 }
 
-export const paramCatalogPriceMax = {
+export const paramCatalogPriceMax: OpenAPIV3.ParameterObject = {
   name: 'priceMax',
   in: 'query',
   description: 'Maximum price in range filter',
-  schema: Type.Number(),
+  schema: {
+    type: 'number',
+    format: 'float',
+    minimum: 0,
+  },
   examples: {
     priceMaxExample: {
       summary: 'Search books below maximum price',
@@ -167,7 +195,7 @@ export const paramCatalogPriceMax = {
  * Sorting Parameters for OpenAPI
  * Controls the sorting of search results.
  */
-export const paramCatalogSortBy = {
+export const paramCatalogSortBy: OpenAPIV3.ParameterObject = {
   name: 'sortBy',
   in: 'query',
   description:
@@ -181,7 +209,7 @@ export const paramCatalogSortBy = {
   },
 }
 
-export const paramCatalogSortOrder = {
+export const paramCatalogSortOrder: OpenAPIV3.ParameterObject = {
   name: 'sortOrder',
   in: 'query',
   description: 'Sort order direction (ASC for ascending, DESC for descending)',
@@ -201,7 +229,7 @@ export const paramCatalogSortOrder = {
  * Field Selection Parameter for OpenAPI
  * Controls which fields are included in the response.
  */
-export const paramCatalogFields = {
+export const paramCatalogFields: OpenAPIV3.ParameterObject = {
   name: 'fields',
   in: 'query',
   description:

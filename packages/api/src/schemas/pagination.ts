@@ -58,20 +58,6 @@ export const PaginatedResultRef = Type.Ref(
 )
 
 /**
- * Error Response Schema
- */
-export const ErrorResponseSchema = Type.Object(
-  {
-    error: Type.String(),
-    message: Type.Union([Type.String(), Type.Array(Type.String())]),
-  },
-  { $id: '#/components/schemas/ErrorResponse' },
-)
-
-export type ErrorResponse = Static<typeof ErrorResponseSchema>
-export const ErrorResponseRef = Type.Ref('#/components/schemas/ErrorResponse')
-
-/**
  * Generic Paginated Response Schema
  * This can be used to create paginated response schemas for any entity type
  */

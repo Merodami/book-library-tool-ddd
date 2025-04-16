@@ -1,7 +1,7 @@
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Static, Type } from '@sinclair/typebox'
 
-import { PaginationMetadataSchema } from './shared.js'
+import { PaginationMetadataSchema } from './pagination.js'
 
 // --------------------------------
 // Common Schema Components
@@ -62,17 +62,15 @@ export const ReservationRequestRef = Type.Ref(
 /**
  * Reservation Return Params Schema
  */
-export const ReservationReturnParamsSchema = Type.Object(
+export const ReservationIdParameterSchema = Type.Object(
   {
     reservationId: Type.String({ format: 'uuid' }),
   },
-  { $id: '#/components/schemas/ReservationReturnParams' },
+  { $id: '#/components/parameters/ReservationIdParameter' },
 )
-export type ReservationReturnParams = Static<
-  typeof ReservationReturnParamsSchema
->
-export const ReservationReturnParamsRef = Type.Ref(
-  '#/components/schemas/ReservationReturnParams',
+export type ReservationIdParameter = Static<typeof ReservationIdParameterSchema>
+export const ReservationIdParameterRef = Type.Ref(
+  '#/components/schemas/ReservationIdParameter',
 )
 
 // --------------------------------

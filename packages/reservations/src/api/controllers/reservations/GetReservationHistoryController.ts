@@ -1,4 +1,5 @@
-import type { ReservationsHistoryQuery, UserId } from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
+import type { ReservationsHistoryQuery } from '@book-library-tool/sdk'
 import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
 import { NextFunction, Request, Response } from 'express'
 
@@ -21,7 +22,7 @@ export class GetReservationHistoryController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { userId } = req.params as UserId
+      const { userId } = req.params as Pick<schemas.UserDTO, 'userId'>
       const { page, limit } = req.query as ReservationsHistoryQuery
 
       // Call the handler directly to retrieve data from the projection repository

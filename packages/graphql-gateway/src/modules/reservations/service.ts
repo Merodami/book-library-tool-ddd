@@ -23,9 +23,9 @@ export class ReservationsService {
     try {
       // Check each ISBN's availability using the catalog endpoint
       const availabilityPromises = bookIsbn.map(async (isbn) => {
-        const response = await apiBooks.default.getCatalog({
+        const response = await apiBooks.books.searchCatalog({
           isbn,
-          limit: 1,
+          // limit: 1,
         })
         return {
           isbn,
@@ -48,9 +48,11 @@ export class ReservationsService {
    * Retrieves all reservations for a user
    */
   async getAllReservations(userId: string): Promise<Reservation[]> {
-    const reservations = await apiReservations.default.getReservationsUser({
-      userId,
-    })
+    const reservations = await apiReservations.reservations.getUserReservations(
+      {
+        userId,
+      },
+    )
     return reservations.data
   }
 
@@ -58,9 +60,11 @@ export class ReservationsService {
    * Retrieves a reservation by its ID
    */
   async getReservation(userId: string, id: string): Promise<Reservation> {
-    const reservations = await apiReservations.default.getReservationsUser({
-      userId,
-    })
+    const reservations = await apiReservations.reservations.getUserReservations(
+      {
+        userId,
+      },
+    )
 
     const reservation = reservations.data.find((r) => r.reservationId === id)
 
@@ -77,9 +81,10 @@ export class ReservationsService {
   async createReservation(
     reservation: ReservationRequest,
   ): Promise<Reservation> {
-    const createdReservation = await apiReservations.default.postReservations({
-      requestBody: reservation,
-    })
+    const createdReservation =
+      await apiReservations.reservations.createReservation({
+        requestBody: reservation,
+      })
 
     return createdReservation
   }
