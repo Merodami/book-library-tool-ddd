@@ -1,4 +1,4 @@
-import { HealthCheck, logger } from '@book-library-tool/shared'
+import { errorMiddleware, HealthCheck, logger } from '@book-library-tool/shared'
 import express, { Express, NextFunction, Request, Response } from 'express'
 import http from 'http'
 
@@ -54,6 +54,8 @@ async function startGateway(): Promise<http.Server> {
       message: `The requested resource '${req.path}' was not found`,
     })
   })
+
+  app.use(errorMiddleware)
 
   // Start HTTP server
   const port = parseInt(process.env.API_GATEWAY_PORT ?? '8000', 10)

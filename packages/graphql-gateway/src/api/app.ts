@@ -47,6 +47,7 @@ async function startServer(): Promise<ServerResult> {
 
   // Initialize Redis Service
   logger.info('Initializing Redis service...')
+
   const redisService = new RedisService({
     host: process.env.REDIS_HOST ?? 'localhost',
     port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
@@ -55,7 +56,9 @@ async function startServer(): Promise<ServerResult> {
 
   try {
     logger.info('Connecting to Redis...')
+
     await redisService.connect()
+
     logger.info('Redis connection established successfully')
   } catch (error) {
     logger.error('Failed to connect to Redis:', error)
@@ -76,6 +79,7 @@ async function startServer(): Promise<ServerResult> {
         check: async () => {
           const loadAvg = os.loadavg()[0]
           const cpuCount = os.cpus().length
+
           return loadAvg < cpuCount
         },
         details: {
@@ -88,9 +92,11 @@ async function startServer(): Promise<ServerResult> {
         check: async () => {
           try {
             const health = await redisService.checkHealth()
+
             return health.status === 'healthy' || health.status === 'degraded'
           } catch (error) {
             logger.warn('Redis service health check failed:', error)
+
             return false
           }
         },
@@ -111,9 +117,11 @@ async function startServer(): Promise<ServerResult> {
                 signal: AbortSignal.timeout(3000), // 3 second timeout
               },
             )
+
             return response.ok
           } catch (error) {
             logger.warn('Books service health check failed:', error)
+
             return false
           }
         },
@@ -134,11 +142,31 @@ async function startServer(): Promise<ServerResult> {
                 signal: AbortSignal.timeout(3000),
               },
             )
+
             return response.ok
           } catch (error) {
             logger.warn('Reservations service health check failed:', error)
             return false
           }
+        },
+        details: {
+          type: 'Dependent Service',
+          essential: true,
+        },
+      },
+      {
+        name: 'wallet-service',
+        check: async () => {
+          const response = await fetch(
+            `${process.env.WALLET_API_URL ?? 'http://localhost:3003'}/health/liveness`,
+            {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+              signal: AbortSignal.timeout(3000),
+            },
+          )
+
+          return response.ok
         },
         details: {
           type: 'Dependent Service',

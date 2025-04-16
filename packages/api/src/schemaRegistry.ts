@@ -1,5 +1,5 @@
 import { TSchema } from '@sinclair/typebox'
-import { OpenAPIV3 } from 'openapi-types'
+import type { OpenAPIV3 } from 'openapi-types'
 
 /**
  * Registry for managing TypeBox schemas and generating OpenAPI specifications

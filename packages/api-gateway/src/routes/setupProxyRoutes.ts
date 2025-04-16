@@ -1,92 +1,99 @@
 import { logger } from '@book-library-tool/shared'
-import { Express } from 'express'
-import {
-  createProxyMiddleware,
-  Options as ProxyOptions,
-} from 'http-proxy-middleware'
+import express from 'express'
+import { createProxyMiddleware } from 'http-proxy-middleware'
 
-// Type definition for service route configuration
+/**
+ * Simple service route configuration
+ */
 interface ServiceRoute {
   path: string
-  target: string
-  pathRewrite?: Record<string, string>
-  additionalOptions?: Partial<ProxyOptions>
+  targetUrl: string
+  targetPath: string
+  description: string
 }
 
 /**
  * Set up proxy routes to backend services
  */
-export function setupProxyRoutes(app: Express, isLocalDev: boolean): void {
-  // Define service routes
+export function setupProxyRoutes(
+  app: express.Express,
+  isLocalDev: boolean,
+): void {
+  // Define all service routes in one place for easier management
   const serviceRoutes: ServiceRoute[] = [
     {
       path: '/graphql',
-      target: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4000',
+      targetUrl: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4000',
+      targetPath: '',
+      description: 'GraphQL API',
     },
     {
       path: '/api/books',
-      target: process.env.BOOKS_API_URL ?? 'http://localhost:3001',
-      pathRewrite: {
-        '^/api/books': '/books',
-      },
+      targetUrl: process.env.BOOKS_API_URL ?? 'http://localhost:3001',
+      targetPath: '/books',
+      description: 'Books Service',
     },
     {
       path: '/api/catalog',
-      target: process.env.CATALOG_API_URL ?? 'http://localhost:3001',
-      pathRewrite: {
-        '^/api/catalog': '/catalog',
-      },
+      targetUrl: process.env.CATALOG_API_URL ?? 'http://localhost:3001',
+      targetPath: '/catalog',
+      description: 'Catalog Service',
     },
     {
       path: '/api/reservations',
-      target: process.env.RESERVATIONS_API_URL ?? 'http://localhost:3002',
-      pathRewrite: {
-        '^/api/reservations': '/reservations',
-      },
+      targetUrl: process.env.RESERVATIONS_API_URL ?? 'http://localhost:3002',
+      targetPath: '/reservations',
+      description: 'Reservations Service',
     },
   ]
 
-  // Create proxy for each service
-  for (const route of serviceRoutes) {
-    try {
-      // Fix: Use proper type definitions for proxy options
-      const options: ProxyOptions = {
-        target: route.target,
+  try {
+    // Set up proxy for each service route
+    for (const route of serviceRoutes) {
+      const fullTargetUrl = `${route.targetUrl}${route.targetPath}`
+
+      // Create the proxy middleware
+      const proxy = createProxyMiddleware({
+        target: fullTargetUrl,
         changeOrigin: true,
-        pathRewrite: route.pathRewrite,
-        ...route.additionalOptions,
-        // Remove the onError handler and use a middleware for error handling instead
-      }
+        pathRewrite: { [`^${route.path}`]: '' },
+        // Basic error handling
+        on: {
+          error: (err, req, res) => {
+            logger.error(`Proxy error for ${route.description}:`, err.message)
 
-      const proxyMiddleware = createProxyMiddleware(options)
-
-      // Add error handling middleware after proxy
-      app.use(route.path, (req, res, next) => {
-        // Forward all headers from the original request
-        req.headers = {
-          ...req.headers,
-        }
-
-        proxyMiddleware(req, res, (err) => {
-          if (err) {
-            logger.error(`Proxy error for ${route.path}:`, err)
-            if (!res.headersSent) {
-              res.status(500).json({
+            if (
+              res &&
+              'headersSent' in res &&
+              !res.headersSent &&
+              'status' in res &&
+              typeof res.status === 'function'
+            ) {
+              res.status(503).json({
                 error: 'Service Unavailable',
+                message: isLocalDev
+                  ? `Cannot connect to ${route.description}: ${err.message}`
+                  : 'Service temporarily unavailable',
               })
             }
-            return
-          }
-          next()
-        })
+          },
+        },
       })
 
+      // Mount the proxy
+      app.use(route.path, proxy)
+
+      // Log proxy setup in development mode
       if (isLocalDev) {
-        logger.info(`Proxy route: ${route.path} → ${route.target}`)
-        logger.info('Path rewrite:', route.pathRewrite)
+        logger.info(
+          `Proxy route: ${route.path} → ${fullTargetUrl} (${route.description})`,
+        )
+        if (route.path !== route.targetPath) {
+          logger.info(`Path rewrite:\n    ${route.path}: ""`)
+        }
       }
-    } catch (error) {
-      logger.error(`Failed to setup proxy for ${route.path}:`, error)
     }
+  } catch (error) {
+    logger.error('Failed to setup proxy routes:', error)
   }
 }
