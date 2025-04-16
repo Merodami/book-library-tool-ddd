@@ -10,7 +10,7 @@ services:
       MONGO_INITDB_DATABASE: library
     volumes:
       - ./mongodata/dev:/data/db
-      - ./packages/database/src/mongo/initDatabase.js:/docker-entrypoint-initdb.d/initDatabase.js
+      - ./packages/database/src/infrastructure/persistence/mongo/initDatabase.js:/docker-entrypoint-initdb.d/initDatabase.js
 
   rabbitmq:
     container_name: rabbitmq

@@ -5,7 +5,7 @@
  * It provides methods for basic cache operations like get, set, delete,
  * and more advanced operations like pattern-based deletion and TTL management.
  */
-export interface CacheService {
+export interface ICacheService {
   /**
    * Establishes a connection to the cache service
    */

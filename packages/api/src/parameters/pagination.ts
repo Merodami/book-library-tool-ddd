@@ -30,8 +30,3 @@ export const paramPaginationLimit: OpenAPIV3.ParameterObject = {
     default: parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10', 10),
   },
 }
-
-export const PaginationParameters = {
-  page: paramPaginationPage,
-  limit: paramPaginationLimit,
-}

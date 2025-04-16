@@ -88,9 +88,6 @@ export function setupProxyRoutes(
         logger.info(
           `Proxy route: ${route.path} → ${fullTargetUrl} (${route.description})`,
         )
-        if (route.path !== route.targetPath) {
-          logger.info(`Path rewrite:\n    ${route.path}: ""`)
-        }
       }
     }
   } catch (error) {

@@ -1,6 +1,6 @@
 {
   "name": "book-library-tool",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "author": "merodami",
   "type": "module",
@@ -29,6 +29,7 @@
     "user:create": "nx run @book-library-tool/auth:generate-user",
     "generate:api": "nx run @book-library-tool/api:build",
     "generate:sdk": "nx run @book-library-tool/sdk:sdk-gen",
+    "generate:graphql": "nx run @book-library-tool/graphql-gateway:graphql-gen",
     "git-hooks-prepare": "husky install",
     "open:docs": "nx run @book-library-tool/api:open-docs",
     "rabbit:ui": "open http://localhost:15672",

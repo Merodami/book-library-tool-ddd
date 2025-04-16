@@ -36,6 +36,7 @@ export function createCatalogRouter(
     validateQuery(schemas.CatalogSearchQuerySchema),
     async (req: Request, res: Response) => {
       const result = await catalogController.getAllBooks(req)
+
       res.json(result)
     },
   )

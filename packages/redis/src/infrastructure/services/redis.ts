@@ -1,8 +1,9 @@
 import { logger } from '@book-library-tool/shared'
 import { Redis } from 'ioredis'
 
-import { CacheService, HealthStatus } from '../../domain/types/cache.types.js'
-import { RedisConfigService } from '../config/redis.config.js'
+import { ICacheService } from '../../domain/repositories/ICacheService.js'
+import { HealthStatus } from '../../domain/types/cache.js'
+import { RedisConfigService } from '../config/redis.js'
 
 interface RedisMetrics {
   operations: {
@@ -24,7 +25,7 @@ interface RedisMetrics {
  * It supports all standard cache operations and includes additional Redis-specific
  * features like pattern-based deletion and TTL management.
  */
-export class RedisService implements CacheService {
+export class RedisService implements ICacheService {
   private client: Redis
   private defaultTTL: number
   private config: RedisConfigService
@@ -81,12 +82,15 @@ export class RedisService implements CacheService {
 
   private updateLatency(latency: number): void {
     this.latencyHistory.push(latency)
+
     if (this.latencyHistory.length > 100) {
       this.latencyHistory.shift()
     }
+
     this.metrics.latency.avg =
       this.latencyHistory.reduce((a, b) => a + b, 0) /
       this.latencyHistory.length
+
     this.metrics.latency.p95 = this.calculatePercentile(95)
   }
 
@@ -134,7 +138,9 @@ export class RedisService implements CacheService {
   public async connect(): Promise<void> {
     try {
       logger.info('Attempting to connect to Redis...')
+
       await this.client.ping()
+
       logger.info('Redis connection initialized successfully')
       logger.info(
         `Redis configuration: host=${this.client.options.host}, port=${this.client.options.port}`,
@@ -151,6 +157,7 @@ export class RedisService implements CacheService {
   public async disconnect(): Promise<void> {
     try {
       await this.client.quit()
+
       logger.info('Redis connection closed')
     } catch (error) {
       logger.error('Error disconnecting from Redis:', error)
@@ -167,8 +174,11 @@ export class RedisService implements CacheService {
     const startTime = Date.now()
     try {
       logger.debug(`Attempting to get value for key: ${key}`)
+
       const value = await this.client.get(key)
+
       this.metrics.operations.get++
+
       this.updateLatency(Date.now() - startTime)
 
       if (!value) {
@@ -178,16 +188,21 @@ export class RedisService implements CacheService {
 
       try {
         const parsed = JSON.parse(value)
+
         logger.debug(`Successfully retrieved and parsed value for key: ${key}`)
+
         return parsed as T
       } catch (parseError) {
         logger.error(`Error parsing cached value for key "${key}":`, parseError)
         logger.error(`Raw value that failed to parse: ${value}`)
+
         return null
       }
     } catch (error) {
       this.metrics.errors++
+
       logger.error(`Error retrieving cached value for key "${key}":`, error)
+
       return null
     }
   }
@@ -207,15 +222,21 @@ export class RedisService implements CacheService {
     const startTime = Date.now()
     try {
       logger.debug(`Attempting to set value for key: ${key} with TTL: ${ttl}s`)
+
       const serializedValue = JSON.stringify(value)
       const result = await this.client.setex(key, ttl, serializedValue)
+
       this.metrics.operations.set++
       this.updateLatency(Date.now() - startTime)
+
       logger.debug(`Successfully set value for key: ${key}`)
+
       return result === 'OK'
     } catch (error) {
       this.metrics.errors++
+
       logger.error(`Error setting cached value for key "${key}":`, error)
+
       return false
     }
   }
@@ -227,6 +248,7 @@ export class RedisService implements CacheService {
    */
   public async exists(key: string): Promise<boolean> {
     const result = await this.client.exists(key)
+
     return result === 1
   }
 
@@ -248,6 +270,7 @@ export class RedisService implements CacheService {
   public async updateTTL(key: string, ttl: number): Promise<boolean> {
     try {
       const result = await this.client.expire(key, ttl)
+
       return result === 1
     } catch (error) {
       logger.error(`Error updating TTL for key "${key}":`, error)
@@ -264,8 +287,10 @@ export class RedisService implements CacheService {
     const startTime = Date.now()
     try {
       const result = await this.client.del(key)
+
       this.metrics.operations.delete++
       this.updateLatency(Date.now() - startTime)
+
       return result === 1
     } catch (error) {
       this.metrics.errors++
@@ -314,13 +339,20 @@ export class RedisService implements CacheService {
   public async clearAll(): Promise<void> {
     try {
       await this.client.flushall()
+
       logger.info('Redis cache cleared')
     } catch (error) {
       logger.error('Error clearing Redis cache:', error)
+
       throw error
     }
   }
 
+  /**
+   * Lists all keys matching a pattern
+   * @param pattern - The pattern to match keys against (default: '*')
+   * @returns An array of keys matching the pattern
+   */
   public async listKeys(pattern: string = '*'): Promise<string[]> {
     return this.client.keys(pattern)
   }

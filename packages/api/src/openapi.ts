@@ -3,6 +3,10 @@ import './schemaRegistration.js'
 import { merge } from 'lodash-es'
 import { OpenAPIV3 } from 'openapi-types'
 
+import {
+  paramPaginationLimit,
+  paramPaginationPage,
+} from './parameters/pagination.js'
 // Import API specs
 import { BooksAPISpec } from './routes/books.js'
 import { ReservationsAPISpec } from './routes/reservations.js'
@@ -103,6 +107,8 @@ export const OpenAPISpec: OpenAPIV3.Document = merge(
         ...(SystemAPISpec.components?.schemas || {}),
       },
       parameters: {
+        paramPaginationLimit,
+        paramPaginationPage,
         ...(BooksAPISpec.components?.parameters || {}),
         ...(ReservationsAPISpec.components?.parameters || {}),
         ...(WalletsAPISpec.components?.parameters || {}),
