@@ -1,0 +1,2782 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+  @link(
+    url: "https://the-guild.dev/graphql/mesh/spec/v1.0"
+    import: [
+      "@regexp"
+      "@typescript"
+      "@resolveRoot"
+      "@statusCodeTypeName"
+      "@enum"
+      "@example"
+      "@httpOperation"
+      "@transport"
+      "@extraSchemaDefinitionDirective"
+    ]
+  ) {
+  query: Query
+  mutation: Mutation
+}
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__field(
+  graph: join__Graph
+  requires: join__FieldSet
+  provides: join__FieldSet
+  type: String
+  external: Boolean
+  override: String
+  usedOverridden: Boolean
+) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__implements(
+  graph: join__Graph!
+  interface: String!
+) repeatable on OBJECT | INTERFACE
+
+directive @join__type(
+  graph: join__Graph!
+  key: join__FieldSet
+  extension: Boolean! = false
+  resolvable: Boolean! = true
+  isInterfaceObject: Boolean! = false
+) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(
+  graph: join__Graph!
+  member: String!
+) repeatable on UNION
+
+scalar join__FieldSet
+
+directive @link(
+  url: String
+  as: String
+  for: link__Purpose
+  import: [link__Import]
+) repeatable on SCHEMA
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  `SECURITY` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+
+  """
+  `EXECUTION` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+enum join__Graph {
+  LIBRARY_API @join__graph(name: "LibraryAPI", url: "http://localhost:8000")
+}
+
+directive @regexp(subgraph: String, pattern: String) repeatable on SCALAR
+
+directive @typescript(
+  subgraph: String
+  type: String
+) repeatable on SCALAR | ENUM
+
+directive @resolveRoot(subgraph: String) repeatable on FIELD_DEFINITION
+
+directive @statusCodeTypeName(
+  subgraph: String
+  typeName: String
+  statusCode: String
+) repeatable on UNION
+
+directive @enum(subgraph: String, value: String) repeatable on ENUM_VALUE
+
+directive @example(
+  subgraph: String
+  value: ObjMap
+) repeatable on FIELD_DEFINITION | OBJECT | INPUT_OBJECT | ENUM | SCALAR
+
+directive @httpOperation(
+  subgraph: String
+  path: String
+  operationSpecificHeaders: [[String]]
+  httpMethod: HTTPMethod
+  isBinary: Boolean
+  requestBaseBody: ObjMap
+  queryParamArgMap: ObjMap
+  queryStringOptionsByParam: ObjMap
+  jsonApiFields: Boolean
+  queryStringOptions: ObjMap
+) repeatable on FIELD_DEFINITION
+
+directive @transport(
+  subgraph: String
+  kind: String
+  location: String
+  headers: [[String]]
+  queryStringOptions: ObjMap
+  queryParams: [[String]]
+) repeatable on SCHEMA
+
+directive @extraSchemaDefinitionDirective(
+  directives: _DirectiveExtensions
+) repeatable on OBJECT
+
+scalar query_searchCatalog_oneOf_0_data_items_isbn
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar query_searchCatalog_oneOf_0_data_items_title
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar query_searchCatalog_oneOf_0_data_items_author
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+"""
+Floats that will have a value of 0 or more.
+"""
+scalar NonNegativeFloat @join__type(graph: LIBRARY_API)
+
+scalar query_searchCatalog_oneOf_0_data_items_publisher
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime @join__type(graph: LIBRARY_API)
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+  @join__type(graph: LIBRARY_API)
+  @specifiedBy(
+    url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf"
+  )
+
+"""
+A string that cannot be passed as an empty value
+"""
+scalar NonEmptyString @join__type(graph: LIBRARY_API)
+
+"""
+Integers that will have a value greater than 0.
+"""
+scalar PositiveInt @join__type(graph: LIBRARY_API)
+
+scalar query_getBookById_oneOf_0_isbn
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar query_getBookById_oneOf_0_title
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar query_getBookById_oneOf_0_author
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar query_getBookById_oneOf_0_publisher
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar query_getUserReservations_oneOf_0_data_items_reservationId
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar query_getUserReservations_oneOf_0_data_items_userId
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar query_getUserReservations_oneOf_0_data_items_isbn
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+"""
+A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
+"""
+scalar UUID @join__type(graph: LIBRARY_API)
+
+scalar mutation_addBook_oneOf_0_isbn
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutation_addBook_oneOf_0_title
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutation_addBook_oneOf_0_author
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutation_addBook_oneOf_0_publisher
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_addBook_input_isbn
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_addBook_input_title
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_addBook_input_author
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_addBook_input_publisher
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutation_updateBook_oneOf_0_isbn
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutation_updateBook_oneOf_0_title
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutation_updateBook_oneOf_0_author
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutation_updateBook_oneOf_0_publisher
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_updateBook_input_isbn
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_updateBook_input_title
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_updateBook_input_author
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_updateBook_input_publisher
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+"""
+Represents empty values
+"""
+scalar Void @join__type(graph: LIBRARY_API)
+
+scalar mutation_createReservation_oneOf_0_reservationId
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutation_createReservation_oneOf_0_userId
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutation_createReservation_oneOf_0_isbn
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_createReservation_input_userId
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar mutationInput_createReservation_input_isbn
+  @regexp(subgraph: "LibraryAPI", pattern: "^(?!\\s*$).+")
+  @typescript(subgraph: "LibraryAPI", type: "string")
+  @join__type(graph: LIBRARY_API)
+
+scalar ObjMap @join__type(graph: LIBRARY_API)
+
+scalar _DirectiveExtensions @join__type(graph: LIBRARY_API)
+
+type Query
+  @extraSchemaDefinitionDirective(
+    directives: {
+      transport: [
+        {
+          subgraph: "LibraryAPI"
+          kind: "rest"
+          location: "http://localhost:8000"
+        }
+      ]
+    }
+  )
+  @join__type(graph: LIBRARY_API) {
+  """
+  Allows searching for books with various filters, sorting, and field selection. Supports exact matches, partial matches, and range queries.
+  """
+  searchCatalog(
+    """
+    Filter by title (case-insensitive, supports partial matches)
+    """
+    title: NonEmptyString
+    """
+    Filter by author (case-insensitive, supports partial matches)
+    """
+    author: NonEmptyString
+    """
+    Filter by exact publication year
+    """
+    publicationYear: Int
+    """
+    Filter by ISBN (exact match)
+    """
+    isbn: NonEmptyString
+    """
+    Filter by publisher (case-insensitive, supports partial matches)
+    """
+    publisher: NonEmptyString
+    """
+    Filter by exact price
+    """
+    price: Float
+    """
+    Minimum publication year in range filter
+    """
+    publicationYearMin: Int
+    """
+    Maximum publication year in range filter
+    """
+    publicationYearMax: Int
+    """
+    Minimum price in range filter
+    """
+    priceMin: Float
+    """
+    Maximum price in range filter
+    """
+    priceMax: Float
+    """
+    Field to sort results by (title, author, publicationYear, price)
+    """
+    sortBy: String
+    sortOrder: queryInput_searchCatalog_sortOrder
+    """
+    Fields to include in the response (title, author, isbn, publicationYear, publisher, price)
+    """
+    fields: [String]
+    """
+    Page number (starting from 1)
+    """
+    page: PositiveInt = 1
+    """
+    Number of items per page (max 100)
+    """
+    limit: PositiveInt = 10
+  ): searchCatalog_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/catalog"
+      operationSpecificHeaders: [["accept", "application/json"]]
+      httpMethod: GET
+      queryParamArgMap: "{\"title\":\"title\",\"author\":\"author\",\"publicationYear\":\"publicationYear\",\"isbn\":\"isbn\",\"publisher\":\"publisher\",\"price\":\"price\",\"publicationYearMin\":\"publicationYearMin\",\"publicationYearMax\":\"publicationYearMax\",\"priceMin\":\"priceMin\",\"priceMax\":\"priceMax\",\"sortBy\":\"sortBy\",\"sortOrder\":\"sortOrder\",\"fields\":\"fields\",\"page\":\"page\",\"limit\":\"limit\"}"
+    )
+  """
+  Get book by reference id
+  """
+  getBookById(
+    """
+    The book ISBN
+    """
+    isbn: String!
+  ): getBookById_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/books/{args.isbn}"
+      operationSpecificHeaders: [["accept", "application/json"]]
+      httpMethod: GET
+    )
+  """
+  Get reservation history for a user
+  """
+  getUserReservations(
+    """
+    User identifier (UUID)
+    """
+    userId: UUID!
+    """
+    Page number (starting from 1)
+    """
+    page: PositiveInt = 1
+    """
+    Number of items per page (max 100)
+    """
+    limit: PositiveInt = 10
+  ): getUserReservations_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/reservations/user/{args.userId}"
+      operationSpecificHeaders: [["accept", "application/json"]]
+      httpMethod: GET
+      queryParamArgMap: "{\"page\":\"page\",\"limit\":\"limit\"}"
+    )
+  """
+  Retrieve a user wallet
+  """
+  getWallet(
+    """
+    User identifier (UUID)
+    """
+    userId: UUID!
+  ): getWallet_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/wallets/{args.userId}"
+      operationSpecificHeaders: [["accept", "application/json"]]
+      httpMethod: GET
+    )
+  """
+  Returns health status of the API and its components
+  """
+  healthCheck: healthCheck_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/health"
+      operationSpecificHeaders: [["accept", "application/json"]]
+      httpMethod: GET
+    )
+  """
+  Returns the OpenAPI documentation in JSON format
+  """
+  getDocs: getDocs_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/docs"
+      operationSpecificHeaders: [["accept", "application/json"]]
+      httpMethod: GET
+    )
+}
+
+type searchCatalog_200_response @join__type(graph: LIBRARY_API) {
+  data: [query_searchCatalog_oneOf_0_data_items]!
+  pagination: query_searchCatalog_oneOf_0_pagination!
+}
+
+type query_searchCatalog_oneOf_0_data_items @join__type(graph: LIBRARY_API) {
+  isbn: query_searchCatalog_oneOf_0_data_items_isbn!
+  title: query_searchCatalog_oneOf_0_data_items_title!
+  author: query_searchCatalog_oneOf_0_data_items_author!
+  publicationYear: NonNegativeFloat!
+  publisher: query_searchCatalog_oneOf_0_data_items_publisher!
+  price: NonNegativeFloat!
+  createdAt: DateTime
+  updatedAt: DateTime
+  deletedAt: DateTime
+}
+
+type query_searchCatalog_oneOf_0_pagination @join__type(graph: LIBRARY_API) {
+  total: Float!
+  page: Float!
+  limit: Float!
+  pages: Float!
+  hasNext: Boolean!
+  hasPrev: Boolean!
+}
+
+type searchCatalog_400_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_searchCatalog_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: query_searchCatalog_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_searchCatalog_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_searchCatalog_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type searchCatalog_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_searchCatalog_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: query_searchCatalog_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_searchCatalog_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_searchCatalog_oneOf_2_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type searchCatalog_429_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_searchCatalog_oneOf_3_error!
+  """
+  Human-readable error message
+  """
+  message: query_searchCatalog_oneOf_3_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_searchCatalog_oneOf_3_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_searchCatalog_oneOf_3_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type getBookById_200_response @join__type(graph: LIBRARY_API) {
+  isbn: query_getBookById_oneOf_0_isbn!
+  title: query_getBookById_oneOf_0_title!
+  author: query_getBookById_oneOf_0_author!
+  publicationYear: NonNegativeFloat!
+  publisher: query_getBookById_oneOf_0_publisher!
+  price: NonNegativeFloat!
+  createdAt: DateTime
+  updatedAt: DateTime
+  deletedAt: DateTime
+}
+
+type getBookById_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_getBookById_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: query_getBookById_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_getBookById_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_getBookById_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type getBookById_404_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_getBookById_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: query_getBookById_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_getBookById_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_getBookById_oneOf_2_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type getUserReservations_200_response @join__type(graph: LIBRARY_API) {
+  data: [query_getUserReservations_oneOf_0_data_items]!
+  pagination: query_getUserReservations_oneOf_0_pagination!
+}
+
+type query_getUserReservations_oneOf_0_data_items
+  @join__type(graph: LIBRARY_API) {
+  reservationId: query_getUserReservations_oneOf_0_data_items_reservationId!
+  userId: query_getUserReservations_oneOf_0_data_items_userId!
+  isbn: query_getUserReservations_oneOf_0_data_items_isbn!
+  reservedAt: DateTime!
+  dueDate: DateTime!
+  status: query_getUserReservations_oneOf_0_data_items_status!
+  feeCharged: NonNegativeFloat!
+  retailPrice: NonNegativeFloat
+  createdAt: DateTime
+  updatedAt: DateTime
+  deletedAt: DateTime
+}
+
+type query_getUserReservations_oneOf_0_pagination
+  @join__type(graph: LIBRARY_API) {
+  total: Float!
+  page: Float!
+  limit: Float!
+  pages: Float!
+  hasNext: Boolean!
+  hasPrev: Boolean!
+}
+
+type getUserReservations_400_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_getUserReservations_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: query_getUserReservations_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_getUserReservations_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_getUserReservations_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type getUserReservations_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_getUserReservations_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: query_getUserReservations_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_getUserReservations_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_getUserReservations_oneOf_2_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type getUserReservations_404_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_getUserReservations_oneOf_3_error!
+  """
+  Human-readable error message
+  """
+  message: query_getUserReservations_oneOf_3_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_getUserReservations_oneOf_3_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_getUserReservations_oneOf_3_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type getWallet_200_response @join__type(graph: LIBRARY_API) {
+  id: UUID!
+  userId: UUID!
+  balance: Float!
+  createdAt: DateTime
+  updatedAt: DateTime
+  deletedAt: DateTime
+}
+
+type getWallet_400_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_getWallet_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: query_getWallet_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_getWallet_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_getWallet_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type getWallet_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_getWallet_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: query_getWallet_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_getWallet_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_getWallet_oneOf_2_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type getWallet_404_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_getWallet_oneOf_3_error!
+  """
+  Human-readable error message
+  """
+  message: query_getWallet_oneOf_3_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_getWallet_oneOf_3_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_getWallet_oneOf_3_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Health check response
+"""
+type healthCheck_200_response @join__type(graph: LIBRARY_API) {
+  """
+  Health status of a service or component
+  """
+  status: query_healthCheck_oneOf_0_status!
+  """
+  The current server time
+  """
+  timestamp: DateTime!
+  """
+  API version
+  """
+  version: String!
+  """
+  Server uptime in seconds
+  """
+  uptime: Float!
+  memoryUsage: query_healthCheck_oneOf_0_memoryUsage!
+  services: query_healthCheck_oneOf_0_services!
+  databases: query_healthCheck_oneOf_0_databases!
+  messageQueue: query_healthCheck_oneOf_0_messageQueue!
+}
+
+"""
+Health status of a service or component
+"""
+type query_healthCheck_oneOf_0_status @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Memory usage information
+"""
+type query_healthCheck_oneOf_0_memoryUsage @join__type(graph: LIBRARY_API) {
+  """
+  Resident Set Size - memory allocated in bytes
+  """
+  rss: Float!
+  """
+  Total size of allocated heap in bytes
+  """
+  heapTotal: Float!
+  """
+  Actual memory used in bytes
+  """
+  heapUsed: Float!
+  """
+  Memory used by C++ objects bound to JavaScript
+  """
+  external: Float!
+  """
+  Memory threshold in percentage (15%)
+  """
+  memoryThreshold: Float!
+}
+
+"""
+Health information for all services
+"""
+type query_healthCheck_oneOf_0_services @join__type(graph: LIBRARY_API) {
+  books: query_healthCheck_oneOf_0_services_books!
+  reservations: query_healthCheck_oneOf_0_services_reservations!
+  wallets: query_healthCheck_oneOf_0_services_wallets!
+}
+
+"""
+Health information for a service
+"""
+type query_healthCheck_oneOf_0_services_books @join__type(graph: LIBRARY_API) {
+  """
+  Health status of a service or component
+  """
+  status: query_healthCheck_oneOf_0_services_books_status!
+  """
+  Service URL
+  """
+  url: String!
+  """
+  Response time in milliseconds
+  """
+  responseTime: Float!
+}
+
+"""
+Health status of a service or component
+"""
+type query_healthCheck_oneOf_0_services_books_status
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Health information for a service
+"""
+type query_healthCheck_oneOf_0_services_reservations
+  @join__type(graph: LIBRARY_API) {
+  """
+  Health status of a service or component
+  """
+  status: query_healthCheck_oneOf_0_services_reservations_status!
+  """
+  Service URL
+  """
+  url: String!
+  """
+  Response time in milliseconds
+  """
+  responseTime: Float!
+}
+
+"""
+Health status of a service or component
+"""
+type query_healthCheck_oneOf_0_services_reservations_status
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Health information for a service
+"""
+type query_healthCheck_oneOf_0_services_wallets
+  @join__type(graph: LIBRARY_API) {
+  """
+  Health status of a service or component
+  """
+  status: query_healthCheck_oneOf_0_services_wallets_status!
+  """
+  Service URL
+  """
+  url: String!
+  """
+  Response time in milliseconds
+  """
+  responseTime: Float!
+}
+
+"""
+Health status of a service or component
+"""
+type query_healthCheck_oneOf_0_services_wallets_status
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Health information for all databases
+"""
+type query_healthCheck_oneOf_0_databases @join__type(graph: LIBRARY_API) {
+  mongodb: query_healthCheck_oneOf_0_databases_mongodb!
+  redis: query_healthCheck_oneOf_0_databases_redis!
+}
+
+"""
+MongoDB health information
+"""
+type query_healthCheck_oneOf_0_databases_mongodb
+  @join__type(graph: LIBRARY_API) {
+  """
+  Health status of a service or component
+  """
+  status: query_healthCheck_oneOf_0_databases_mongodb_status!
+  """
+  Database connection URL (masked)
+  """
+  url: String!
+  """
+  Response time in milliseconds
+  """
+  responseTime: Float!
+  """
+  Available collections
+  """
+  collections: [String]!
+}
+
+"""
+Health status of a service or component
+"""
+type query_healthCheck_oneOf_0_databases_mongodb_status
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Redis health information
+"""
+type query_healthCheck_oneOf_0_databases_redis @join__type(graph: LIBRARY_API) {
+  """
+  Health status of a service or component
+  """
+  status: query_healthCheck_oneOf_0_databases_redis_status!
+  """
+  Redis host (localhost)
+  """
+  host: String!
+  """
+  Redis port (6379)
+  """
+  port: Float!
+  """
+  Default TTL (3600s)
+  """
+  ttl: Float!
+  """
+  Response time in milliseconds
+  """
+  responseTime: Float!
+}
+
+"""
+Health status of a service or component
+"""
+type query_healthCheck_oneOf_0_databases_redis_status
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Health information for message queues
+"""
+type query_healthCheck_oneOf_0_messageQueue @join__type(graph: LIBRARY_API) {
+  rabbitmq: query_healthCheck_oneOf_0_messageQueue_rabbitmq!
+}
+
+"""
+RabbitMQ health information
+"""
+type query_healthCheck_oneOf_0_messageQueue_rabbitmq
+  @join__type(graph: LIBRARY_API) {
+  """
+  Health status of a service or component
+  """
+  status: query_healthCheck_oneOf_0_messageQueue_rabbitmq_status!
+  """
+  RabbitMQ host (localhost)
+  """
+  host: String!
+  """
+  RabbitMQ port (5672)
+  """
+  port: Float!
+  """
+  Queues in RabbitMQ
+  """
+  queues: [query_healthCheck_oneOf_0_messageQueue_rabbitmq_queues_items]!
+}
+
+"""
+Health status of a service or component
+"""
+type query_healthCheck_oneOf_0_messageQueue_rabbitmq_status
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Message queue information
+"""
+type query_healthCheck_oneOf_0_messageQueue_rabbitmq_queues_items
+  @join__type(graph: LIBRARY_API) {
+  """
+  Queue name
+  """
+  name: String!
+  """
+  Number of messages in queue
+  """
+  messageCount: Float!
+}
+
+type healthCheck_500_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_healthCheck_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: query_healthCheck_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_healthCheck_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_healthCheck_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+OpenAPI documentation
+"""
+type getDocs_200_response @join__type(graph: LIBRARY_API) {
+  openapi: String!
+  info: JSON!
+  paths: JSON!
+  components: JSON!
+  additionalProperties: JSON @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type getDocs_500_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: query_getDocs_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: query_getDocs_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type query_getDocs_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type query_getDocs_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type Mutation @join__type(graph: LIBRARY_API) {
+  """
+  Add a new book reference
+  """
+  addBook(input: addBook_request_Input): addBook_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/books"
+      operationSpecificHeaders: [
+        ["Content-Type", "application/json"]
+        ["accept", "application/json"]
+      ]
+      httpMethod: POST
+    )
+  """
+  Update a book reference
+  """
+  updateBook(
+    """
+    The book ISBN
+    """
+    isbn: String!
+    input: updateBook_request_Input
+  ): updateBook_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/books/{args.isbn}"
+      operationSpecificHeaders: [
+        ["Content-Type", "application/json"]
+        ["accept", "application/json"]
+      ]
+      httpMethod: PATCH
+    )
+  """
+  Delete a book reference
+  """
+  deleteBook(
+    """
+    The book ISBN
+    """
+    isbn: String!
+  ): deleteBook_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/books/{args.isbn}"
+      operationSpecificHeaders: [["accept", "application/json"]]
+      httpMethod: DELETE
+    )
+  """
+  Create a new reservation
+  """
+  createReservation(
+    input: createReservation_request_Input
+  ): createReservation_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/reservations"
+      operationSpecificHeaders: [
+        ["Content-Type", "application/json"]
+        ["accept", "application/json"]
+      ]
+      httpMethod: POST
+    )
+  """
+  Mark a reservation as returned
+  """
+  returnBook(
+    """
+    Reservation identifier (UUID)
+    """
+    reservationId: UUID!
+  ): returnBook_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/reservations/{args.reservationId}/return"
+      operationSpecificHeaders: [["accept", "application/json"]]
+      httpMethod: PATCH
+    )
+  """
+  Modify balance of a user wallet
+  """
+  modifyWalletBalance(
+    """
+    User identifier (UUID)
+    """
+    userId: UUID!
+    input: modifyWalletBalance_request_Input
+  ): modifyWalletBalance_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/wallets/{args.userId}/balance"
+      operationSpecificHeaders: [
+        ["Content-Type", "application/json"]
+        ["accept", "application/json"]
+      ]
+      httpMethod: POST
+    )
+  """
+  Apply a late fee to a user wallet
+  """
+  applyLateFee(
+    """
+    User identifier (UUID)
+    """
+    userId: UUID!
+    input: applyLateFee_request_Input
+  ): applyLateFee_response
+    @httpOperation(
+      subgraph: "LibraryAPI"
+      path: "/api/wallets/{args.userId}/late-return"
+      operationSpecificHeaders: [
+        ["Content-Type", "application/json"]
+        ["accept", "application/json"]
+      ]
+      httpMethod: PATCH
+    )
+}
+
+type addBook_201_response @join__type(graph: LIBRARY_API) {
+  isbn: mutation_addBook_oneOf_0_isbn!
+  title: mutation_addBook_oneOf_0_title!
+  author: mutation_addBook_oneOf_0_author!
+  publicationYear: NonNegativeFloat!
+  publisher: mutation_addBook_oneOf_0_publisher!
+  price: NonNegativeFloat!
+  createdAt: DateTime
+  updatedAt: DateTime
+  deletedAt: DateTime
+}
+
+type addBook_400_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_addBook_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_addBook_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_addBook_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_addBook_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type addBook_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_addBook_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_addBook_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_addBook_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_addBook_oneOf_2_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type addBook_409_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_addBook_oneOf_3_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_addBook_oneOf_3_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_addBook_oneOf_3_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_addBook_oneOf_3_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type updateBook_200_response @join__type(graph: LIBRARY_API) {
+  isbn: mutation_updateBook_oneOf_0_isbn!
+  title: mutation_updateBook_oneOf_0_title!
+  author: mutation_updateBook_oneOf_0_author!
+  publicationYear: NonNegativeFloat!
+  publisher: mutation_updateBook_oneOf_0_publisher!
+  price: NonNegativeFloat!
+  createdAt: DateTime
+  updatedAt: DateTime
+  deletedAt: DateTime
+}
+
+type updateBook_400_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_updateBook_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_updateBook_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_updateBook_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_updateBook_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type updateBook_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_updateBook_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_updateBook_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_updateBook_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_updateBook_oneOf_2_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type updateBook_404_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_updateBook_oneOf_3_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_updateBook_oneOf_3_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_updateBook_oneOf_3_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_updateBook_oneOf_3_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type Void_container @join__type(graph: LIBRARY_API) {
+  Void: Void @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type deleteBook_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_deleteBook_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_deleteBook_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_deleteBook_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_deleteBook_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type deleteBook_404_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_deleteBook_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_deleteBook_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_deleteBook_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_deleteBook_oneOf_2_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type createReservation_201_response @join__type(graph: LIBRARY_API) {
+  reservationId: mutation_createReservation_oneOf_0_reservationId!
+  userId: mutation_createReservation_oneOf_0_userId!
+  isbn: mutation_createReservation_oneOf_0_isbn!
+  reservedAt: DateTime!
+  dueDate: DateTime!
+  status: mutation_createReservation_oneOf_0_status!
+  feeCharged: NonNegativeFloat!
+  retailPrice: NonNegativeFloat
+  createdAt: DateTime
+  updatedAt: DateTime
+  deletedAt: DateTime
+}
+
+type createReservation_400_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_createReservation_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_createReservation_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_createReservation_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_createReservation_oneOf_1_message
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type createReservation_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_createReservation_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_createReservation_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_createReservation_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_createReservation_oneOf_2_message
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type createReservation_404_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_createReservation_oneOf_3_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_createReservation_oneOf_3_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_createReservation_oneOf_3_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_createReservation_oneOf_3_message
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type returnBook_200_response @join__type(graph: LIBRARY_API) {
+  reservationId: UUID!
+  userId: UUID!
+  isbn: String!
+  reservedAt: DateTime!
+  dueDate: DateTime!
+  status: mutation_returnBook_oneOf_0_status!
+  feeCharged: Float
+}
+
+type returnBook_400_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_returnBook_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_returnBook_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_returnBook_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_returnBook_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type returnBook_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_returnBook_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_returnBook_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_returnBook_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_returnBook_oneOf_2_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type returnBook_404_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_returnBook_oneOf_3_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_returnBook_oneOf_3_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_returnBook_oneOf_3_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_returnBook_oneOf_3_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type modifyWalletBalance_200_response @join__type(graph: LIBRARY_API) {
+  id: UUID!
+  userId: UUID!
+  balance: Float!
+  createdAt: DateTime
+  updatedAt: DateTime
+  deletedAt: DateTime
+}
+
+type modifyWalletBalance_400_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_modifyWalletBalance_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_modifyWalletBalance_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_modifyWalletBalance_oneOf_1_error
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_modifyWalletBalance_oneOf_1_message
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type modifyWalletBalance_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_modifyWalletBalance_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_modifyWalletBalance_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_modifyWalletBalance_oneOf_2_error
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_modifyWalletBalance_oneOf_2_message
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type modifyWalletBalance_404_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_modifyWalletBalance_oneOf_3_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_modifyWalletBalance_oneOf_3_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_modifyWalletBalance_oneOf_3_error
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_modifyWalletBalance_oneOf_3_message
+  @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type applyLateFee_200_response @join__type(graph: LIBRARY_API) {
+  message: String
+  wallet: mutation_applyLateFee_oneOf_0_wallet
+}
+
+type mutation_applyLateFee_oneOf_0_wallet @join__type(graph: LIBRARY_API) {
+  id: UUID!
+  userId: UUID!
+  balance: Float!
+  createdAt: DateTime
+  updatedAt: DateTime
+  deletedAt: DateTime
+}
+
+type applyLateFee_400_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_applyLateFee_oneOf_1_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_applyLateFee_oneOf_1_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_applyLateFee_oneOf_1_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_applyLateFee_oneOf_1_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type applyLateFee_401_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_applyLateFee_oneOf_2_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_applyLateFee_oneOf_2_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_applyLateFee_oneOf_2_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_applyLateFee_oneOf_2_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+type applyLateFee_404_response @join__type(graph: LIBRARY_API) {
+  """
+  Error code that identifies the type of error
+  """
+  error: mutation_applyLateFee_oneOf_3_error!
+  """
+  Human-readable error message
+  """
+  message: mutation_applyLateFee_oneOf_3_message!
+  """
+  Additional error details if available
+  """
+  details: JSON
+  """
+  The request path that resulted in the error
+  """
+  path: String
+  """
+  The time at which the error occurred
+  """
+  timestamp: DateTime
+}
+
+"""
+Error code that identifies the type of error
+"""
+type mutation_applyLateFee_oneOf_3_error @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+"""
+Human-readable error message
+"""
+type mutation_applyLateFee_oneOf_3_message @join__type(graph: LIBRARY_API) {
+  String: String @resolveRoot(subgraph: "LibraryAPI")
+}
+
+union searchCatalog_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "searchCatalog_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "400"
+    typeName: "searchCatalog_400_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "searchCatalog_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "429"
+    typeName: "searchCatalog_429_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "searchCatalog_200_response")
+  @join__unionMember(graph: LIBRARY_API, member: "searchCatalog_400_response")
+  @join__unionMember(graph: LIBRARY_API, member: "searchCatalog_401_response")
+  @join__unionMember(graph: LIBRARY_API, member: "searchCatalog_429_response") =
+  | searchCatalog_200_response
+  | searchCatalog_400_response
+  | searchCatalog_401_response
+  | searchCatalog_429_response
+
+union getBookById_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "getBookById_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "getBookById_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "404"
+    typeName: "getBookById_404_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "getBookById_200_response")
+  @join__unionMember(graph: LIBRARY_API, member: "getBookById_401_response")
+  @join__unionMember(graph: LIBRARY_API, member: "getBookById_404_response") =
+  | getBookById_200_response
+  | getBookById_401_response
+  | getBookById_404_response
+
+union getUserReservations_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "getUserReservations_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "400"
+    typeName: "getUserReservations_400_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "getUserReservations_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "404"
+    typeName: "getUserReservations_404_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "getUserReservations_200_response"
+  )
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "getUserReservations_400_response"
+  )
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "getUserReservations_401_response"
+  )
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "getUserReservations_404_response"
+  ) =
+  | getUserReservations_200_response
+  | getUserReservations_400_response
+  | getUserReservations_401_response
+  | getUserReservations_404_response
+
+union getWallet_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "getWallet_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "400"
+    typeName: "getWallet_400_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "getWallet_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "404"
+    typeName: "getWallet_404_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "getWallet_200_response")
+  @join__unionMember(graph: LIBRARY_API, member: "getWallet_400_response")
+  @join__unionMember(graph: LIBRARY_API, member: "getWallet_401_response")
+  @join__unionMember(graph: LIBRARY_API, member: "getWallet_404_response") =
+  | getWallet_200_response
+  | getWallet_400_response
+  | getWallet_401_response
+  | getWallet_404_response
+
+union healthCheck_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "healthCheck_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "500"
+    typeName: "healthCheck_500_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "healthCheck_200_response")
+  @join__unionMember(graph: LIBRARY_API, member: "healthCheck_500_response") =
+  | healthCheck_200_response
+  | healthCheck_500_response
+
+union getDocs_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "getDocs_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "500"
+    typeName: "getDocs_500_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "getDocs_200_response")
+  @join__unionMember(graph: LIBRARY_API, member: "getDocs_500_response") =
+  | getDocs_200_response
+  | getDocs_500_response
+
+union addBook_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "201"
+    typeName: "addBook_201_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "400"
+    typeName: "addBook_400_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "addBook_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "409"
+    typeName: "addBook_409_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "addBook_201_response")
+  @join__unionMember(graph: LIBRARY_API, member: "addBook_400_response")
+  @join__unionMember(graph: LIBRARY_API, member: "addBook_401_response")
+  @join__unionMember(graph: LIBRARY_API, member: "addBook_409_response") =
+  | addBook_201_response
+  | addBook_400_response
+  | addBook_401_response
+  | addBook_409_response
+
+union updateBook_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "updateBook_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "400"
+    typeName: "updateBook_400_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "updateBook_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "404"
+    typeName: "updateBook_404_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "updateBook_200_response")
+  @join__unionMember(graph: LIBRARY_API, member: "updateBook_400_response")
+  @join__unionMember(graph: LIBRARY_API, member: "updateBook_401_response")
+  @join__unionMember(graph: LIBRARY_API, member: "updateBook_404_response") =
+  | updateBook_200_response
+  | updateBook_400_response
+  | updateBook_401_response
+  | updateBook_404_response
+
+union deleteBook_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "204"
+    typeName: "Void_container"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "deleteBook_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "404"
+    typeName: "deleteBook_404_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "Void_container")
+  @join__unionMember(graph: LIBRARY_API, member: "deleteBook_401_response")
+  @join__unionMember(graph: LIBRARY_API, member: "deleteBook_404_response") =
+  | Void_container
+  | deleteBook_401_response
+  | deleteBook_404_response
+
+union createReservation_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "201"
+    typeName: "createReservation_201_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "400"
+    typeName: "createReservation_400_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "createReservation_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "404"
+    typeName: "createReservation_404_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "createReservation_201_response"
+  )
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "createReservation_400_response"
+  )
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "createReservation_401_response"
+  )
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "createReservation_404_response"
+  ) =
+  | createReservation_201_response
+  | createReservation_400_response
+  | createReservation_401_response
+  | createReservation_404_response
+
+union returnBook_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "returnBook_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "400"
+    typeName: "returnBook_400_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "returnBook_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "404"
+    typeName: "returnBook_404_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "returnBook_200_response")
+  @join__unionMember(graph: LIBRARY_API, member: "returnBook_400_response")
+  @join__unionMember(graph: LIBRARY_API, member: "returnBook_401_response")
+  @join__unionMember(graph: LIBRARY_API, member: "returnBook_404_response") =
+  | returnBook_200_response
+  | returnBook_400_response
+  | returnBook_401_response
+  | returnBook_404_response
+
+union modifyWalletBalance_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "modifyWalletBalance_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "400"
+    typeName: "modifyWalletBalance_400_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "modifyWalletBalance_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "404"
+    typeName: "modifyWalletBalance_404_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "modifyWalletBalance_200_response"
+  )
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "modifyWalletBalance_400_response"
+  )
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "modifyWalletBalance_401_response"
+  )
+  @join__unionMember(
+    graph: LIBRARY_API
+    member: "modifyWalletBalance_404_response"
+  ) =
+  | modifyWalletBalance_200_response
+  | modifyWalletBalance_400_response
+  | modifyWalletBalance_401_response
+  | modifyWalletBalance_404_response
+
+union applyLateFee_response
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "200"
+    typeName: "applyLateFee_200_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "400"
+    typeName: "applyLateFee_400_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "401"
+    typeName: "applyLateFee_401_response"
+  )
+  @statusCodeTypeName(
+    subgraph: "LibraryAPI"
+    statusCode: "404"
+    typeName: "applyLateFee_404_response"
+  )
+  @join__type(graph: LIBRARY_API)
+  @join__unionMember(graph: LIBRARY_API, member: "applyLateFee_200_response")
+  @join__unionMember(graph: LIBRARY_API, member: "applyLateFee_400_response")
+  @join__unionMember(graph: LIBRARY_API, member: "applyLateFee_401_response")
+  @join__unionMember(graph: LIBRARY_API, member: "applyLateFee_404_response") =
+  | applyLateFee_200_response
+  | applyLateFee_400_response
+  | applyLateFee_401_response
+  | applyLateFee_404_response
+
+"""
+Sort order direction (ASC for ascending, DESC for descending)
+"""
+enum queryInput_searchCatalog_sortOrder @join__type(graph: LIBRARY_API) {
+  ASC @join__enumValue(graph: LIBRARY_API)
+  DESC @join__enumValue(graph: LIBRARY_API)
+}
+
+enum query_getUserReservations_oneOf_0_data_items_status
+  @join__type(graph: LIBRARY_API) {
+  created @join__enumValue(graph: LIBRARY_API)
+  borrowed @join__enumValue(graph: LIBRARY_API)
+  returned @join__enumValue(graph: LIBRARY_API)
+  late @join__enumValue(graph: LIBRARY_API)
+  brought @join__enumValue(graph: LIBRARY_API)
+  cancelled @join__enumValue(graph: LIBRARY_API)
+  pending_payment @join__enumValue(graph: LIBRARY_API)
+  reserved @join__enumValue(graph: LIBRARY_API)
+  rejected @join__enumValue(graph: LIBRARY_API)
+  reservation_book_limit_reach @join__enumValue(graph: LIBRARY_API)
+}
+
+enum mutation_createReservation_oneOf_0_status @join__type(graph: LIBRARY_API) {
+  created @join__enumValue(graph: LIBRARY_API)
+  borrowed @join__enumValue(graph: LIBRARY_API)
+  returned @join__enumValue(graph: LIBRARY_API)
+  late @join__enumValue(graph: LIBRARY_API)
+  brought @join__enumValue(graph: LIBRARY_API)
+  cancelled @join__enumValue(graph: LIBRARY_API)
+  pending_payment @join__enumValue(graph: LIBRARY_API)
+  reserved @join__enumValue(graph: LIBRARY_API)
+  rejected @join__enumValue(graph: LIBRARY_API)
+  reservation_book_limit_reach @join__enumValue(graph: LIBRARY_API)
+}
+
+enum mutation_returnBook_oneOf_0_status @join__type(graph: LIBRARY_API) {
+  reserved @join__enumValue(graph: LIBRARY_API)
+  borrowed @join__enumValue(graph: LIBRARY_API)
+  returned @join__enumValue(graph: LIBRARY_API)
+  late @join__enumValue(graph: LIBRARY_API)
+  brought @join__enumValue(graph: LIBRARY_API)
+}
+
+enum HTTPMethod @join__type(graph: LIBRARY_API) {
+  GET @join__enumValue(graph: LIBRARY_API)
+  HEAD @join__enumValue(graph: LIBRARY_API)
+  POST @join__enumValue(graph: LIBRARY_API)
+  PUT @join__enumValue(graph: LIBRARY_API)
+  DELETE @join__enumValue(graph: LIBRARY_API)
+  CONNECT @join__enumValue(graph: LIBRARY_API)
+  OPTIONS @join__enumValue(graph: LIBRARY_API)
+  TRACE @join__enumValue(graph: LIBRARY_API)
+  PATCH @join__enumValue(graph: LIBRARY_API)
+}
+
+input addBook_request_Input
+  @example(
+    subgraph: "LibraryAPI"
+    value: "{\"summary\":\"The Target by Catherine Coulter\",\"value\":{\"id\":\"0515125628\",\"title\":\"The Target\",\"author\":\"Catherine Coulter\",\"publicationYear\":1999,\"publisher\":\"Jove Books\",\"price\":27}}"
+  )
+  @join__type(graph: LIBRARY_API) {
+  isbn: mutationInput_addBook_input_isbn!
+  title: mutationInput_addBook_input_title!
+  author: mutationInput_addBook_input_author!
+  publicationYear: Float!
+  publisher: mutationInput_addBook_input_publisher!
+  price: Float!
+}
+
+input updateBook_request_Input
+  @example(
+    subgraph: "LibraryAPI"
+    value: "{\"summary\":\"Update book price\",\"value\":{\"price\":29.99}}"
+  )
+  @join__type(graph: LIBRARY_API) {
+  isbn: mutationInput_updateBook_input_isbn
+  title: mutationInput_updateBook_input_title
+  author: mutationInput_updateBook_input_author
+  publicationYear: Float
+  publisher: mutationInput_updateBook_input_publisher
+  price: Float
+}
+
+input createReservation_request_Input
+  @example(
+    subgraph: "LibraryAPI"
+    value: "{\"summary\":\"New reservation request\",\"value\":{\"userId\":\"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\"isbn\":\"0515125628\"}}"
+  )
+  @join__type(graph: LIBRARY_API) {
+  userId: mutationInput_createReservation_input_userId!
+  isbn: mutationInput_createReservation_input_isbn!
+}
+
+input modifyWalletBalance_request_Input
+  @example(
+    subgraph: "LibraryAPI"
+    value: "{\"summary\":\"Add funds to wallet\",\"value\":{\"amount\":20}}"
+  )
+  @join__type(graph: LIBRARY_API) {
+  amount: Float!
+}
+
+input applyLateFee_request_Input
+  @example(
+    subgraph: "LibraryAPI"
+    value: "{\"summary\":\"Late return fee calculation\",\"value\":{\"daysLate\":5,\"retailPrice\":36}}"
+  )
+  @join__type(graph: LIBRARY_API) {
+  daysLate: NonNegativeFloat!
+  retailPrice: NonNegativeFloat!
+}
