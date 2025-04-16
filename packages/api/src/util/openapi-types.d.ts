@@ -1,5 +1,3 @@
-
-
 declare module 'openapi-types' {
   namespace OpenAPIV3 {
     interface Document {
@@ -12,7 +10,7 @@ declare module 'openapi-types' {
           validateRequestBody: boolean
         }
       >
-      'x-ticknovate'?: {
+      'x-library'?: {
         /**
          * Whether to enable API Gateway caching.
          * Beware, even 0.5GB costs about 14 USD per month. Do not casually
