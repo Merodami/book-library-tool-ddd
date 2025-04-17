@@ -14,7 +14,7 @@ export async function registerServiceHealthChecks(
   // Define services to check
   const serviceChecks = [
     {
-      name: 'graphql-gateway',
+      name: 'graphql',
       url: process.env.GRAPHQL_GATEWAY_HEALTH_URL ?? 'http://localhost:9668',
     },
     {

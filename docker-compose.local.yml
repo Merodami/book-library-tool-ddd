@@ -51,8 +51,8 @@ services:
       - '4001:4001'
       - '9668:9668'
     volumes:
-      - ./packages/graphql-gateway/supergraph.graphql:/app/supergraph.graphql:ro
-      - ./packages/graphql-gateway/grafbase.toml:/app/grafbase.toml:ro
+      - ./packages/graphql/supergraph.graphql:/app/supergraph.graphql:ro
+      - ./packages/graphql/grafbase.toml:/app/grafbase.toml:ro
     command:
       - --config
       - /app/grafbase.toml

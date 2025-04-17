@@ -7,7 +7,7 @@ This service acts as the GraphQL gateway for the Book Library application, provi
 To start the development server:
 
 ```bash
-nx serve graphql-gateway
+nx serve graphql
 ```
 
 ## Build
@@ -15,7 +15,7 @@ nx serve graphql-gateway
 To build the project:
 
 ```bash
-nx build graphql-gateway
+nx build graphql
 ```
 
 ## Testing
@@ -23,5 +23,5 @@ nx build graphql-gateway
 To run tests:
 
 ```bash
-nx test graphql-gateway
+nx test graphql
 ```

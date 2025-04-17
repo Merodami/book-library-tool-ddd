@@ -37,7 +37,7 @@ list_size = 100
 # Entity caching
 [entity_caching.redis]
 url = "redis://redis:6379"
-key_prefix = "graphql-gateway-cache"
+key_prefix = "graphql-cache"
 
 # [entity_caching.redis.tls]
 # cert = "/path/to/user.crt"
@@ -61,7 +61,7 @@ duration = "10s"
 # Redis rate limit
 [gateway.rate_limit.redis]
 url = "redis://redis:6379"
-key_prefix = "graphql-gateway-rate-limit"
+key_prefix = "graphql-rate-limit"
 
 # Redis rate limit TLS
 # [gateway.rate_limit.redis.tls]
@@ -130,7 +130,7 @@ warming_percent = 100
 # Telemetry
 # ToDo: https://grafbase.com/docs/reference/gateway/configuration/telemetry
 [telemetry]
-service_name = "graphql-gateway"
+service_name = "graphql"
 
 # TLS
 # ToDo: https://grafbase.com/docs/reference/gateway/configuration/transport-layer-security

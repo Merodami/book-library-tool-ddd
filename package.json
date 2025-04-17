@@ -30,7 +30,7 @@
     "user:create": "nx run @book-library-tool/auth:generate-user",
     "generate:api": "nx run @book-library-tool/api:build",
     "generate:sdk": "nx run @book-library-tool/sdk:sdk-gen",
-    "generate:graphql": "nx run @book-library-tool/graphql-gateway:graphql-gen",
+    "generate:graphql": "nx run @book-library-tool/graphql:graphql-gen",
     "git-hooks-prepare": "husky install",
     "open:docs": "nx run @book-library-tool/api:open-docs",
     "rabbit:ui": "open http://localhost:15672",

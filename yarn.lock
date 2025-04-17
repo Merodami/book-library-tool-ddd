@@ -362,9 +362,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@book-library-tool/graphql-gateway@workspace:packages/graphql-gateway":
+"@book-library-tool/graphql@workspace:packages/graphql":
   version: 0.0.0-use.local
-  resolution: "@book-library-tool/graphql-gateway@workspace:packages/graphql-gateway"
+  resolution: "@book-library-tool/graphql@workspace:packages/graphql"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.7"
     "@omnigraph/openapi": "npm:^0.109.7"

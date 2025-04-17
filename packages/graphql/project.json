@@ -1,5 +1,5 @@
 {
-  "name": "@book-library-tool/graphql-gateway",
+  "name": "@book-library-tool/graphql",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": ["@book-library-tool/sdk"],
   "targets": {
