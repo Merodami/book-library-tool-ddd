@@ -24,7 +24,7 @@ export function setupProxyRoutes(
     {
       path: '/graphql',
       targetUrl: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4001',
-      targetPath: '/',
+      targetPath: '/graphql',
       description: 'GraphQL API',
     },
     {

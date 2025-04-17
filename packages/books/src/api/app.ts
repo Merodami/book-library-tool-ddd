@@ -1,20 +1,21 @@
-import { apiTokenAuth } from '@book-library-tool/auth'
 import { MongoDatabaseService } from '@book-library-tool/database'
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
-import { errorMiddleware, logger } from '@book-library-tool/shared'
+import { fastifyAuth } from '@book-library-tool/http'
+// Import the health check setup function from the file in the same folder
+import { setupServiceHealthCheck } from '@book-library-tool/http'
+import { logger } from '@book-library-tool/shared'
 import { BookEventSubscriptions } from '@event-store/BookEventSubscriptions.js'
 import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
+import fastifyCors from '@fastify/cors'
+import fastifyHelmet from '@fastify/helmet'
+import fastifyRateLimit from '@fastify/rate-limit'
 import { BookProjectionRepository } from '@persistence/mongo/BookProjectionRepository.js'
 // Routers and controllers for different contexts
 import { BookRepository } from '@persistence/mongo/BookRepository.js'
 import { createBookRouter } from '@routes/books/BookRoute.js'
 import { createCatalogRouter } from '@routes/catalog/CatalogRoute.js'
-import cors from 'cors'
-import express from 'express'
-import gracefulShutdown from 'http-graceful-shutdown'
-
-// Import the health check setup function from the file in the same folder
-import { setupServiceHealthCheck } from './healthcheck.js'
+import closeWithGrace from 'close-with-grace'
+import Fastify from 'fastify'
 
 async function startServer() {
   // Create and connect the database service (write and projection share the same DB context)
@@ -24,9 +25,11 @@ async function startServer() {
 
   try {
     await dbService.connect()
+
     logger.info('Successfully connected to MongoDB.')
   } catch (error) {
     logger.error(`Error connecting to MongoDB: ${error}`)
+
     process.exit(1)
   }
 
@@ -54,22 +57,33 @@ async function startServer() {
 
   logger.info('Event subscriptions registered successfully')
 
-  // Initialize the Express application with common middleware.
-  const app = express()
-    .disable('x-powered-by')
-    .use(cors({ exposedHeaders: ['Date', 'Content-Disposition'] }))
-    .use(express.json())
-    .use((req, res, next) => {
-      // Skip authentication for health check endpoints
-      if (req.path === '/health' || req.path.startsWith('/health/')) {
-        return next()
-      }
+  // Initialize the Fastify application with enterprise-grade configuration
+  const app = Fastify({
+    logger: true,
+    trustProxy: true,
+    disableRequestLogging: process.env.NODE_ENV === 'production',
+  })
 
-      // Apply token-based authentication for all other routes
-      return apiTokenAuth({
-        secret: process.env.JWT_SECRET || 'default-secret',
-      })(req, res, next)
-    })
+  // Register core plugins
+  await app.register(fastifyHelmet, {
+    contentSecurityPolicy: process.env.NODE_ENV === 'production',
+  })
+
+  await app.register(fastifyCors, {
+    exposedHeaders: ['Date', 'Content-Disposition'],
+  })
+
+  await app.register(fastifyRateLimit, {
+    max: parseInt(process.env.RATE_LIMIT_MAX || '1000', 10),
+    timeWindow: '1 minute',
+  })
+
+  // Register authentication plugin
+  await app.register(fastifyAuth, {
+    secret: process.env.JWT_SECRET || 'default-secret',
+    excludePaths: ['/health', '/health/details'],
+  })
+
   // Setup health check endpoints
   setupServiceHealthCheck(
     app,
@@ -109,56 +123,93 @@ async function startServer() {
    * Inside createBookRouter, a unified facade (e.g., BookFacade) is built,
    * and then a single controller (BookController) delegates to that facade.
    */
-  app.use('/books', (req, res, next) => {
-    return createBookRouter(bookRepository, bookProjectionRepository, eventBus)(
-      req,
-      res,
-      next,
-    )
-  })
+  app.register(
+    async (instance) => {
+      return instance.register(
+        createBookRouter(bookRepository, bookProjectionRepository, eventBus),
+      )
+    },
+    { prefix: '/books' },
+  )
 
   /**
    * Set up catalog routes:
    *
    * Here, we instantiate the catalog-specific repository, service, and controller.
    */
-  app.use('/catalog', (req, res, next) => {
-    return createCatalogRouter(bookProjectionRepository)(req, res, next)
+  app.register(
+    async (instance) => {
+      return instance.register(createCatalogRouter(bookProjectionRepository))
+    },
+    { prefix: '/catalog' },
+  )
+
+  // Global error handling
+  app.setErrorHandler((error, request, reply) => {
+    // Use existing error middleware logic for consistency
+    const statusCode = error.statusCode || 500
+    const response = {
+      error: error.name || 'InternalServerError',
+      message: error.message,
+      statusCode,
+      ...(process.env.NODE_ENV !== 'production' && statusCode === 500
+        ? { stack: error.stack }
+        : {}),
+    }
+
+    logger.error(`Error: ${error.message}`, {
+      path: request.url,
+      method: request.method,
+      ...(process.env.NODE_ENV !== 'production' ? { stack: error.stack } : {}),
+    })
+
+    reply.status(statusCode).send(response)
   })
 
-  // Global error handling middleware
-  app.use(errorMiddleware)
-
   // Start the HTTP server.
-  const SERVER_PORT = process.env.BOOKS_SERVICE_SERVER_PORT || 3001
-  const server = app.listen(SERVER_PORT, () => {
+  const SERVER_PORT = parseInt(
+    process.env.BOOKS_SERVICE_SERVER_PORT || '3001',
+    10,
+  )
+
+  try {
+    await app.listen({ port: SERVER_PORT, host: '0.0.0.0' })
     logger.info(`App listening on port ${SERVER_PORT}`)
     logger.info(
       `Health check available at http://localhost:${SERVER_PORT}/health`,
     )
-  })
+  } catch (err) {
+    logger.error('Error starting server:', err)
+    process.exit(1)
+  }
 
   // Configure graceful shutdown to close connections gracefully.
-  gracefulShutdown(server, {
-    signals: 'SIGINT SIGTERM',
-    timeout: 10000,
-    onShutdown: async () => {
+  closeWithGrace(
+    {
+      delay: 10000,
+    },
+    async ({ signal, err }) => {
+      if (err) {
+        logger.error(`Error during shutdown: ${err.message}`)
+      }
+
+      logger.info(`Received ${signal}, shutting down gracefully`)
+
+      // Close Fastify server first to stop accepting new connections
+      await app.close()
+      logger.info('Server closed')
+
       logger.info('Closing DB connection...')
-
       await dbService.disconnect()
-
       logger.info('DB connection closed.')
 
       logger.info('Closing EventBus connection...')
-
       await eventBus.shutdown()
-
       logger.info('EventBus connection closed.')
-    },
-    finally: () => {
+
       logger.info('Server gracefully shut down.')
     },
-  })
+  )
 
   process.on('unhandledRejection', (reason) => {
     logger.error(`Unhandled Promise Rejection: ${reason}`)

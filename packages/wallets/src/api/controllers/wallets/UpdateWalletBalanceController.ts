@@ -1,6 +1,6 @@
 import { User } from '@book-library-tool/sdk'
 import { UpdateWalletBalanceHandler } from '@wallets/commands/UpdateWalletBalanceHandler.js'
-import { NextFunction, Request, Response } from 'express'
+import { FastifyReply, FastifyRequest } from 'fastify'
 
 /**
  * Controller responsible for updating wallet balances.
@@ -8,37 +8,33 @@ import { NextFunction, Request, Response } from 'express'
 export class UpdateWalletBalanceController {
   constructor(
     private readonly updateWalletBalanceHandler: UpdateWalletBalanceHandler,
-  ) {
-    this.updateWalletBalance = this.updateWalletBalance.bind(this)
-  }
+  ) {}
 
   /**
    * POST /wallets/:userId/balance
    * Updates a wallet's balance with the specified amount
    */
   async updateWalletBalance(
-    req: Request,
-    res: Response,
-    next: NextFunction,
+    request: FastifyRequest<{
+      Params: Pick<User, 'userId'>
+      Body: { amount: number }
+    }>,
+    reply: FastifyReply,
   ): Promise<void> {
-    try {
-      const { userId } = req.params as Pick<User, 'userId'>
-      const { amount } = req.body as { amount: number }
+    const { userId } = request.params
+    const { amount } = request.body
 
-      // Execute the command
-      const wallet = await this.updateWalletBalanceHandler.execute({
-        userId,
-        amount,
-      })
+    // Execute the command
+    const wallet = await this.updateWalletBalanceHandler.execute({
+      userId,
+      amount,
+    })
 
-      if (!wallet) {
-        res.status(404).json({ message: 'Wallet not found after update' })
-        return
-      }
-
-      res.status(200).json(wallet)
-    } catch (error) {
-      next(error)
+    if (!wallet) {
+      await reply.status(404).send({ message: 'Wallet not found after update' })
+      return
     }
+
+    await reply.status(200).send(wallet)
   }
 }

@@ -9,6 +9,7 @@
     "@book-library-tool/auth": "workspace:^",
     "@book-library-tool/database": "workspace:^",
     "@book-library-tool/event-store": "workspace:^",
+    "@book-library-tool/http": "workspace:^",
     "@book-library-tool/sdk": "workspace:^",
     "@book-library-tool/shared": "workspace:^",
     "@book-library-tool/types": "workspace:^",

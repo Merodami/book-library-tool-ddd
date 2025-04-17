@@ -1,6 +1,6 @@
 import { schemas } from '@book-library-tool/api'
 import { BookReturnHandler } from '@reservations/commands/BookReturnHandler.js'
-import { NextFunction, Request, Response } from 'express'
+import { FastifyReply, FastifyRequest } from 'fastify'
 
 export class ReturnReservationController {
   constructor(private readonly returnReservationHandler: BookReturnHandler) {
@@ -14,24 +14,19 @@ export class ReturnReservationController {
    * Generates a ReservationReturned event, persists it, and publishes it.
    */
   async returnReservation(
-    req: Request,
-    res: Response,
-    next: NextFunction,
+    request: FastifyRequest<{ Params: schemas.ReservationIdParameter }>,
+    reply: FastifyReply,
   ): Promise<void> {
-    try {
-      const { reservationId } = req.params as schemas.ReservationIdParameter
+    const { reservationId } = request.params
 
-      // Execute the command directly through the handler
-      await this.returnReservationHandler.execute({
-        reservationId,
-      })
+    // Execute the command directly through the handler
+    await this.returnReservationHandler.execute({
+      reservationId,
+    })
 
-      res.status(200).json({
-        success: true,
-        message: 'Reservation returned successfully',
-      })
-    } catch (error) {
-      next(error)
-    }
+    await reply.status(200).send({
+      success: true,
+      message: 'Reservation returned successfully',
+    })
   }
 }

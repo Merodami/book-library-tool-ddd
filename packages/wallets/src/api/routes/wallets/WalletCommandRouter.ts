@@ -1,10 +1,10 @@
-import { schemas, validateBody, validateParams } from '@book-library-tool/api'
+import { schemas } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
 import { UpdateWalletBalanceHandler } from '@wallets/commands/UpdateWalletBalanceHandler.js'
 import { UpdateWalletBalanceController } from '@wallets/controllers/wallets/UpdateWalletBalanceController.js'
 import type { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
 import type { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
-import { Router } from 'express'
+import { FastifyInstance } from 'fastify'
 
 /**
  * Creates and configures the wallet command router
@@ -14,28 +14,32 @@ export function createWalletCommandRouter(
   walletRepository: IWalletRepository,
   walletProjectionRepository: IWalletProjectionRepository,
   eventBus: EventBus,
-): Router {
-  const router = Router()
+): (fastify: FastifyInstance) => Promise<void> {
+  return async (fastify: FastifyInstance) => {
+    // Create command handlers
+    const updateWalletBalanceHandler = new UpdateWalletBalanceHandler(
+      walletRepository,
+      walletProjectionRepository,
+      eventBus,
+    )
 
-  // Create command handlers
-  const updateWalletBalanceHandler = new UpdateWalletBalanceHandler(
-    walletRepository,
-    walletProjectionRepository,
-    eventBus,
-  )
+    // Create controllers
+    const updateWalletBalanceController = new UpdateWalletBalanceController(
+      updateWalletBalanceHandler,
+    )
 
-  // Create controllers
-  const updateWalletBalanceController = new UpdateWalletBalanceController(
-    updateWalletBalanceHandler,
-  )
-
-  // Define command routes
-  router.post(
-    '/:userId/balance',
-    validateParams(schemas.BookIdParameterSchema),
-    validateBody(schemas.WalletBalanceRequestSchema),
-    updateWalletBalanceController.updateWalletBalance,
-  )
-
-  return router
+    // Define command routes
+    fastify.post(
+      '/:userId/balance',
+      {
+        schema: {
+          params: schemas.BookIdParameterSchema,
+          body: schemas.WalletBalanceRequestSchema,
+        },
+      },
+      updateWalletBalanceController.updateWalletBalance.bind(
+        updateWalletBalanceController,
+      ),
+    )
+  }
 }
