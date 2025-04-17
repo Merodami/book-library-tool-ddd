@@ -1,7 +1,8 @@
 import { schemas } from '@book-library-tool/api'
-import { CatalogController } from '@controllers/catalog/CatalogController.js'
-import { GetAllBooksHandler } from '@queries/GetAllBooksHandler.js'
-import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
+import { paginationHook } from '@book-library-tool/http'
+import { CatalogController } from '@books/controllers/catalog/CatalogController.js'
+import { GetAllBooksHandler } from '@books/queries/GetAllBooksHandler.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 
 /**
@@ -32,6 +33,7 @@ export function createCatalogRouter(
     fastify.get(
       '/',
       {
+        onRequest: [paginationHook],
         schema: {
           querystring: schemas.CatalogSearchQuerySchema,
         },

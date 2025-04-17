@@ -1,9 +1,9 @@
 import type { EventBus } from '@book-library-tool/event-store'
 import { Errors } from '@book-library-tool/shared'
 import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
-import type { CreateBookCommand } from '@commands/CreateBookCommand.js'
-import { Book } from '@entities/Book.js'
-import type { IBookRepository } from '@repositories/IBookRepository.js'
+import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
+import { Book } from '@books/entities/Book.js'
+import type { IBookRepository } from '@books/repositories/IBookRepository.js'
 
 /**
  * CreateBookHandler is responsible for processing a CreateBookCommand.

@@ -1,5 +1,6 @@
 import { schemas } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
+import { paginationHook } from '@book-library-tool/http'
 import {
   ReservationRequest,
   ReservationsHistoryQuery,
@@ -67,11 +68,7 @@ export function createReservationRouter(
         },
       },
       async (request, reply) => {
-        try {
-          await createReservationController.createReservation(request, reply)
-        } catch (error) {
-          return reply.status(500).send(error)
-        }
+        await createReservationController.createReservation(request, reply)
       },
     )
 
@@ -81,6 +78,7 @@ export function createReservationRouter(
     }>(
       '/user/:userId',
       {
+        onRequest: [paginationHook],
         schema: {
           params: schemas.UserIdParameterSchema,
           querystring: schemas.ReservationsHistoryQuerySchema,
@@ -104,11 +102,7 @@ export function createReservationRouter(
         },
       },
       async (request, reply) => {
-        try {
-          await returnReservationController.returnReservation(request, reply)
-        } catch (error) {
-          return reply.status(500).send(error)
-        }
+        await returnReservationController.returnReservation(request, reply)
       },
     )
   }

@@ -1,5 +1,4 @@
 export * from './errorCodes.js'
-export { errorMiddleware } from './errorMiddleware.js'
 export * as Errors from './errors.js'
 export * from './health/index.js'
 export { default as logger, setContextGetter } from './logger.js'

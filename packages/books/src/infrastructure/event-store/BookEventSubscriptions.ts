@@ -8,7 +8,7 @@ import {
   RESERVATION_BOOK_VALIDATION_FAILED,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
-import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
+import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
 
 /**
  * Set up event subscriptions for book-related events.

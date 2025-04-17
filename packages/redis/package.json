@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Redis Service for Book Library Tool",
-  "author": "merodami",
+  "author": "Damian Meroni (@merodami)",
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {

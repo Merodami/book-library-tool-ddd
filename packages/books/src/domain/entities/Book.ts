@@ -1,5 +1,6 @@
-import { makeValidator, schemas } from '@book-library-tool/api'
+import { schemas } from '@book-library-tool/api'
 import { AggregateRoot, DomainEvent } from '@book-library-tool/event-store'
+import { makeValidator } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
 import { logger } from '@book-library-tool/shared'
 
 // Book domain event type constants
@@ -8,7 +9,7 @@ export const BOOK_UPDATED = 'BookUpdated'
 export const BOOK_DELETED = 'BookDeleted'
 
 // Schema validator for Book
-const assertBookSchema = makeValidator(schemas.BookSchema)
+const assertSchema = makeValidator(schemas.BookSchema)
 
 export interface BookProps {
   isbn: string
@@ -68,7 +69,7 @@ export class Book extends AggregateRoot {
    */
   public static create(command: BookProps): { book: Book; event: DomainEvent } {
     // Validate using schema
-    assertBookSchema(command)
+    assertSchema(command)
 
     const timestamp = new Date()
 
@@ -123,7 +124,7 @@ export class Book extends AggregateRoot {
     }
 
     // Validate the updated properties
-    assertBookSchema(updatedProps)
+    assertSchema(updatedProps)
 
     const timestamp = new Date()
     const newVersion = this.version + 1

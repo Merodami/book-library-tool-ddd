@@ -1,4 +1,4 @@
-import { makeValidator, schemas } from '@book-library-tool/api'
+import { schemas } from '@book-library-tool/api'
 import {
   AggregateRoot,
   DomainEvent,
@@ -13,11 +13,12 @@ import {
   RESERVATION_RETAIL_PRICE_UPDATED,
   RESERVATION_RETURNED,
 } from '@book-library-tool/event-store'
+import { makeValidator } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { randomUUID } from 'crypto'
 
-const assertReservationSchema = makeValidator(schemas.ReservationSchema)
+const assertSchema = makeValidator(schemas.ReservationSchema)
 
 export interface ReservationProps {
   userId: string
@@ -108,7 +109,7 @@ export class Reservation extends AggregateRoot {
     const reservationId = props.reservationId || randomUUID()
 
     // Validate the reservation data
-    assertReservationSchema({
+    assertSchema({
       ...props,
       reservationId,
       dueDate: dueDate.toISOString(),

@@ -1,6 +1,6 @@
 import { Cache } from '@book-library-tool/redis'
 import type { CatalogSearchQuery } from '@book-library-tool/sdk'
-import { GetAllBooksHandler } from '@queries/GetAllBooksHandler.js'
+import { GetAllBooksHandler } from '@books/queries/GetAllBooksHandler.js'
 import type { FastifyRequest } from 'fastify'
 
 export class CatalogController {

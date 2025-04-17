@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Database service for Book Library Tool",
-  "author": "merodami",
+  "author": "Damian Meroni (@merodami)",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

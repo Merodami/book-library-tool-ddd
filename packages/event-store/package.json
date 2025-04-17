@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Event-store library for Book Library Tool",
-  "author": "merodami",
+  "author": "Damian Meroni (@merodami)",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,7 +15,6 @@
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.7",
-    "depcheck": "^1.4.7",
     "typescript": "^5.8.3"
   },
   "depcheck": {

@@ -1,4 +1,4 @@
-import { DeleteBookHandler } from '@commands/DeleteBookHandler.js'
+import { DeleteBookHandler } from '@books/commands/DeleteBookHandler.js'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export class DeleteBookController {

@@ -3,7 +3,7 @@ import {
   DomainEvent,
 } from '@book-library-tool/event-store'
 import { ErrorCode } from '@book-library-tool/shared'
-import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 
 /**
  * Event handler that maintains the read model for books in MongoDB.
@@ -42,15 +42,29 @@ export class BookProjectionHandler {
   async handleBookUpdated(event: DomainEvent): Promise<void> {
     const updates: any = {}
 
-    if (event.payload.updated.title) updates.title = event.payload.updated.title
-    if (event.payload.updated.author)
+    if (event.payload.updated.title) {
+      updates.title = event.payload.updated.title
+    }
+
+    if (event.payload.updated.author) {
       updates.author = event.payload.updated.author
-    if (event.payload.updated.publicationYear)
+    }
+
+    if (event.payload.updated.publicationYear) {
       updates.publicationYear = event.payload.updated.publicationYear
-    if (event.payload.updated.publisher)
+    }
+
+    if (event.payload.updated.publisher) {
       updates.publisher = event.payload.updated.publisher
-    if (event.payload.updated.price) updates.price = event.payload.updated.price
-    if (event.payload.updated.isbn) updates.isbn = event.payload.updated.isbn
+    }
+
+    if (event.payload.updated.price) {
+      updates.price = event.payload.updated.price
+    }
+
+    if (event.payload.updated.isbn) {
+      updates.isbn = event.payload.updated.isbn
+    }
 
     // Add updatedAt to the updates
     updates.updatedAt = event.timestamp.toISOString()

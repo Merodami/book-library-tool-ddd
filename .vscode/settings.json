@@ -1,11 +1,21 @@
 {
   "cSpell.words": [
+    "Damian Meroni (@merodami)",
+    "depcheckrc",
     "Dinero",
     "dtos",
     "DVERDUE",
+    "fkill",
+    "grafbase",
     "HEALTHCHECK",
     "Mailhog",
+    "merodami",
+    "Meroni",
+    "mongodata",
+    "omnigraph",
     "rabbitmq",
+    "rabbitmqadmin",
+    "rabbitmqctl",
     "supergraph",
     "uuidv",
     "vitest"
