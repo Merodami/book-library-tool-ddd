@@ -1,4 +1,5 @@
 import { HealthCheck, logger } from '@book-library-tool/shared'
+import { Redis } from 'ioredis'
 
 /**
  * Register health checks for backend services
@@ -25,12 +26,26 @@ export async function registerServiceHealthChecks(
       name: 'wallets-service',
       url: process.env.WALLETS_API_URL ?? 'http://localhost:3003',
     },
+    {
+      name: 'redis',
+      url: process.env.REDIS_URL ?? 'redis://localhost:6379',
+    },
   ]
+  console.log('🚀 ~ serviceChecks:', serviceChecks)
 
   // Register each service health check
   for (const service of serviceChecks) {
     healthCheck.register(service.name, async () => {
       try {
+        if (service.name === 'redis') {
+          const redis = new Redis(service.url)
+
+          await redis.ping()
+          await redis.quit()
+
+          return true
+        }
+
         const response = await fetch(`${service.url}/health/liveness`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },

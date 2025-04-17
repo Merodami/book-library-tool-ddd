@@ -12,6 +12,8 @@ services:
     volumes:
       - ./mongodata/dev:/data/db
       - ./packages/database/src/infrastructure/persistence/mongo/initDatabase.js:/docker-entrypoint-initdb.d/initDatabase.js
+    networks:
+      - network-interface
 
   rabbitmq:
     container_name: rabbitmq
@@ -23,9 +25,12 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: library
       RABBITMQ_DEFAULT_PASS: library
+    networks:
+      - network-interface
 
   redis:
     image: redis:7.2-alpine
+    container_name: redis
     ports:
       - '6379:6379'
     volumes:
@@ -36,12 +41,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - network-interface
 
   grafbase-gateway:
     image: ghcr.io/grafbase/gateway:latest
     container_name: grafbase-gateway
     ports:
       - '4001:4001'
+      - '9668:9668'
     volumes:
       - ./packages/graphql-gateway/supergraph.graphql:/app/supergraph.graphql:ro
       - ./packages/graphql-gateway/grafbase.toml:/app/grafbase.toml:ro
@@ -53,6 +61,12 @@ services:
       - --listen-address
       - 0.0.0.0:4001
     restart: unless-stopped
+    networks:
+      - network-interface
 
 volumes:
   redis_data:
+
+networks:
+  network-interface:
+    driver: bridge

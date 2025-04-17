@@ -1,10 +1,6 @@
 import type { CatalogSearchQuery } from '@book-library-tool/sdk'
 import { GetAllBooksHandler } from '@queries/GetAllBooksHandler.js'
-import { Request } from 'express'
-
-type ExtendedCatalogSearchQuery = Omit<CatalogSearchQuery, 'fields'> & {
-  fields?: string[]
-}
+import { FastifyRequest } from 'fastify'
 
 export class CatalogController {
   constructor(private readonly getAllBooksHandler: GetAllBooksHandler) {
@@ -15,10 +11,8 @@ export class CatalogController {
    * Handles GET requests for the catalog.
    * Returns a paginated list of books with optional field selection.
    */
-  async getAllBooks(
-    req: Request<unknown, unknown, unknown, ExtendedCatalogSearchQuery>,
-  ) {
-    const query = req.query as ExtendedCatalogSearchQuery
+  async getAllBooks(request: FastifyRequest) {
+    const query = request.query as CatalogSearchQuery
 
     // Convert query to CatalogSearchQuery format
     const { fields: _, ...rest } = query

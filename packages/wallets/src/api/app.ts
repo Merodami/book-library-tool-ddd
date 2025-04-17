@@ -1,19 +1,20 @@
-import { apiTokenAuth } from '@book-library-tool/auth'
 import { MongoDatabaseService } from '@book-library-tool/database'
 import { RabbitMQEventBus } from '@book-library-tool/event-store'
-import { errorMiddleware, logger } from '@book-library-tool/shared'
+import { fastifyAuth, setupServiceHealthCheck } from '@book-library-tool/http'
+import { logger } from '@book-library-tool/shared'
+import fastifyCors from '@fastify/cors'
+import fastifyHelmet from '@fastify/helmet'
+import fastifyRateLimit from '@fastify/rate-limit'
 import { ProcessWalletPaymentHandler } from '@wallets/commands/ProcessWalletPaymentHandler.js'
 import { WalletEventSubscriptions } from '@wallets/event-store/WalletEventSubscriptions.js'
 import { WalletProjectionHandler } from '@wallets/event-store/WalletProjectionHandler.js'
 import { WalletProjectionRepository } from '@wallets/persistence/mongo/WalletProjectionRepository.js'
 import { WalletRepository } from '@wallets/persistence/mongo/WalletRepository.js'
-import { WalletRouter } from '@wallets/routes/wallets/WalletRouter.js'
-import cors from 'cors'
-import express from 'express'
-import gracefulShutdown from 'http-graceful-shutdown'
+import { createWalletRouter } from '@wallets/routes/wallets/WalletRouter.js'
+import closeWithGrace from 'close-with-grace'
+import Fastify from 'fastify'
 
 import { BookReturnHandler } from '../application/use_cases/commands/BookReturnHandler.js'
-import { setupServiceHealthCheck } from './healthcheck.js'
 
 async function startServer() {
   // Initialize the infrastructure service (database connection)
@@ -66,26 +67,32 @@ async function startServer() {
 
   logger.info('Event subscriptions registered successfully')
 
-  // Initialize Express app and configure middleware.
-  const app = express()
-    .disable('x-powered-by')
-    .use(
-      cors({
-        exposedHeaders: ['Date', 'Content-Disposition'],
-      }),
-    )
-    .use(express.json())
-    // Apply token-based authentication.
-    .use((req, res, next) => {
-      // Skip authentication for health check endpoints
-      if (req.path === '/health' || req.path.startsWith('/health/')) {
-        return next()
-      }
-      // Apply token-based authentication for all other routes
-      return apiTokenAuth({
-        secret: process.env.JWT_SECRET || 'default-secret',
-      })(req, res, next)
-    })
+  // Initialize the Fastify application with enterprise-grade configuration
+  const app = Fastify({
+    logger: true,
+    trustProxy: true,
+    disableRequestLogging: process.env.NODE_ENV === 'production',
+  })
+
+  // Register core plugins
+  await app.register(fastifyHelmet, {
+    contentSecurityPolicy: process.env.NODE_ENV === 'production',
+  })
+
+  await app.register(fastifyCors, {
+    exposedHeaders: ['Date', 'Content-Disposition'],
+  })
+
+  await app.register(fastifyRateLimit, {
+    max: parseInt(process.env.RATE_LIMIT_MAX || '1000', 10),
+    timeWindow: '1 minute',
+  })
+
+  // Register authentication plugin
+  await app.register(fastifyAuth, {
+    secret: process.env.JWT_SECRET || 'default-secret',
+    excludePaths: ['/health', '/health/details'],
+  })
 
   // Setup health check endpoints
   setupServiceHealthCheck(
@@ -127,31 +134,70 @@ async function startServer() {
    *  - The projection repository (for queries)
    *  - The EventBus (for publishing events)
    */
-  app.use('/wallets', (req, res, next) => {
-    return WalletRouter(walletRepository, walletProjectionRepository, eventBus)(
-      req,
-      res,
-      next,
-    )
+  app.register(
+    async (instance) => {
+      return instance.register(
+        createWalletRouter(
+          walletRepository,
+          walletProjectionRepository,
+          eventBus,
+        ),
+      )
+    },
+    { prefix: '/wallets' },
+  )
+
+  // Global error handling
+  app.setErrorHandler((error, request, reply) => {
+    const statusCode = error.statusCode || 500
+    const response = {
+      error: error.name || 'InternalServerError',
+      message: error.message,
+      statusCode,
+      ...(process.env.NODE_ENV !== 'production' && statusCode === 500
+        ? { stack: error.stack }
+        : {}),
+    }
+
+    logger.error(`Error: ${error.message}`, {
+      path: request.url,
+      method: request.method,
+      ...(process.env.NODE_ENV !== 'production' ? { stack: error.stack } : {}),
+    })
+
+    reply.status(statusCode).send(response)
   })
 
-  // Global error-handling middleware.
-  app.use(errorMiddleware)
+  // Start the HTTP server.
+  const SERVER_PORT = parseInt(process.env.WALLETS_SERVICE_PORT || '3003', 10)
 
-  // Start the HTTP server on the specified port.
-  const SERVER_PORT = process.env.WALLETS_SERVICE_PORT || 3003
-  const server = app.listen(SERVER_PORT, () => {
-    logger.info(`Wallets API listening on port ${SERVER_PORT}`)
+  try {
+    await app.listen({ port: SERVER_PORT, host: '0.0.0.0' })
+    logger.info(`App listening on port ${SERVER_PORT}`)
     logger.info(
       `Health check available at http://localhost:${SERVER_PORT}/health`,
     )
-  })
+  } catch (err) {
+    logger.error('Error starting server:', err)
+    process.exit(1)
+  }
 
-  // Set up graceful shutdown behavior.
-  gracefulShutdown(server, {
-    signals: 'SIGINT SIGTERM',
-    timeout: 10000,
-    onShutdown: async () => {
+  // Configure graceful shutdown to close connections gracefully.
+  closeWithGrace(
+    {
+      delay: 10000,
+    },
+    async ({ signal, err }) => {
+      if (err) {
+        logger.error(`Error during shutdown: ${err.message}`)
+      }
+
+      logger.info(`Received ${signal}, shutting down gracefully`)
+
+      // Close Fastify server first to stop accepting new connections
+      await app.close()
+      logger.info('Server closed')
+
       logger.info('Closing DB connection...')
       await dbService.disconnect()
       logger.info('DB connection closed.')
@@ -159,13 +205,11 @@ async function startServer() {
       logger.info('Closing EventBus connection...')
       await eventBus.shutdown()
       logger.info('EventBus connection closed.')
-    },
-    finally: () => {
+
       logger.info('Server gracefully shut down.')
     },
-  })
+  )
 
-  // Global unhandled rejection handler.
   process.on('unhandledRejection', (reason) => {
     logger.error(`Unhandled Promise Rejection: ${reason}`)
   })

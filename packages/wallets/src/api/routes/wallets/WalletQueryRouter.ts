@@ -1,8 +1,8 @@
-import { schemas, validateParams } from '@book-library-tool/api'
+import { schemas } from '@book-library-tool/api'
 import { GetWalletController } from '@wallets/controllers/wallets/GetWalletController.js'
 import { GetWalletHandler } from '@wallets/queries/GetWalletHandler.js'
 import type { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
-import { Router } from 'express'
+import { FastifyInstance } from 'fastify'
 
 /**
  * Creates and configures the wallet query router
@@ -10,21 +10,23 @@ import { Router } from 'express'
  */
 export function createWalletQueryRouter(
   walletProjectionRepository: IWalletProjectionRepository,
-): Router {
-  const router = Router()
+): (fastify: FastifyInstance) => Promise<void> {
+  return async (fastify: FastifyInstance) => {
+    // Create handlers
+    const getWalletHandler = new GetWalletHandler(walletProjectionRepository)
 
-  // Create handlers
-  const getWalletHandler = new GetWalletHandler(walletProjectionRepository)
+    // Create controllers
+    const getWalletController = new GetWalletController(getWalletHandler)
 
-  // Create controllers
-  const getWalletController = new GetWalletController(getWalletHandler)
-
-  // Define query routes
-  router.get(
-    '/:userId',
-    validateParams(schemas.UserIdParameterSchema),
-    getWalletController.getWallet,
-  )
-
-  return router
+    // Define query routes
+    fastify.get(
+      '/:userId',
+      {
+        schema: {
+          params: schemas.UserIdParameterSchema,
+        },
+      },
+      getWalletController.getWallet.bind(getWalletController),
+    )
+  }
 }

@@ -1,5 +1,5 @@
 import { DeleteBookHandler } from '@commands/DeleteBookHandler.js'
-import { NextFunction, Request, Response } from 'express'
+import { FastifyReply, FastifyRequest } from 'fastify'
 
 export class DeleteBookController {
   constructor(private readonly deleteBookHandler: DeleteBookHandler) {
@@ -12,18 +12,15 @@ export class DeleteBookController {
    * The deletion is handled as a soft delete that generates a BookDeleted event.
    */
   async deleteBook(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    try {
-      const { isbn } = req.params
+    request: FastifyRequest<{
+      Params: { isbn: string }
+    }>,
+    reply: FastifyReply,
+  ) {
+    const { isbn } = request.params
 
-      await this.deleteBookHandler.execute({ isbn })
+    await this.deleteBookHandler.execute({ isbn })
 
-      res.status(200).json({ message: 'Book deleted successfully' })
-    } catch (error) {
-      next(error)
-    }
+    return reply.code(200).send({ message: 'Book deleted successfully' })
   }
 }

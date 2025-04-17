@@ -1,6 +1,6 @@
 import type { ReservationRequest } from '@book-library-tool/sdk'
 import { CreateReservationHandler } from '@reservations/commands/CreateReservationHandler.js'
-import { NextFunction, Request, Response } from 'express'
+import { FastifyReply, FastifyRequest } from 'fastify'
 
 export class CreateReservationController {
   constructor(
@@ -21,27 +21,22 @@ export class CreateReservationController {
    * The handler will generate a ReservationCreated event, persist it, and publish it.
    */
   async createReservation(
-    req: Request,
-    res: Response,
-    next: NextFunction,
+    request: FastifyRequest<{ Body: ReservationRequest }>,
+    reply: FastifyReply,
   ): Promise<void> {
-    try {
-      const { userId, isbn } = req.body as ReservationRequest
+    const { userId, isbn } = request.body
 
-      // Build the command
-      const reservationCommand: ReservationRequest = {
-        userId,
-        isbn,
-      }
-
-      // Directly delegate to the handler which enforces business rules and generates events
-      await this.createReservationHandler.execute(reservationCommand)
-
-      res
-        .status(201)
-        .json({ success: true, message: 'Reservation created successfully' })
-    } catch (error) {
-      next(error)
+    // Build the command
+    const reservationCommand: ReservationRequest = {
+      userId,
+      isbn,
     }
+
+    // Directly delegate to the handler which enforces business rules and generates events
+    await this.createReservationHandler.execute(reservationCommand)
+
+    await reply
+      .status(201)
+      .send({ success: true, message: 'Reservation created successfully' })
   }
 }
