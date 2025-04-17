@@ -22,8 +22,12 @@ function removeIdProperties(obj: any): any {
     return obj.map(removeIdProperties)
   } else if (obj && typeof obj === 'object') {
     const newObj: any = {}
+
     for (const key of Object.keys(obj)) {
-      if (key === '$id') continue
+      if (key === '$id') {
+        continue
+      }
+
       // eslint-disable-next-line security/detect-object-injection
       newObj[key] = removeIdProperties(obj[key])
     }
@@ -45,6 +49,7 @@ function removeCustomKeywords(
     return obj.map((item) => removeCustomKeywords(item, keysToRemove))
   } else if (obj && typeof obj === 'object') {
     const newObj: any = {}
+
     for (const key of Object.keys(obj)) {
       if (keysToRemove.includes(key)) continue
 
@@ -65,10 +70,11 @@ function removeHiddenRoutes(spec: OpenAPIV3.Document): OpenAPIV3.Document {
 
   // Create a new object without the hidden paths
   const filteredPaths: Record<string, any> = {}
-  for (const path in spec.paths) {
-    if (!hiddenPaths.includes(path)) {
+
+  for (const routePath in spec.paths) {
+    if (!hiddenPaths.includes(routePath)) {
       // eslint-disable-next-line security/detect-object-injection
-      filteredPaths[path] = spec.paths[path]
+      filteredPaths[routePath] = spec.paths[routePath]
     }
   }
 

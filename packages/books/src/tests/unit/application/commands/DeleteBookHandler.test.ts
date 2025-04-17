@@ -160,7 +160,7 @@ describe('DeleteBookHandler', () => {
   it('should handle repository errors during save', async () => {
     // Arrange
     const aggregateId = 'book-123'
-    const { book, event: createdEvent } = Book.create({
+    const { book: _book, event: createdEvent } = Book.create({
       isbn: validCommand.isbn,
       title: 'Test Book',
       author: 'Test Author',

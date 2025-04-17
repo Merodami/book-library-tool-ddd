@@ -17,7 +17,7 @@ const ajv = new Ajv({
   coerceTypes: false,
 })
 
-const ajvErrors = ajvErrorsImport as unknown as (ajv: Ajv) => void
+const ajvErrors = ajvErrorsImport as unknown as (localAjv: Ajv) => void
 
 addFormats(ajv)
 ajvErrors(ajv)
