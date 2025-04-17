@@ -1,5 +1,7 @@
 import { NextFunction, Request as ExpressRequest, Response } from 'express'
 
+import logger from '../../../shared/src/logger.js'
+
 /**
  * Express middleware to extract and normalize pagination parameters from query parameters.
  * It adds a standardized `pagination` object to the request that contains `page` and `limit` values.
@@ -41,7 +43,7 @@ export const paginationMiddleware = () => {
       }
 
       // Log the error for debugging purposes.
-      console.error('Error in pagination middleware:', error)
+      logger.error('Error in pagination middleware:', error)
 
       next()
     }

@@ -1,6 +1,7 @@
 import { schemas } from '@book-library-tool/api'
+import { Cache } from '@book-library-tool/redis/src/application/decorators/cache.js'
 import { GetReservationStatusHandler } from '@reservations/queries/GetReservationStatusHandler.js'
-import { NextFunction, Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 
 export class GetReservationStatusController {
   constructor(
@@ -15,6 +16,11 @@ export class GetReservationStatusController {
    * Get the current status of a specific reservation.
    * This is a read-only operation that uses the projection repository.
    */
+  @Cache({
+    ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
+    prefix: 'reservation:status',
+    condition: (result) => result !== null,
+  })
   async getReservationStatus(
     req: Request,
     res: Response,

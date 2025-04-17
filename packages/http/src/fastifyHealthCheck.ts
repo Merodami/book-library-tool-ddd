@@ -8,9 +8,10 @@ import {
   getDefaultMessageForError,
   HealthCheckDependency,
   logger,
-  ServiceHealthCheckOptions,
 } from '@book-library-tool/shared'
 import type { FastifyInstance } from 'fastify'
+
+import { ServiceHealthCheckOptions } from './fastify/types/HealthCheckConfig.js'
 
 /**
  * Sets up health check endpoints for a service

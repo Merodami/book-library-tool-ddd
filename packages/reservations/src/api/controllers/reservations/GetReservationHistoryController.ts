@@ -1,7 +1,8 @@
 import { schemas } from '@book-library-tool/api'
+import { Cache } from '@book-library-tool/redis/src/application/decorators/cache.js'
 import type { ReservationsHistoryQuery } from '@book-library-tool/sdk'
 import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export class GetReservationHistoryController {
   constructor(
@@ -16,6 +17,11 @@ export class GetReservationHistoryController {
    * Retrieve a user's reservation history.
    * This uses the projection repository through the query handler.
    */
+  @Cache({
+    ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
+    prefix: 'reservation:history',
+    condition: (result) => result && result.data && Array.isArray(result.data),
+  })
   async getReservationHistory(
     request: FastifyRequest<{
       Params: Pick<schemas.UserDTO, 'userId'>

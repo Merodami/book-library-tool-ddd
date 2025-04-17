@@ -1,6 +1,7 @@
+import { Cache } from '@book-library-tool/redis'
 import type { CatalogSearchQuery } from '@book-library-tool/sdk'
 import { GetAllBooksHandler } from '@queries/GetAllBooksHandler.js'
-import { FastifyRequest } from 'fastify'
+import type { FastifyRequest } from 'fastify'
 
 export class CatalogController {
   constructor(private readonly getAllBooksHandler: GetAllBooksHandler) {
@@ -11,6 +12,11 @@ export class CatalogController {
    * Handles GET requests for the catalog.
    * Returns a paginated list of books with optional field selection.
    */
+  @Cache({
+    ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
+    prefix: 'catalog:books',
+    condition: (result) => result && result.data && Array.isArray(result.data),
+  })
   async getAllBooks(request: FastifyRequest) {
     const query = request.query as CatalogSearchQuery
 

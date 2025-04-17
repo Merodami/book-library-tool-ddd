@@ -1,6 +1,7 @@
+import { Cache } from '@book-library-tool/redis/src/application/decorators/cache.js'
 import { GetBookHandler } from '@queries/GetBookHandler.js'
 import type { GetBookQuery } from '@queries/GetBookQuery.js'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export class GetBookController {
   constructor(private readonly getBookHandler: GetBookHandler) {
@@ -11,6 +12,11 @@ export class GetBookController {
    * GET /books/:isbn
    * Retrieves a book by ISBN.
    */
+  @Cache({
+    ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
+    prefix: 'book:details',
+    condition: (result) => result !== null,
+  })
   async getBook(
     request: FastifyRequest<{
       Params: { isbn: string }

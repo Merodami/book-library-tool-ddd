@@ -1,3 +1,4 @@
+import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
 import jwt, { JwtPayload } from 'jsonwebtoken'
@@ -46,30 +47,40 @@ export const fastifyAuth = fp(async function (
       const authHeader = request.headers[headerName.toLowerCase()]
 
       if (!authHeader || typeof authHeader !== 'string') {
-        return reply.code(401).send({
-          error: 'UNAUTHORIZED',
-          message: 'Missing API token',
-        })
+        logger.info('Missing API token', { authHeader })
+
+        throw new Errors.ApplicationError(
+          401,
+          ErrorCode.UNAUTHORIZED,
+          'Missing API token',
+        )
       }
 
       // Validate Bearer token format
       const [scheme, token] = authHeader.split(' ')
       if (scheme !== 'Bearer' || !token) {
-        return reply.code(401).send({
-          error: 'UNAUTHORIZED',
-          message: 'Invalid API token format',
-        })
+        logger.info('Invalid API token format', { authHeader })
+
+        throw new Errors.ApplicationError(
+          401,
+          ErrorCode.UNAUTHORIZED,
+          'Invalid API token format',
+        )
       }
 
       try {
         // Verify and decode the token
         const decoded = jwt.verify(token, secret) as JwtPayload
+
         request.user = decoded
       } catch (error) {
-        return reply.code(401).send({
-          error: 'UNAUTHORIZED',
-          message: 'Invalid API token',
-        })
+        logger.info('Invalid API token', { error })
+
+        throw new Errors.ApplicationError(
+          401,
+          ErrorCode.UNAUTHORIZED,
+          'Invalid API token',
+        )
       }
     },
   )

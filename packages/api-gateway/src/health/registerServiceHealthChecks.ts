@@ -31,7 +31,6 @@ export async function registerServiceHealthChecks(
       url: process.env.REDIS_URL ?? 'redis://localhost:6379',
     },
   ]
-  console.log('🚀 ~ serviceChecks:', serviceChecks)
 
   // Register each service health check
   for (const service of serviceChecks) {

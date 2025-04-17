@@ -50,27 +50,23 @@ export interface RedisConfig {
 }
 
 /**
- * Cache options for fine-tuned control over caching behavior
+ * Configuration options for the cache decorator
  */
 export interface CacheOptions {
-  /** Time-to-live in seconds for the cached item */
-  ttl?: number
-  /** Custom key prefix to namespace cache keys */
-  prefix?: string
-  /** Whether the cache can be bypassed using force parameter */
-  bypassable?: boolean
-  /** Function to determine if the result should be cached based on its value */
+  /** Time to live in seconds */
+  ttl: number
+  /** Cache key prefix */
+  prefix: string
+  /** Optional condition to determine if result should be cached */
   condition?: (result: any) => boolean
-  /** Only cache the result if it evaluates to true */
-  cacheIfTruthy?: boolean
-  /** Only cache the result if it's an array with at least one item */
-  cacheIfHasItems?: boolean
-  /** Whether to cache null or undefined values */
-  cacheNullValues?: boolean
-  /** Custom function to generate cache keys for complex objects */
-  hashFunction?: (args: any[]) => string
-  /** Time-to-live in seconds for local memory cache (0 disables local caching) */
-  localTtl?: number
+  /** Callback for cache hits (useful for monitoring) */
+  onCacheHit?: (key: string, execTime: number) => void
+  /** Callback for cache misses (useful for monitoring) */
+  onCacheMiss?: (key: string, execTime: number) => void
+  /** Custom key generator function */
+  keyGenerator?: (prefix: string, methodName: string, args: any[]) => string
+  /** Whether to use stale data while refreshing (defaults to false) */
+  staleWhileRevalidate?: boolean
 }
 
 /**

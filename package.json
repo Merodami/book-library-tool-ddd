@@ -11,6 +11,7 @@
     "graph": "nx graph",
     "docker:local": "docker compose -f docker-compose.local.yml up -d",
     "docker:local:down": "docker compose -f docker-compose.local.yml down",
+    "docker:restart": "yarn docker:local:down && yarn docker:local",
     "test": "yarn vitest",
     "build": "nx run-many --target=build --all --parallel=100 --output-style=stream --skip-nx-cache",
     "typecheck": "nx run-many --target=typecheck --parallel=100",
