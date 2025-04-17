@@ -108,7 +108,7 @@ depth = 10
 height = 12
 aliases = 5
 root_fields = 6
-complexity = 10
+complexity = 100
 
 # Operation caching
 [operation_caching]
