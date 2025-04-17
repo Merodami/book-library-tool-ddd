@@ -1,13 +1,16 @@
-import { HealthCheck, logger } from '@book-library-tool/shared'
+import { HealthCheckDependency, logger } from '@book-library-tool/shared'
 import { Redis } from 'ioredis'
 
 /**
  * Register health checks for backend services
+ *
+ * Note: This function only prepares the health check dependencies.
+ * The actual registration happens via the createFastifyServer function
+ * which expects the healthChecks array directly.
  */
 export async function registerServiceHealthChecks(
-  healthCheck: HealthCheck,
   isLocalDev: boolean,
-): Promise<void> {
+): Promise<HealthCheckDependency[]> {
   // Define services to check
   const serviceChecks = [
     {
@@ -31,36 +34,48 @@ export async function registerServiceHealthChecks(
       url: process.env.REDIS_URL ?? 'redis://localhost:6379',
     },
   ]
-  console.log('🚀 ~ serviceChecks:', serviceChecks)
 
-  // Register each service health check
-  for (const service of serviceChecks) {
-    healthCheck.register(service.name, async () => {
-      try {
-        if (service.name === 'redis') {
-          const redis = new Redis(service.url)
+  // Create health check dependencies for each service
+  const healthChecks: HealthCheckDependency[] = serviceChecks.map(
+    (service) => ({
+      name: service.name,
+      check: async () => {
+        try {
+          if (service.name === 'redis') {
+            const redis = new Redis(service.url)
 
-          await redis.ping()
-          await redis.quit()
+            await redis.ping()
+            await redis.quit()
 
-          return true
+            return true
+          }
+
+          const response = await fetch(`${service.url}/health/liveness`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(3000),
+          })
+
+          return response.ok
+        } catch (error) {
+          if (isLocalDev) {
+            logger.warn(`${service.name} health check failed`)
+            logger.warn(error)
+          }
+
+          return false
         }
+      },
+      details: {
+        type: service.name === 'redis' ? 'Redis' : 'REST API',
+        url: service.url,
+      },
+    }),
+  )
 
-        const response = await fetch(`${service.url}/health/liveness`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(3000),
-        })
-
-        return response.ok
-      } catch (error) {
-        if (isLocalDev) {
-          logger.warn(`${service.name} health check failed`)
-          logger.warn(error)
-        }
-
-        return false
-      }
-    })
+  if (isLocalDev) {
+    logger.info('Registered health checks for all backend services')
   }
+
+  return healthChecks
 }
