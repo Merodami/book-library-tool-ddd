@@ -11,7 +11,7 @@ export async function registerServiceHealthChecks(
   const serviceChecks = [
     {
       name: 'graphql-gateway',
-      url: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4000',
+      url: process.env.GRAPHQL_GATEWAY_HEALTH_URL ?? 'http://localhost:9668',
     },
     {
       name: 'books-service',
@@ -36,6 +36,7 @@ export async function registerServiceHealthChecks(
           headers: { 'Content-Type': 'application/json' },
           signal: AbortSignal.timeout(3000),
         })
+
         return response.ok
       } catch (error) {
         if (isLocalDev) {

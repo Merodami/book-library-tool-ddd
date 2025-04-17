@@ -23,8 +23,8 @@ export function setupProxyRoutes(
   const serviceRoutes: ServiceRoute[] = [
     {
       path: '/graphql',
-      targetUrl: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4000',
-      targetPath: '',
+      targetUrl: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4001',
+      targetPath: '/',
       description: 'GraphQL API',
     },
     {

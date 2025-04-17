@@ -6,17 +6,6 @@ export const composeConfig = defineConfig({
     {
       sourceHandler: loadOpenAPISubgraph('LibraryAPI', {
         source: '../api/dist/openapi.json',
-        // Pending to mutate queries GET
-        // selectQueryOrMutationField: [
-        //   {
-        //     fieldName: 'add_weather_forecast', // OAS field name
-        //     type: 'Query' // switch method POST from default Mutation into Query
-        //   },
-        //   {
-        //     fieldName: 'get_weather_forecast', // OAS field name
-        //     type: 'Mutation' // switch method GET from default Query into Mutation
-        //   }
-        // ]
       }),
     },
   ],

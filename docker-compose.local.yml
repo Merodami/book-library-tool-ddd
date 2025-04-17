@@ -1,4 +1,5 @@
 version: '3.5'
+
 services:
   library:
     container_name: library
@@ -35,6 +36,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  grafbase-gateway:
+    image: ghcr.io/grafbase/gateway:latest
+    container_name: grafbase-gateway
+    ports:
+      - '4001:4001'
+    volumes:
+      - ./packages/graphql-gateway/supergraph.graphql:/app/supergraph.graphql:ro
+      - ./packages/graphql-gateway/grafbase.toml:/app/grafbase.toml:ro
+    command:
+      - --config
+      - /app/grafbase.toml
+      - --schema
+      - /app/supergraph.graphql
+      - --listen-address
+      - 0.0.0.0:4001
+    restart: unless-stopped
 
 volumes:
   redis_data:
