@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import { Cache } from '@book-library-tool/redis/src/application/decorators/cache.js'
+import { Cache } from '@book-library-tool/redis'
 import { GetReservationStatusHandler } from '@reservations/queries/GetReservationStatusHandler.js'
 import type { NextFunction, Request, Response } from 'express'
 

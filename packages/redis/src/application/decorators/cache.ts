@@ -148,6 +148,7 @@ async function handleCacheMiss<T>(
   // Cache the result if it matches the condition (or if no condition specified)
   if (!options.condition || options.condition(result)) {
     await globalCacheService?.set(cacheKey, result, options.ttl)
+
     logger.debug(`Cached result for ${cacheKey} with TTL ${options.ttl}s`)
   }
 
@@ -174,6 +175,7 @@ async function refreshCacheInBackground<T>(
 
     if (!options.condition || options.condition(freshResult)) {
       await globalCacheService?.set(key, freshResult, options.ttl)
+
       logger.debug(`Background refresh of ${key} complete`)
     }
   } catch (error) {

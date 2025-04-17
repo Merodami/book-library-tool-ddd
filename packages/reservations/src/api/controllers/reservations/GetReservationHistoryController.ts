@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import { Cache } from '@book-library-tool/redis/src/application/decorators/cache.js'
+import { Cache } from '@book-library-tool/redis'
 import type { ReservationsHistoryQuery } from '@book-library-tool/sdk'
 import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
 import type { FastifyReply, FastifyRequest } from 'fastify'
