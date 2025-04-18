@@ -219,6 +219,7 @@ export class Wallet extends AggregateRoot {
     }
 
     events.sort((a, b) => a.version - b.version)
+
     let wallet: Wallet | undefined
 
     for (const event of events) {
@@ -235,7 +236,9 @@ export class Wallet extends AggregateRoot {
               new Date(event.timestamp),
               new Date(event.timestamp),
             )
+
             temp.version = event.version
+
             return temp
           }
           throw new Error('First event must be a WalletCreated event')

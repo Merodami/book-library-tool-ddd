@@ -60,6 +60,7 @@ export class HealthCheck {
     }
 
     const servicesHealth: ServiceHealth[] = []
+
     let systemStatus: HealthStatus = 'healthy'
 
     // Check each registered service

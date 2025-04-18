@@ -142,6 +142,7 @@ async function startReservationService() {
         name: 'redis',
         check: async () => {
           const health = await redisService.checkHealth()
+
           return health.status === 'healthy' || health.status === 'degraded'
         },
         details: {

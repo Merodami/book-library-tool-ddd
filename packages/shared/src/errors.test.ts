@@ -27,6 +27,7 @@ describe('ApplicationError helpers', () => {
 describe('catchError()', () => {
   it('wraps a TypeORM “EntityNotFound” error into 404 ApplicationError', () => {
     const ormErr = new Error('missing')
+
     ormErr.name = 'EntityNotFound'
 
     const fn = catchError('Book', '123')

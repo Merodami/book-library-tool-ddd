@@ -68,8 +68,6 @@ describe('BookProjectionHandler', () => {
         publicationYear: 2023,
         publisher: 'Test Publisher',
         price: 29.99,
-        createdAt: event.timestamp.toISOString(),
-        updatedAt: event.timestamp.toISOString(),
       })
     })
   })

@@ -28,6 +28,7 @@ export function setUpTestDatabase(dependencies?: Dependencies) {
 
     // Create a new MongoDB memory server instance
     mongoServer = await MongoMemoryServer.create()
+
     const mongoUri = mongoServer.getUri()
 
     // Set environment variables for testing
@@ -90,8 +91,10 @@ export function setUpTestDatabase(dependencies?: Dependencies) {
       // Example of how you could mock something for testing
       // Could replace this with any functionality you need to mock
       const randomUUID = dependencies.randomUUID
+
       return { randomUUID }
     }
+
     return {}
   }
 

@@ -368,6 +368,7 @@ describe('BookEventSubscriptions', () => {
     }
 
     const error = new Error('Test error')
+
     mockProjectionHandler.handleBookCreated.mockRejectedValue(error)
 
     // Act
@@ -415,6 +416,7 @@ describe('BookEventSubscriptions', () => {
     }
 
     const error = new Error('Validation error')
+
     mockProjectionHandler.handleReservationValidateBook.mockRejectedValue(error)
 
     // Act

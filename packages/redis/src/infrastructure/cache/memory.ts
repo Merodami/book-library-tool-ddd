@@ -40,10 +40,12 @@ export class MemoryCacheService implements ICacheService {
    */
   async get<T>(key: string): Promise<T | null> {
     const item = this.cache.get(key)
+
     if (!item) return null
 
     if (item.expiresAt < Date.now()) {
       this.cache.delete(key)
+
       return null
     }
 
@@ -66,6 +68,7 @@ export class MemoryCacheService implements ICacheService {
       value,
       expiresAt: Date.now() + ttl * 1000,
     })
+
     return true
   }
 
@@ -76,7 +79,9 @@ export class MemoryCacheService implements ICacheService {
    */
   async exists(key: string): Promise<boolean> {
     const item = this.cache.get(key)
+
     if (!item) return false
+
     return item.expiresAt > Date.now()
   }
 
@@ -87,8 +92,10 @@ export class MemoryCacheService implements ICacheService {
    */
   async getTTL(key: string): Promise<number> {
     const item = this.cache.get(key)
+
     if (!item) return -2
     if (item.expiresAt < Date.now()) return -1
+
     return Math.floor((item.expiresAt - Date.now()) / 1000)
   }
 
@@ -100,8 +107,10 @@ export class MemoryCacheService implements ICacheService {
    */
   async updateTTL(key: string, ttl: number): Promise<boolean> {
     const item = this.cache.get(key)
+
     if (!item) return false
     item.expiresAt = Date.now() + ttl * 1000
+
     return true
   }
 
@@ -121,6 +130,7 @@ export class MemoryCacheService implements ICacheService {
    */
   async delPattern(pattern: string): Promise<number> {
     const wildcardPattern = pattern.replace('*', '.*')
+
     let deletedCount = 0
 
     for (const key of this.cache.keys()) {

@@ -32,6 +32,7 @@ export class UpdateWalletBalanceController {
 
     if (!wallet) {
       await reply.status(404).send({ message: 'Wallet not found after update' })
+
       return
     }
 

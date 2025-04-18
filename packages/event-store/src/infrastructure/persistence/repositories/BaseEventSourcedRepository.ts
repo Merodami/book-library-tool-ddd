@@ -58,6 +58,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
       await this.createEntitySpecificIndexes()
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
+
       logger.error(
         `Failed to create indexes on ${this.COLLECTION_NAME}:`,
         message,
@@ -181,6 +182,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
     while (attempts < this.MAX_RETRY_ATTEMPTS) {
       try {
         await this.saveEvents(aggregateId, events, expectedVersion)
+
         return // Success.
       } catch (error) {
         lastError = error
@@ -190,8 +192,10 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
           error.message.includes(ErrorCode.CONCURRENCY_CONFLICT)
         ) {
           attempts++
+
           // Exponential backoff with jitter.
           const delay = Math.floor(Math.random() * (100 * 2 ** attempts)) + 50
+
           await new Promise((resolve) => setTimeout(resolve, delay))
 
           // Refresh expected version before retrying.
@@ -200,6 +204,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
             .sort({ version: -1 })
             .limit(1)
             .toArray()
+
           expectedVersion = latestEvent.length > 0 ? latestEvent[0].version : 0
           continue
         }
@@ -234,6 +239,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
         .toArray()
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
+
       throw new Errors.ApplicationError(
         500,
         ErrorCode.EVENT_LOOKUP_FAILED,
@@ -251,16 +257,19 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
     events: DomainEvent[],
   ): Record<string, DomainEvent[]> {
     const grouped: Record<string, DomainEvent[]> = {}
+
     for (const event of events) {
       if (!grouped[event.aggregateId]) {
         grouped[event.aggregateId] = []
       }
       grouped[event.aggregateId].push(event)
     }
+
     // Sort each group by version for correct ordering.
     Object.values(grouped).forEach((group) =>
       group.sort((a, b) => a.version - b.version),
     )
+
     return grouped
   }
 
@@ -272,9 +281,11 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
    */
   async getById(aggregateId: string): Promise<T | null> {
     const events = await this.getEventsForAggregate(aggregateId)
+
     if (events.length === 0) {
       return null
     }
+
     return this.rehydrateFromEvents(events)
   }
 

@@ -30,6 +30,7 @@ export function createSystemHealthCheck(memoryThreshold: number = 15) {
       logger.debug(
         'Development environment on macOS detected, bypassing memory threshold check',
       )
+
       return true
     }
 

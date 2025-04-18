@@ -16,6 +16,7 @@ class SchemaRegistry {
     }
 
     this.schemas.set(name, schema)
+
     return schema
   }
 
@@ -24,9 +25,11 @@ class SchemaRegistry {
    */
   get<T extends TSchema>(name: string): T {
     const schema = this.schemas.get(name)
+
     if (!schema) {
       throw new Error(`Schema "${name}" not found in registry`)
     }
+
     return schema as T
   }
 

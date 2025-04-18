@@ -1,3 +1,8 @@
+import {
+  BOOK_CREATED,
+  BOOK_DELETED,
+  BOOK_UPDATED,
+} from '@book-library-tool/event-store'
 import { Book } from '@books/entities/Book.js'
 import { describe, expect, it } from 'vitest'
 
@@ -28,7 +33,7 @@ describe('Book', () => {
       expect(book.isDeleted()).toBe(false)
 
       expect(event).toBeDefined()
-      expect(event.eventType).toBe('BookCreated')
+      expect(event.eventType).toBe(BOOK_CREATED)
       expect(event.aggregateId).toBe(book.id)
       expect(event.version).toBe(1)
     })
@@ -127,7 +132,7 @@ describe('Book', () => {
       expect(updatedBook.isDeleted()).toBe(false)
 
       expect(event).toBeDefined()
-      expect(event.eventType).toBe('BookUpdated')
+      expect(event.eventType).toBe(BOOK_UPDATED)
       expect(event.aggregateId).toBe(updatedBook.id)
       expect(event.version).toBe(1)
     })
@@ -155,7 +160,7 @@ describe('Book', () => {
       // Assert
       expect(book.isDeleted()).toBe(true)
       expect(event).toBeDefined()
-      expect(event.eventType).toBe('BookDeleted')
+      expect(event.eventType).toBe(BOOK_DELETED)
       expect(event.aggregateId).toBe(currentBook.id)
       expect(event.version).toBe(1)
     })

@@ -81,6 +81,7 @@ function log(
 
 // Create and export a default logger instance.
 const logger = createLogger()
+
 export default logger
 
 /**

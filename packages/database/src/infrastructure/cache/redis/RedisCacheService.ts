@@ -37,6 +37,7 @@ export class RedisCacheService {
             Number(process.env.REDIS_RETRY_DELAY || 50) * Math.pow(2, retries),
             Number(process.env.REDIS_MAX_RETRY_DELAY || 2000),
           )
+
           return delay
         },
       },
@@ -73,8 +74,10 @@ export class RedisCacheService {
   async get<T extends Document>(key: string): Promise<T | null> {
     try {
       const cached = await this.client.get(key)
+
       if (!cached) {
         this.metrics.misses++
+
         return null
       }
 
@@ -84,6 +87,7 @@ export class RedisCacheService {
       if (now - entry.timestamp > entry.ttl) {
         await this.client.del(key)
         this.metrics.misses++
+
         return null
       }
 
@@ -92,6 +96,7 @@ export class RedisCacheService {
       return entry.data
     } catch (error) {
       logger.error('Error getting from Redis cache:', error)
+
       return null
     }
   }

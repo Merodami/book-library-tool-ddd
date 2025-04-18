@@ -32,6 +32,7 @@ const queryAjv = new Ajv({
   allErrors: true,
   coerceTypes: true, // Enable type coercion for query params
 })
+
 addFormats(queryAjv)
 ajvErrors(queryAjv)
 

@@ -31,6 +31,7 @@ export const fastifyAuth = fp(async function (
             request.url.startsWith(pattern.slice(0, -1))
           )
             return true
+
           return false
         })
       ) {
@@ -51,6 +52,7 @@ export const fastifyAuth = fp(async function (
 
       // Validate Bearer token format
       const [scheme, token] = authHeader.split(' ')
+
       if (scheme !== 'Bearer' || !token) {
         logger.info('Invalid API token format', { authHeader })
 

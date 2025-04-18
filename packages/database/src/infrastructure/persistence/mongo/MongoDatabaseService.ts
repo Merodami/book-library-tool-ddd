@@ -170,6 +170,7 @@ export class MongoDatabaseService {
     ]
 
     const errorCode = (error as MongoError & { code?: number }).code
+
     return (
       (errorCode !== undefined && transientErrorCodes.includes(errorCode)) ||
       error.message.includes('network error') ||
@@ -198,7 +199,9 @@ export class MongoDatabaseService {
         lastError = error as Error
         if (this.isTransientError(error)) {
           this.metrics.retryCount++
+
           const delay = 1000 * Math.pow(2, i)
+
           logger.warn(
             `Retry attempt ${i + 1}/${maxRetries} after ${delay}ms: ${error.message}`,
           )
@@ -208,6 +211,7 @@ export class MongoDatabaseService {
         throw error
       }
     }
+
     throw lastError
   }
 
@@ -269,6 +273,7 @@ export class MongoDatabaseService {
     if (options?.cacheTtl) {
       const cached =
         await this.cacheService.get<PaginatedResult<WithId<T>>>(cacheKey)
+
       if (cached) {
         return cached
       }

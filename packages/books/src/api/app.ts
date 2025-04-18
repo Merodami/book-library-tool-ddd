@@ -106,6 +106,7 @@ async function startBookService() {
         name: 'event-bus',
         check: async () => {
           const health = await eventBus.checkHealth()
+
           return health.status === 'UP'
         },
         details: { type: 'RabbitMQ' },

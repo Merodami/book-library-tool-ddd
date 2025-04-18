@@ -39,6 +39,7 @@ export class RedisService implements ICacheService {
    */
   constructor(config?: { host: string; port: number; defaultTTL?: number }) {
     this.config = RedisConfigService.getInstance()
+
     const redisConfig = this.config.getConfig()
 
     this.client = new Redis({
@@ -50,6 +51,7 @@ export class RedisService implements ICacheService {
           times * redisConfig.retryDelay,
           redisConfig.maxRetryDelay,
         )
+
         return delay
       },
     })
@@ -102,14 +104,18 @@ export class RedisService implements ICacheService {
       Math.max(0, Math.ceil((percentile / 100) * sorted.length) - 1),
       sorted.length - 1,
     )
+
     return sorted.at(index) ?? 0
   }
 
   public async checkHealth(): Promise<HealthStatus> {
     const startTime = Date.now()
+
     try {
       await this.client.ping()
+
       const latency = Date.now() - startTime
+
       this.updateLatency(latency)
 
       return {
@@ -172,6 +178,7 @@ export class RedisService implements ICacheService {
    */
   public async get<T>(key: string): Promise<T | null> {
     const startTime = Date.now()
+
     try {
       logger.debug(`Attempting to get value for key: ${key}`)
 
@@ -183,6 +190,7 @@ export class RedisService implements ICacheService {
 
       if (!value) {
         logger.debug(`No value found for key: ${key}`)
+
         return null
       }
 
@@ -220,6 +228,7 @@ export class RedisService implements ICacheService {
     ttl: number = this.defaultTTL,
   ): Promise<boolean> {
     const startTime = Date.now()
+
     try {
       logger.debug(`Attempting to set value for key: ${key} with TTL: ${ttl}s`)
 
@@ -274,6 +283,7 @@ export class RedisService implements ICacheService {
       return result === 1
     } catch (error) {
       logger.error(`Error updating TTL for key "${key}":`, error)
+
       return false
     }
   }
@@ -285,6 +295,7 @@ export class RedisService implements ICacheService {
    */
   public async del(key: string): Promise<boolean> {
     const startTime = Date.now()
+
     try {
       const result = await this.client.del(key)
 
@@ -295,6 +306,7 @@ export class RedisService implements ICacheService {
     } catch (error) {
       this.metrics.errors++
       logger.error(`Error deleting key "${key}":`, error)
+
       return false
     }
   }
@@ -308,6 +320,7 @@ export class RedisService implements ICacheService {
     try {
       let cursor = '0'
       let deletedCount = 0
+
       const redisConfig = this.config.getConfig()
 
       do {
@@ -318,10 +331,12 @@ export class RedisService implements ICacheService {
           'COUNT',
           redisConfig.scanCount,
         )
+
         cursor = nextCursor
 
         if (keys.length > 0) {
           const result = await this.client.del(...keys)
+
           deletedCount += result
         }
       } while (cursor !== '0')
@@ -329,6 +344,7 @@ export class RedisService implements ICacheService {
       return deletedCount
     } catch (error) {
       logger.error(`Error deleting keys matching pattern "${pattern}":`, error)
+
       return 0
     }
   }

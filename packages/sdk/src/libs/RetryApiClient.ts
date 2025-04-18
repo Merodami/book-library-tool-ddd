@@ -92,8 +92,10 @@ export function createRetryApiClient(
 
             try {
               const result = await originalRequest(originalOptions)
+
               clearTimeout(timeoutId)
               resolve(result as T)
+
               return
             } finally {
               clearTimeout(timeoutId)

@@ -64,6 +64,7 @@ export class ValidateReservationHandler {
         process.env.MAX_RESERVATIONS_PER_USER ?? '3',
         10,
       )
+
       let exceedsLimit = false
 
       // Only check reservation limits if the initial validation passed
@@ -72,6 +73,7 @@ export class ValidateReservationHandler {
           await this.reservationProjectionRepository.countActiveReservationsByUser(
             reservation.userId,
           )
+
         exceedsLimit = activeReservationsCount >= maxReservations
       }
 
@@ -147,6 +149,7 @@ export class ValidateReservationHandler {
       )
 
       await this.saveAndPublishEvent(result.event, currentVersion)
+
       return
     }
 
@@ -154,6 +157,7 @@ export class ValidateReservationHandler {
       const result = currentReservation.reject(RESERVATION_BOOK_LIMIT_REACH)
 
       await this.saveAndPublishEvent(result.event, currentVersion)
+
       return
     }
 

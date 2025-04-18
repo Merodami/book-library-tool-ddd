@@ -57,6 +57,7 @@ export class BookBroughtHandler {
         logger.error(
           `Reservation with ID ${command.reservationId} not found for late fee purchase`,
         )
+
         return
       }
 
@@ -68,6 +69,7 @@ export class BookBroughtHandler {
         logger.error(
           `User mismatch for reservation ${command.reservationId}: expected ${reservation.userId}, got ${command.userId}`,
         )
+
         return
       }
 
