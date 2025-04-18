@@ -1,3 +1,4 @@
+import logger from '../../shared/src/logger.js'
 import { createRetryApiClient, RetryConfig } from './libs/RetryApiClient.js'
 
 /**
@@ -39,10 +40,11 @@ const defaultRetryConfig: RetryConfig = {
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],
   retryOnNetworkError: true,
   logger: (message, error) => {
-    console.warn(message)
+    logger.warn(message)
+
     // Log additional details in development environment
     if (process.env.NODE_ENV === 'development' && error) {
-      console.warn('Error details:', error)
+      logger.warn('Error details:', error)
     }
   },
 }

@@ -4,20 +4,6 @@ import type {
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
 import { BookUpdateRequest } from '@book-library-tool/sdk'
-import { ObjectId } from 'mongodb'
-
-interface BookProjection {
-  _id: ObjectId
-  isbn: string
-  title: string
-  author: string
-  publicationYear: number
-  publisher: string
-  price: number
-  deletedAt?: Date
-  createdAt?: Date
-  updatedAt?: Date
-}
 
 export interface IBookProjectionRepository {
   /**
@@ -70,5 +56,5 @@ export interface IBookProjectionRepository {
    * @param isbn - The ISBN of the book to find
    * @returns The book data if found, null otherwise
    */
-  findBookForReservation(isbn: string): Promise<BookProjection | null>
+  findBookForReservation(isbn: string): Promise<Book | null>
 }

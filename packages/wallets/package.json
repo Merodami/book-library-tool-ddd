@@ -6,21 +6,16 @@
   "main": "src/api/app.js",
   "dependencies": {
     "@book-library-tool/api": "workspace:^",
-    "@book-library-tool/auth": "workspace:^",
     "@book-library-tool/database": "workspace:^",
     "@book-library-tool/event-store": "workspace:^",
+    "@book-library-tool/http": "workspace:^",
     "@book-library-tool/sdk": "workspace:^",
     "@book-library-tool/shared": "workspace:^",
-    "cors": "^2.8.5",
     "dinero.js": "^1.9.1",
-    "express": "^5.1.0",
-    "http-graceful-shutdown": "^3.1.14"
+    "fastify": "^5.3.0"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
     "@types/dinero.js": "^1.9.4",
-    "@types/express": "^5.0.1",
-    "depcheck": "^1.4.7",
     "typescript": "^5.8.3"
   },
   "depcheck": {

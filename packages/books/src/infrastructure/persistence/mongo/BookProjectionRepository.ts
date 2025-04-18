@@ -1,26 +1,227 @@
-import { MongoDatabaseService } from '@book-library-tool/database'
+import {
+  assertDocument,
+  buildProjection,
+  buildRangeFilter,
+  buildTextFilter,
+  convertDateStrings,
+} from '@book-library-tool/database'
 import type {
   Book,
-  BookUpdateRequest,
+  CatalogSearchQuery,
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
-import { ErrorCode, getDefaultMessageForError } from '@book-library-tool/shared'
+import { ErrorCode, logger } from '@book-library-tool/shared'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
-import { GetAllBooksQuery } from '@queries/GetAllBooksQuery.js'
-import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
-import type { Collection } from 'mongodb'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { Collection, ObjectId } from 'mongodb'
+
+import type { BookDocument } from './documents/BookDocument.js'
 
 /**
- * Maps a MongoDB document to the Book domain model.
- * This function ensures that the data structure returned from the database
- * matches the expected Book interface, providing a consistent API response.
- * It also handles the transformation of MongoDB's _id field and ensures
- * proper date formatting for timestamps.
- *
- * @param doc - The raw MongoDB document containing book data
- * @returns A properly formatted Book object ready for API responses
+ * Repository for performing read operations on Book projections in MongoDB.
+ * Implements filtering, pagination, and mapping to/from domain models.
  */
-function mapProjectionToBook(doc: any): Book {
+export class BookProjectionRepository implements IBookProjectionRepository {
+  /**
+   * Constructs a new BookProjectionRepository.
+   * @param collection - MongoDB collection storing BookDocument entries
+   */
+  constructor(private readonly collection: Collection<BookDocument>) {}
+
+  /**
+   * Retrieves a paginated list of books matching the given query parameters.
+   * Supports text search, numeric range filters, sorting, and field projection.
+   * @param query - Search and pagination parameters
+   * @param fields - Optional list of fields to include in results
+   * @returns Paginated response containing domain Book objects
+   */
+  async getAllBooks(
+    query: CatalogSearchQuery,
+    fields?: string[],
+  ): Promise<PaginatedBookResponse> {
+    // Base filter excludes soft-deleted records
+    const dbQuery: Record<string, unknown> = { deletedAt: { $exists: false } }
+
+    // Text-based filters on title, author, publisher
+    Object.assign(
+      dbQuery,
+      buildTextFilter('title', query.title),
+      buildTextFilter('author', query.author),
+      buildTextFilter('publisher', query.publisher),
+    )
+
+    // Exact ISBN match
+    if (query.isbn) {
+      dbQuery.isbn = query.isbn
+    }
+
+    // Numeric range filters for publicationYear and price
+    Object.assign(
+      dbQuery,
+      buildRangeFilter('publicationYear', {
+        exact: query.publicationYear,
+        min: query.publicationYearMin,
+        max: query.publicationYearMax,
+      }),
+      buildRangeFilter('price', {
+        exact: query.price,
+        min: query.priceMin,
+        max: query.priceMax,
+      }),
+    )
+
+    // Count total before pagination
+    const total = await this.collection.countDocuments(dbQuery)
+    const skip = query.skip || 0
+    const limit = query.limit || 10
+    const page = Math.floor(skip / limit) + 1
+    const pages = Math.ceil(total / limit)
+
+    // Build cursor with projection, skip, limit, and optional sort
+    let cursor = this.collection
+      .find(dbQuery)
+      .project(buildProjection(fields))
+      .skip(skip)
+      .limit(limit)
+
+    if (query.sortBy && query.sortOrder) {
+      cursor = cursor.sort({
+        [query.sortBy]: query.sortOrder === 'ASC' ? 1 : -1,
+      })
+    }
+
+    // Execute query and map documents to domain models
+    const docs = await cursor.toArray()
+    const data = docs.map((d) =>
+      mapToDomain(
+        assertDocument<BookDocument>(d, [
+          'isbn',
+          'title',
+          'author',
+          'publicationYear',
+          'publisher',
+          'price',
+          'createdAt',
+          'updatedAt',
+        ]),
+      ),
+    )
+
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages,
+        hasNext: skip + limit < total,
+        hasPrev: skip > 0,
+      },
+    }
+  }
+
+  /**
+   * Retrieves a single book by its ISBN, excluding soft-deleted records.
+   * @param isbn - Unique book identifier
+   * @param fields - Optional list of fields to include
+   * @returns Domain Book object or null if not found
+   * @throws ApplicationError on data mapping errors
+   */
+  async getBookByISBN(isbn: string, fields?: string[]): Promise<Book | null> {
+    const doc = await this.collection.findOne(
+      { isbn, deletedAt: { $exists: false } },
+      { projection: buildProjection(fields) },
+    )
+
+    if (!doc) return null
+
+    try {
+      return mapToDomain(
+        assertDocument<BookDocument>(doc, [
+          'isbn',
+          'title',
+          'author',
+          'publicationYear',
+          'publisher',
+          'price',
+          'createdAt',
+          'updatedAt',
+        ]),
+      )
+    } catch (err) {
+      logger.error(`Invalid book doc for ISBN ${isbn}:`, err)
+      throw new ApplicationError(
+        500,
+        ErrorCode.INTERNAL_ERROR,
+        'Invalid book data',
+      )
+    }
+  }
+
+  /**
+   * Saves a new book projection to MongoDB.
+   * @param book - Domain Book object to persist
+   */
+  async saveProjection(book: Book): Promise<void> {
+    const doc = mapToDocument(book)
+
+    await this.collection.insertOne({ ...doc, _id: new ObjectId() })
+  }
+
+  /**
+   * Updates an existing book projection by document _id.
+   * Converts any ISO string dates in updates to Date objects.
+   * @param id - Document ObjectId as string
+   * @param updates - Partial Book data with optional dates
+   */
+  async updateProjection(id: string, updates: Partial<Book>): Promise<void> {
+    const mongoUpdates = convertDateStrings(updates as Record<string, unknown>)
+
+    if (!('updatedAt' in updates)) {
+      mongoUpdates.updatedAt = new Date()
+    }
+    await this.collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: mongoUpdates },
+    )
+  }
+
+  /**
+   * Marks a book as deleted (soft delete).
+   * @param id - Document ObjectId as string
+   * @param timestamp - Deletion timestamp
+   */
+  async markAsDeleted(id: string, timestamp: Date): Promise<void> {
+    await this.collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { deletedAt: timestamp, updatedAt: timestamp } },
+    )
+  }
+
+  /**
+   * Finds an active book for reservation by ISBN, excluding deleted.
+   * @param isbn - Unique book identifier
+   * @returns Domain Book object or null if not found
+   */
+  async findBookForReservation(isbn: string): Promise<Book | null> {
+    const doc = await this.collection.findOne({
+      isbn,
+      deletedAt: { $exists: false },
+    })
+
+    if (!doc) return null
+    try {
+      return mapToDomain(assertDocument<BookDocument>(doc, ['isbn']))
+    } catch {
+      return null
+    }
+  }
+}
+
+/**
+ * Helper: map MongoDB document to domain Book.
+ */
+function mapToDomain(doc: BookDocument): Book {
   return {
     isbn: doc.isbn,
     title: doc.title,
@@ -28,166 +229,32 @@ function mapProjectionToBook(doc: any): Book {
     publicationYear: doc.publicationYear,
     publisher: doc.publisher,
     price: doc.price,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
+    createdAt: doc.createdAt.toISOString(),
+    updatedAt: doc.updatedAt.toISOString(),
+    deletedAt: doc.deletedAt?.toISOString(),
   }
 }
 
 /**
- * Repository implementation for accessing book projections in MongoDB.
- * This class is part of the CQRS pattern's read model, providing efficient
- * query capabilities for book data. It implements the IBookProjectionRepository
- * interface and handles all read operations for books.
- *
- * The repository uses MongoDB's aggregation framework for complex queries
- * and implements proper indexing for optimal performance.
+ * Helper: map domain Book to MongoDB document (no _id).
  */
-export class BookProjectionRepository implements IBookProjectionRepository {
-  private readonly collection: Collection<any>
-  private readonly BOOK_PROJECTION_TABLE = 'book_projection'
+function mapToDocument(book: Book): Omit<BookDocument, '_id'> {
+  // Use shared util to convert ISO date strings to Date objects
+  const dates = convertDateStrings({
+    createdAt: book.createdAt,
+    updatedAt: book.updatedAt,
+    deletedAt: book.deletedAt,
+  } as Record<string, unknown>) as Record<string, Date | undefined>
 
-  constructor(private dbService: MongoDatabaseService) {
-    this.collection = dbService.getCollection(this.BOOK_PROJECTION_TABLE)
-  }
-
-  /**
-   * Retrieves a paginated list of books with support for multiple filtering options.
-   * This method implements a flexible search mechanism that supports:
-   * - Case-insensitive partial text matching for title and author
-   * - Exact matching for publication year
-   * - Pagination with configurable page size
-   *
-   * The search is optimized using MongoDB's regex capabilities with proper
-   * escaping of special characters to prevent regex injection.
-   *
-   * @param query - Query parameters including:
-   *                - title: Partial text match (case-insensitive)
-   *                - author: Partial text match (case-insensitive)
-   *                - publicationYear: Exact year match
-   *                - limit: Number of items per page (default: 10)
-   *                - page: Page number (default: 1)
-   * @returns A paginated response containing:
-   *          - books: Array of matching Book objects
-   *          - total: Total number of matching books
-   *          - page: Current page number
-   *          - limit: Number of items per page
-   */
-  async getAllBooks(query: GetAllBooksQuery): Promise<PaginatedBookResponse> {
-    const { title, author, publicationYear, limit = 10, page = 1 } = query
-
-    const filter: Record<string, unknown> = {}
-
-    if (title && typeof title === 'string' && title.trim().length > 0) {
-      // Use regex for a case-insensitive search in the title field
-      const escapedTitle = title.trim().replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&')
-      filter.title = { $regex: escapedTitle, $options: 'i' }
-    }
-
-    if (author && typeof author === 'string' && author.trim().length > 0) {
-      // Use regex for a case-insensitive search in the author field
-      const escapedAuthor = author
-        .trim()
-        .replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&')
-      filter.author = { $regex: escapedAuthor, $options: 'i' }
-    }
-
-    if (publicationYear) {
-      filter.publicationYear = Number(publicationYear)
-    }
-
-    // Use the pagination helper to get paginated books data
-    const paginatedBooks = await this.dbService.paginateCollection<Book>(
-      this.collection,
-      filter,
-      { limit, page },
-      { projection: { _id: 0 } },
-    )
-
-    return paginatedBooks
-  }
-
-  /**
-   * Retrieves a single book by its ISBN.
-   * This method implements a fast lookup using the ISBN index and includes
-   * soft-delete checking to ensure deleted books are not returned.
-   *
-   * @param isbn - The ISBN of the book to retrieve (must be a valid ISBN)
-   * @returns The Book object if found and not deleted, null if not found
-   * @throws {ApplicationError} If the book is found but marked as deleted,
-   *                           with error code 'BOOK_NOT_FOUND' and HTTP 404 status
-   */
-  async getBookByISBN(isbn: string): Promise<Book | null> {
-    const doc = await this.collection.findOne({ isbn })
-
-    if (doc && doc.deletedAt) {
-      throw new ApplicationError(
-        404,
-        ErrorCode.BOOK_NOT_FOUND,
-        getDefaultMessageForError(ErrorCode.BOOK_NOT_FOUND),
-      )
-    }
-
-    return doc ? mapProjectionToBook(doc) : null
-  }
-
-  /**
-   * Saves a new book projection in the database.
-   *
-   * @param bookProjection - The book projection data to save
-   */
-  async saveProjection(bookProjection: any): Promise<void> {
-    await this.collection.insertOne(bookProjection)
-  }
-
-  /**
-   * Updates a book projection with partial data.
-   *
-   * @param id - The aggregate ID of the book to update
-   * @param updates - Partial book data to update
-   */
-  async updateProjection(
-    id: string,
-    updates: BookUpdateRequest,
-  ): Promise<void> {
-    await this.collection.updateOne(
-      { id },
-      {
-        $set: {
-          ...updates,
-          updatedAt: new Date(),
-        },
-      },
-    )
-  }
-
-  /**
-   * Marks a book as deleted by setting the deletedAt timestamp.
-   *
-   * @param id - The aggregate ID of the book to mark as deleted
-   * @param timestamp - The timestamp when the book was deleted
-   */
-  async markAsDeleted(id: string, timestamp: Date): Promise<void> {
-    await this.collection.updateOne(
-      { id },
-      {
-        $set: {
-          deletedAt: timestamp,
-          updatedAt: timestamp,
-        },
-      },
-    )
-  }
-
-  /**
-   * Finds a book for reservation validation.
-   *
-   * @param isbn - The ISBN of the book to find
-   * @returns The book data if found and not deleted, null otherwise
-   */
-  async findBookForReservation(isbn: string): Promise<any | null> {
-    return this.collection.findOne({
-      isbn,
-      deletedAt: { $exists: false },
-    })
+  return {
+    isbn: book.isbn,
+    title: book.title,
+    author: book.author,
+    publicationYear: book.publicationYear,
+    publisher: book.publisher,
+    price: book.price,
+    createdAt: dates.createdAt ?? new Date(),
+    updatedAt: dates.updatedAt ?? new Date(),
+    deletedAt: dates.deletedAt,
   }
 }

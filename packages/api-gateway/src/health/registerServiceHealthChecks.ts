@@ -1,50 +1,58 @@
-import { HealthCheck, logger } from '@book-library-tool/shared'
+import type { HealthCheckConfig } from '@book-library-tool/http'
+import { logger } from '@book-library-tool/shared'
 
 /**
- * Register health checks for backend services
+ * Register health checks for all services
+ * @param isLocalDev - Whether running in development mode
+ * @returns Array of health check configurations
  */
 export async function registerServiceHealthChecks(
-  healthCheck: HealthCheck,
   isLocalDev: boolean,
-): Promise<void> {
-  // Define services to check
-  const serviceChecks = [
+): Promise<HealthCheckConfig[]> {
+  const healthChecks: HealthCheckConfig[] = []
+
+  // Add health checks for each service
+  const services = [
     {
-      name: 'graphql-gateway',
-      url: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4000',
-    },
-    {
-      name: 'books-service',
+      name: 'books',
       url: process.env.BOOKS_API_URL ?? 'http://localhost:3001',
     },
     {
-      name: 'reservations-service',
+      name: 'reservations',
       url: process.env.RESERVATIONS_API_URL ?? 'http://localhost:3002',
     },
     {
-      name: 'wallets-service',
+      name: 'wallets',
       url: process.env.WALLETS_API_URL ?? 'http://localhost:3003',
+    },
+    {
+      name: 'graphql',
+      url: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4001',
     },
   ]
 
-  // Register each service health check
-  for (const service of serviceChecks) {
-    healthCheck.register(service.name, async () => {
-      try {
-        const response = await fetch(`${service.url}/health/liveness`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(3000),
-        })
-        return response.ok
-      } catch (error) {
-        if (isLocalDev) {
-          logger.warn(`${service.name} health check failed`)
-          logger.warn(error)
-        }
+  for (const service of services) {
+    healthChecks.push({
+      name: `${service.name}-service`,
+      check: async () => {
+        try {
+          const response = await fetch(`${service.url}/health`)
 
-        return false
-      }
+          return response.ok
+        } catch (error) {
+          if (isLocalDev) {
+            logger.warn(`Health check failed for ${service.name}:`, error)
+          }
+
+          return false
+        }
+      },
+      details: {
+        type: 'Service',
+        essential: true,
+      },
     })
   }
+
+  return healthChecks
 }

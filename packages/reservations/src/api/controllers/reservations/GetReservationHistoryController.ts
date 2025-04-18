@@ -1,7 +1,8 @@
 import { schemas } from '@book-library-tool/api'
+import { Cache } from '@book-library-tool/redis'
 import type { ReservationsHistoryQuery } from '@book-library-tool/sdk'
 import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
-import { NextFunction, Request, Response } from 'express'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export class GetReservationHistoryController {
   constructor(
@@ -16,25 +17,28 @@ export class GetReservationHistoryController {
    * Retrieve a user's reservation history.
    * This uses the projection repository through the query handler.
    */
+  @Cache({
+    ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
+    prefix: 'reservation:history',
+    condition: (result) => result && result.data && Array.isArray(result.data),
+  })
   async getReservationHistory(
-    req: Request,
-    res: Response,
-    next: NextFunction,
+    request: FastifyRequest<{
+      Params: Pick<schemas.UserDTO, 'userId'>
+      Querystring: ReservationsHistoryQuery
+    }>,
+    reply: FastifyReply,
   ): Promise<void> {
-    try {
-      const { userId } = req.params as Pick<schemas.UserDTO, 'userId'>
-      const { page, limit } = req.query as ReservationsHistoryQuery
+    const { userId } = request.params
+    const { page, limit } = request.query
 
-      // Call the handler directly to retrieve data from the projection repository
-      const history = await this.getReservationHistoryHandler.execute({
-        userId,
-        page: page ? Math.floor(Number(page)) : 1,
-        limit: limit ? Math.floor(Number(limit)) : 10,
-      })
+    // Call the handler directly to retrieve data from the projection repository
+    const history = await this.getReservationHistoryHandler.execute({
+      userId,
+      page: page ? Math.floor(Number(page)) : 1,
+      limit: limit ? Math.floor(Number(limit)) : 10,
+    })
 
-      res.status(200).json(history)
-    } catch (error) {
-      next(error)
-    }
+    await reply.status(200).send(history)
   }
 }

@@ -1,11 +1,23 @@
 {
   "cSpell.words": [
+    "Damian Meroni (@merodami)",
+    "depcheckrc",
     "Dinero",
     "dtos",
     "DVERDUE",
+    "fastcsv",
+    "fkill",
+    "grafbase",
     "HEALTHCHECK",
     "Mailhog",
+    "merodami",
+    "Meroni",
+    "mongodata",
+    "omnigraph",
     "rabbitmq",
+    "rabbitmqadmin",
+    "rabbitmqctl",
+    "supergraph",
     "uuidv",
     "vitest"
   ],
@@ -43,5 +55,8 @@
     "javascriptreact",
     "typescript",
     "typescriptreact"
-  ]
+  ],
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml"
+  }
 }

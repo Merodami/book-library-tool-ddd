@@ -1,36 +1,47 @@
+import { Cache } from '@book-library-tool/redis'
 import { GetWalletHandler } from '@wallets/queries/GetWalletHandler.js'
-import { NextFunction, Request, Response } from 'express'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 /**
- * Controller responsible for retrieving wallet information.
+ * Controller responsible for handling wallet retrieval operations.
+ * This controller follows the CQRS pattern, specifically handling queries (read operations).
+ * It uses Fastify's request/response types for type safety and better integration with Fastify.
  */
 export class GetWalletController {
-  constructor(private readonly getWalletHandler: GetWalletHandler) {
-    this.getWallet = this.getWallet.bind(this)
-  }
+  /**
+   * Creates a new instance of GetWalletController
+   * @param getWalletHandler - The handler responsible for executing the wallet retrieval logic
+   */
+  constructor(private readonly getWalletHandler: GetWalletHandler) {}
 
   /**
-   * GET /wallets/:userId
-   * Retrieves wallet information for a specific user
+   * Handles GET requests to retrieve a wallet by user ID
+   * @param request - Fastify request object containing the user ID in params
+   * @param reply - Fastify reply object for sending the response
+   * @returns Promise<void> - The response is sent through the reply object
+   *
+   * @example
+   * GET /wallets/123
+   * Response: { id: "123", balance: 100, ... }
    */
+  @Cache({
+    ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
+    prefix: 'wallet:details',
+    condition: (result) => result !== null,
+  })
   async getWallet(
-    req: Request,
-    res: Response,
-    next: NextFunction,
+    request: FastifyRequest<{ Params: { userId: string } }>,
+    reply: FastifyReply,
   ): Promise<void> {
-    try {
-      const { userId } = req.params
+    const { userId } = request.params
 
-      const wallet = await this.getWalletHandler.execute({ userId })
+    const wallet = await this.getWalletHandler.execute({ userId })
 
-      if (!wallet) {
-        res.status(404).json({ message: 'Wallet not found' })
-        return
-      }
-
-      res.status(200).json(wallet)
-    } catch (error) {
-      next(error)
+    if (!wallet) {
+      await reply.status(404).send({ message: 'Wallet not found' })
+      return
     }
+
+    await reply.status(200).send(wallet)
   }
 }

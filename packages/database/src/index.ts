@@ -1,5 +1,6 @@
 export * from '@database/persistence/mongo/getNextGlobalVersion.js'
 export * from '@database/persistence/mongo/MongoDatabaseService.js'
 export * from '@database/persistence/mongo/MongoRepository.js'
+export * from '@database/persistence/mongo/projectionUtils.js'
 export * from '@database/repositories/IDatabaseService.js'
 export * from '@database/testUtils/setUpTestDatabase.js'

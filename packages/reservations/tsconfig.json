@@ -50,6 +50,9 @@
     },
     {
       "path": "../event-store"
+    },
+    {
+      "path": "../http"
     }
   ]
 }

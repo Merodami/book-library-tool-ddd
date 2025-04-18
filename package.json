@@ -1,16 +1,18 @@
 {
   "name": "book-library-tool",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
-  "author": "merodami",
+  "author": "Damian Meroni (@merodami)",
   "type": "module",
   "scripts": {
-    "depcheck": "nx run-many --target=depcheck --all --parallel=100",
+    "validate:all": "yarn validate:dependencies && yarn typecheck && yarn lint",
+    "validate:dependencies": "nx run-many --target='knip --no-hints' --all",
     "upgrade": "nx run-many --target=upgrade --all --parallel=100",
     "upgrade:all": "nx run-many --target=upgrade --all --parallel=100",
     "graph": "nx graph",
     "docker:local": "docker compose -f docker-compose.local.yml up -d",
     "docker:local:down": "docker compose -f docker-compose.local.yml down",
+    "docker:restart": "yarn docker:local:down && yarn docker:local",
     "test": "yarn vitest",
     "build": "nx run-many --target=build --all --parallel=100 --output-style=stream --skip-nx-cache",
     "typecheck": "nx run-many --target=typecheck --parallel=100",
@@ -29,7 +31,7 @@
     "user:create": "nx run @book-library-tool/auth:generate-user",
     "generate:api": "nx run @book-library-tool/api:build",
     "generate:sdk": "nx run @book-library-tool/sdk:sdk-gen",
-    "generate:graphql": "nx run @book-library-tool/graphql-gateway:graphql-gen",
+    "generate:graphql": "nx run @book-library-tool/graphql:graphql-gen",
     "git-hooks-prepare": "husky install",
     "open:docs": "nx run @book-library-tool/api:open-docs",
     "rabbit:ui": "open http://localhost:15672",
@@ -44,27 +46,25 @@
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.30.1",
     "@typescript-eslint/parser": "^8.30.1",
-    "axios": "^1.8.4",
     "eslint": "^9.24.0",
     "eslint-config-prettier": "^10.1.2",
-    "eslint-loader": "^4.0.2",
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sonarjs": "^3.0.2",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "express": "^5.1.0",
     "fix-esm-import-path": "^1.10.1",
     "fkill-cli": "^8.0.0",
     "husky": "^9.1.7",
+    "knip": "^5.50.5",
     "lint-staged": "^15.5.1",
     "nx": "^20.8.0",
     "prettier": "^3.5.3",
-    "supertest": "^7.1.0",
     "tsc-alias": "^1.8.15",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.1.1"
+    "vitest": "^3.1.1",
+    "testcontainers": "^10.24.2"
   },
   "workspaces": [
     "packages/*"
@@ -72,8 +72,5 @@
   "packageManager": "yarn@4.7.0",
   "engines": {
     "node": ">=20.0.0 <21.0.0"
-  },
-  "dependencies": {
-    "dataloader": "^2.2.3"
   }
 }

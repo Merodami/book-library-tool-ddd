@@ -1,0 +1,27 @@
+{
+  "name": "@book-library-tool/graphql",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GraphQL Gateway for Book Library Tool",
+  "author": "Damian Meroni (@merodami)",
+  "type": "module",
+  "devDependencies": {
+    "@graphql-mesh/compose-cli": "^1.4.7",
+    "@omnigraph/openapi": "^0.109.7"
+  },
+  "depcheck": {
+    "ignore": [
+      "nx",
+      "ts-node",
+      "tsconfig-paths"
+    ],
+    "parsers": {
+      "**/*.ts": "typescript"
+    },
+    "detectors": [
+      "requireCallExpression",
+      "importDeclaration",
+      "typescriptImportEqualsDeclaration"
+    ]
+  }
+}

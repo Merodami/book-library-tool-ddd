@@ -1,6 +1,6 @@
 import { logger } from '@book-library-tool/shared'
 import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
-import { CacheService } from '@database/cache/mongo/CacheService.js'
+import { RedisCacheService } from '@database/cache/redis/RedisCacheService.js'
 import {
   Collection,
   Db,
@@ -36,7 +36,7 @@ export class MongoDatabaseService {
   private client: MongoClient | null = null
   private db: Db | null = null
   private dbName: string
-  private cacheService: CacheService
+  private cacheService: RedisCacheService
   private metrics: MongoMetrics = {
     queryCount: 0,
     queryTime: 0,
@@ -50,11 +50,11 @@ export class MongoDatabaseService {
    */
   constructor(dbName: string) {
     this.dbName = dbName
-    this.cacheService = new CacheService()
+    this.cacheService = new RedisCacheService()
 
     // Handle process termination signals
-    process.on('SIGTERM', () => {
-      this.cacheService.dispose()
+    process.on('SIGTERM', async () => {
+      await this.cacheService.dispose()
     })
   }
 
@@ -234,15 +234,15 @@ export class MongoDatabaseService {
   /**
    * Invalidates cache entries for a specific collection
    */
-  invalidateCache(collectionName: string): void {
-    this.cacheService.invalidateCollection(collectionName)
+  async invalidateCache(collectionName: string): Promise<void> {
+    await this.cacheService.invalidateCollection(collectionName)
   }
 
   /**
    * Clears the entire cache
    */
-  clearCache(): void {
-    this.cacheService.clear()
+  async clearCache(): Promise<void> {
+    await this.cacheService.clear()
   }
 
   /**
@@ -267,7 +267,8 @@ export class MongoDatabaseService {
 
     // Try to get from cache first if cacheTtl is specified
     if (options?.cacheTtl) {
-      const cached = this.cacheService.get<PaginatedResult<WithId<T>>>(cacheKey)
+      const cached =
+        await this.cacheService.get<PaginatedResult<WithId<T>>>(cacheKey)
       if (cached) {
         return cached
       }
@@ -318,7 +319,7 @@ export class MongoDatabaseService {
 
       // Cache the result if cacheTtl is specified
       if (options?.cacheTtl) {
-        this.cacheService.set(cacheKey, result, options.cacheTtl)
+        await this.cacheService.set(cacheKey, result, options.cacheTtl)
       }
 
       this.metrics.queryCount++

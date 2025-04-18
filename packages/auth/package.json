@@ -7,11 +7,10 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@book-library-tool/shared": "workspace:^",
-    "express": "^5.1.0",
+    "date-fns": "^4.1.0",
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "typescript": "^5.8.3"
   }

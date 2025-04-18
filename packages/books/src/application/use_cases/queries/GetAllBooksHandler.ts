@@ -3,7 +3,7 @@ import type {
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 
 export class GetAllBooksHandler {
   constructor(

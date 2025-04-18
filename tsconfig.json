@@ -31,7 +31,7 @@
     { "path": "packages/api" },
     { "path": "packages/sdk" },
     { "path": "packages/api-gateway" },
-    { "path": "packages/graphql-gateway" },
+    { "path": "packages/graphql" },
     { "path": "packages/shared" },
     { "path": "packages/database" },
     { "path": "packages/event-store" },

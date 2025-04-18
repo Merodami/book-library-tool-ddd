@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Database service for Book Library Tool",
-  "author": "merodami",
+  "author": "Damian Meroni (@merodami)",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,11 +12,13 @@
     "@book-library-tool/shared": "workspace:^",
     "@book-library-tool/types": "workspace:^",
     "he": "^1.2.0",
-    "mongodb": "^6.15.0"
+    "mongodb": "^6.15.0",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@types/he": "^1.2.3",
     "@types/mongodb": "^4.0.7",
+    "@types/redis": "^4.0.11",
     "migrate-mongo": "^12.1.3",
     "mongodb-memory-server": "^10.1.4",
     "typescript": "^5.8.3"

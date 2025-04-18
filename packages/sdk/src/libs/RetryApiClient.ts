@@ -1,3 +1,4 @@
+import logger from '../../../shared/src/logger.js'
 import type { ApiRequestOptions } from '../openapi/core/ApiRequestOptions.js'
 import { CancelablePromise } from '../openapi/core/CancelablePromise.js'
 import type { OpenAPIConfig } from '../openapi/core/OpenAPI.js'
@@ -37,7 +38,7 @@ const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
   useExponentialBackoff: true,
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],
   retryOnNetworkError: true,
-  logger: console.warn,
+  logger: logger.warn,
 }
 
 /**
@@ -99,6 +100,7 @@ export function createRetryApiClient(
             }
           } catch (error) {
             lastError = error
+
             if (
               !shouldRetryError(error, fullRetryConfig) ||
               attempt >= fullRetryConfig.maxRetries
