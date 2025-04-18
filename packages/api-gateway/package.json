@@ -5,8 +5,8 @@
   "description": "API Gateway with rate limiting and common middleware for services",
   "author": "Damian Meroni (@merodami)",
   "type": "module",
-  "main": "dist/application/server.js",
-  "types": "dist/application/server.d.ts",
+  "main": "dist/application/api/server.js",
+  "types": "index.d.ts",
   "dependencies": {
     "@book-library-tool/http": "workspace:*",
     "@book-library-tool/shared": "workspace:*",

@@ -3,6 +3,7 @@ import { Errors } from '@book-library-tool/shared'
 import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
 import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
 import { Book } from '@books/entities/Book.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import type { IBookRepository } from '@books/repositories/IBookRepository.js'
 
 /**
@@ -13,16 +14,17 @@ import type { IBookRepository } from '@books/repositories/IBookRepository.js'
 export class CreateBookHandler {
   constructor(
     private readonly repository: IBookRepository,
+    private readonly projectionRepository: IBookProjectionRepository,
     private readonly eventBus: EventBus,
   ) {}
 
   async execute(command: CreateBookCommand): Promise<Book> {
-    // Check for existing events (i.e. an existing aggregate) for the given ISBN.
-    const aggregateId = await this.repository.findAggregateIdByISBN(
-      command.isbn,
-    )
+    // Check if the book already exists in the projection.
+    const existing = await this.projectionRepository.getBookByISBN(command.isbn)
 
-    if (aggregateId) {
+    console.log('🚀 ~ CreateBookHandler ~ execute ~ existing:', existing)
+
+    if (existing) {
       throw new Errors.ApplicationError(
         400,
         ErrorCode.BOOK_ALREADY_EXISTS,

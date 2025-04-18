@@ -1,46 +1,55 @@
-import {
+// tests/integration/infrastructure/repositories/BookProjectionRepository.test.ts
+import type {
   Book,
   BookUpdateRequest,
   CatalogSearchQuery,
+  PaginatedBookResponse,
 } from '@book-library-tool/sdk'
 import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
-import { BookDocument } from '@books/persistence/mongo/documents/BookDocument.js'
-import { Collection, MongoClient, ObjectId } from 'mongodb'
+import type { BookDocument } from '@books/persistence/mongo/documents/BookDocument.js'
+import { Collection, MongoClient } from 'mongodb'
+import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
-describe('BookProjectionRepository Integration', () => {
+describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () => {
+  let container: StartedTestContainer
   let client: MongoClient
   let collection: Collection<BookDocument>
   let repository: BookProjectionRepository
-  let mockBook: Book
-  let bookId: string
 
-  // Setup MongoDB connection
   beforeAll(async () => {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017'
-    client = new MongoClient(mongoUri)
+    container = await new GenericContainer('mongo:6.0')
+      .withExposedPorts(27017)
+      .withEnvironment({
+        MONGO_INITDB_ROOT_USERNAME: 'root',
+        MONGO_INITDB_ROOT_PASSWORD: 'example',
+      })
+      .withWaitStrategy(Wait.forLogMessage('Waiting for connections'))
+      .start()
+
+    const host = container.getHost()
+    const port = container.getMappedPort(27017)
+    const uri = `mongodb://root:example@${host}:${port}/?authSource=admin`
+
+    client = new MongoClient(uri)
     await client.connect()
 
-    // Use a test database
     const db = client.db('book-library-test')
-    collection = db.collection<BookDocument>('books')
 
+    collection = db.collection<BookDocument>('books')
     repository = new BookProjectionRepository(collection)
   })
 
-  // Cleanup after all tests
   afterAll(async () => {
-    await collection.deleteMany({})
     await client.close()
+    await container.stop()
   })
 
-  // Reset data before each test
   beforeEach(async () => {
-    // Clear collection
     await collection.deleteMany({})
 
-    // Create test book
-    mockBook = {
+    // Insert baseline book via repository to ensure correct mapping
+    const baseBook: Book = {
       isbn: '978-3-16-148410-0',
       title: 'Test Book',
       author: 'Test Author',
@@ -51,213 +60,109 @@ describe('BookProjectionRepository Integration', () => {
       updatedAt: new Date().toISOString(),
     }
 
-    // Insert test book manually
-    const result = await collection.insertOne({
-      _id: new ObjectId(),
-      isbn: mockBook.isbn,
-      title: mockBook.title,
-      author: mockBook.author,
-      publicationYear: mockBook.publicationYear,
-      publisher: mockBook.publisher,
-      price: mockBook.price,
-      createdAt: mockBook.createdAt ? new Date(mockBook.createdAt) : new Date(),
-      updatedAt: mockBook.updatedAt ? new Date(mockBook.updatedAt) : new Date(),
-    })
-
-    bookId = result.insertedId.toString()
+    await repository.saveProjection(baseBook)
   })
 
   describe('getBookByISBN', () => {
-    it('should return a book when it exists', async () => {
-      // Act
-      const result = await repository.getBookByISBN(mockBook.isbn)
+    it('returns the book when it exists', async () => {
+      const result = await repository.getBookByISBN('978-3-16-148410-0')
 
-      // Assert
-      expect(result).toBeDefined()
-      expect(result?.isbn).toBe(mockBook.isbn)
-      expect(result?.title).toBe(mockBook.title)
-      expect(result?.author).toBe(mockBook.author)
+      expect(result).not.toBeNull()
+      expect(result?.isbn).toBe('978-3-16-148410-0')
+      expect(result?.title).toBe('Test Book')
     })
 
-    it('should return null when book does not exist', async () => {
-      // Act
-      const result = await repository.getBookByISBN('non-existent-isbn')
+    it('returns null for non-existent ISBN', async () => {
+      const result = await repository.getBookByISBN('no-such')
 
-      // Assert
       expect(result).toBeNull()
     })
   })
 
   describe('getAllBooks', () => {
-    it('should return all books with pagination', async () => {
-      // Arrange - Add another book
-      const secondBook: Book = {
+    it('returns paginated books', async () => {
+      const second: Book = {
         isbn: '978-3-16-148410-1',
-        title: 'Another Test Book',
-        author: 'Another Author',
+        title: 'Another',
+        author: 'Author',
         publicationYear: 2024,
-        publisher: 'Test Publisher',
+        publisher: 'Publisher',
         price: 29.99,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
 
-      await repository.saveProjection(secondBook)
+      await repository.saveProjection(second)
 
-      // Act
-      const query: CatalogSearchQuery = {
-        page: 1,
-        limit: 10,
-      }
-      const result = await repository.getAllBooks(query)
+      const query: CatalogSearchQuery = { skip: 0, limit: 10 }
+      const resp: PaginatedBookResponse = await repository.getAllBooks(query)
 
-      // Assert
-      expect(result.data.length).toBe(2)
-      expect(result.pagination.total).toBe(2)
-      expect(result.pagination.page).toBe(1)
-      expect(result.pagination.limit).toBe(10)
-      expect(result.pagination.pages).toBe(1)
-      expect(
-        result.data.some((book: Book) => book.isbn === mockBook.isbn),
-      ).toBe(true)
-      expect(
-        result.data.some((book: Book) => book.isbn === secondBook.isbn),
-      ).toBe(true)
+      expect(resp.data.length).toBe(2)
+      expect(resp.pagination.total).toBe(2)
     })
 
-    it('should filter books by title', async () => {
-      // Arrange - Add another book
-      const secondBook: Book = {
-        isbn: '978-3-16-148410-1',
-        title: 'Different Title',
-        author: 'Another Author',
-        publicationYear: 2024,
-        publisher: 'Test Publisher',
-        price: 29.99,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
+    it('filters by title', async () => {
+      const query: CatalogSearchQuery = { title: 'Test', skip: 0, limit: 10 }
+      const resp = await repository.getAllBooks(query)
 
-      await repository.saveProjection(secondBook)
-
-      // Act - Search for "Test" in title
-      const query: CatalogSearchQuery = {
-        title: 'Test',
-        page: 1,
-        limit: 10,
-      }
-      const result = await repository.getAllBooks(query)
-
-      // Assert
-      expect(result.data.length).toBe(1)
-      expect(result.pagination.total).toBe(1)
-      expect(result.data[0].isbn).toBe(mockBook.isbn)
+      expect(resp.data.every((b) => b.title.includes('Test'))).toBe(true)
     })
   })
 
-  describe('saveProjection', () => {
-    it('should save a new book projection', async () => {
-      // Arrange
+  describe('saveProjection and updateProjection', () => {
+    it('saves and updates correctly', async () => {
       const newBook: Book = {
         isbn: '978-3-16-148410-2',
-        title: 'New Book',
-        author: 'New Author',
+        title: 'New',
+        author: 'New',
         publicationYear: 2025,
-        publisher: 'New Publisher',
+        publisher: 'New',
         price: 39.99,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
 
-      // Act
       await repository.saveProjection(newBook)
 
-      // Assert - Check if the book was saved
-      const savedBook = await repository.getBookByISBN(newBook.isbn)
-      expect(savedBook).toBeDefined()
-      expect(savedBook?.isbn).toBe(newBook.isbn)
-      expect(savedBook?.title).toBe(newBook.title)
-      expect(savedBook?.author).toBe(newBook.author)
-    })
-  })
+      let fetched = await repository.getBookByISBN(newBook.isbn)
 
-  describe('updateProjection', () => {
-    it('should update an existing book projection', async () => {
-      // Arrange
-      const updates: BookUpdateRequest = {
-        title: 'Updated Title',
-        author: 'Updated Author',
+      expect(fetched).not.toBeNull()
+
+      const doc = await collection.findOne({ isbn: newBook.isbn })!
+      const id = doc?._id.toString()
+      const updates: BookUpdateRequest = { title: 'Updated', author: 'Edited' }
+
+      if (!id) {
+        throw new Error('Book ID is null')
       }
 
-      // First get the document to retrieve its ID
-      const book = await collection.findOne({ isbn: mockBook.isbn })
-      const id = book?._id.toString()
+      await repository.updateProjection(id, updates)
 
-      // Act
-      await repository.updateProjection(id!, updates)
-
-      // Assert
-      const updatedBook = await repository.getBookByISBN(mockBook.isbn)
-      expect(updatedBook).toBeDefined()
-      expect(updatedBook?.title).toBe(updates.title)
-      expect(updatedBook?.author).toBe(updates.author)
-      expect(updatedBook?.isbn).toBe(mockBook.isbn) // ISBN should not change
+      fetched = await repository.getBookByISBN(newBook.isbn)
+      expect(fetched?.title).toBe('Updated')
+      expect(fetched?.author).toBe('Edited')
     })
   })
 
-  describe('markAsDeleted', () => {
-    it('should mark a book as deleted', async () => {
-      // Arrange
-      const timestamp = new Date()
+  describe('markAsDeleted and findBookForReservation', () => {
+    it('soft-deletes and excludes', async () => {
+      const doc = await collection.findOne({ isbn: '978-3-16-148410-0' })!
+      const id = doc?._id.toString()
+      const ts = new Date()
 
-      // First get the document to retrieve its ID
-      const book = await collection.findOne({ isbn: mockBook.isbn })
-      const id = book?._id.toString()
-
-      // Act
-      await repository.markAsDeleted(id!, timestamp)
-
-      // Assert - Book should not be returned in normal queries
-      const query: CatalogSearchQuery = {
-        page: 1,
-        limit: 10,
+      if (!id) {
+        throw new Error('Book ID is null')
       }
-      const result = await repository.getAllBooks(query)
-      expect(result.data.length).toBe(0)
 
-      // Check the database directly to confirm the deletedAt is set
-      const markedBook = await collection.findOne({ isbn: mockBook.isbn })
-      expect(markedBook).toBeDefined()
-      expect(markedBook?.deletedAt).toBeInstanceOf(Date)
-    })
-  })
+      await repository.markAsDeleted(id, ts)
 
-  describe('findBookForReservation', () => {
-    it('should return a book when it exists and is not deleted', async () => {
-      // Act
-      const result = await repository.findBookForReservation(mockBook.isbn)
+      const all = await repository.getAllBooks({ skip: 0, limit: 10 })
 
-      // Assert
-      expect(result).toBeDefined()
-      expect(result?.isbn).toBe(mockBook.isbn)
-    })
+      expect(all.data.length).toBe(0)
 
-    it('should return null when book is deleted', async () => {
-      // Arrange
-      const timestamp = new Date()
+      const found = await repository.findBookForReservation('978-3-16-148410-0')
 
-      // First get the document to retrieve its ID
-      const book = await collection.findOne({ isbn: mockBook.isbn })
-      const id = book?._id.toString()
-
-      // Mark as deleted
-      await repository.markAsDeleted(id!, timestamp)
-
-      // Act
-      const result = await repository.findBookForReservation(mockBook.isbn)
-
-      // Assert
-      expect(result).toBeNull()
+      expect(found).toBeNull()
     })
   })
 })

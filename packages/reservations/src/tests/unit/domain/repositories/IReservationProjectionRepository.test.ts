@@ -3,10 +3,9 @@ import {
   Reservation as SDKReservation,
 } from '@book-library-tool/sdk'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
+import { Reservation } from '@reservations/entities/Reservation.js'
+import { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
 import { describe, expect, it, vi } from 'vitest'
-
-import { Reservation } from '../../../../domain/entities/Reservation.js'
-import { IReservationProjectionRepository } from '../../../../domain/repositories/IReservationProjectionRepository.js'
 
 describe('IReservationProjectionRepository', () => {
   const mockRepository = {
@@ -56,7 +55,9 @@ describe('IReservationProjectionRepository', () => {
       vi.mocked(mockRepository.getUserReservations).mockResolvedValue(
         mockPaginatedResult,
       )
+
       const result = await mockRepository.getUserReservations(mockUserId)
+
       expect(result.data).toHaveLength(1)
       expect(result.data[0]).toEqual(mockSDKReservation)
       expect(mockRepository.getUserReservations).toHaveBeenCalledWith(
@@ -70,8 +71,10 @@ describe('IReservationProjectionRepository', () => {
       vi.mocked(mockRepository.getReservationById).mockResolvedValue(
         mockSDKReservation,
       )
+
       const reservation =
         await mockRepository.getReservationById(mockReservationId)
+
       expect(reservation).toEqual(mockSDKReservation)
       expect(mockRepository.getReservationById).toHaveBeenCalledWith(
         mockReservationId,
@@ -80,8 +83,10 @@ describe('IReservationProjectionRepository', () => {
 
     it('should return null when reservation is not found', async () => {
       vi.mocked(mockRepository.getReservationById).mockResolvedValue(null)
+
       const reservation =
         await mockRepository.getReservationById('non-existent-id')
+
       expect(reservation).toBeNull()
     })
   })
@@ -91,7 +96,9 @@ describe('IReservationProjectionRepository', () => {
       vi.mocked(mockRepository.getBookReservations).mockResolvedValue(
         mockPaginatedResult,
       )
+
       const result = await mockRepository.getBookReservations(mockIsbn)
+
       expect(result.data).toHaveLength(1)
       expect(result.data[0]).toEqual(mockSDKReservation)
       expect(mockRepository.getBookReservations).toHaveBeenCalledWith(mockIsbn)
@@ -103,8 +110,10 @@ describe('IReservationProjectionRepository', () => {
       vi.mocked(mockRepository.getActiveBookReservations).mockResolvedValue([
         mockSDKReservation,
       ])
+
       const reservations =
         await mockRepository.getActiveBookReservations(mockIsbn)
+
       expect(reservations).toHaveLength(1)
       expect(reservations[0]).toEqual(mockSDKReservation)
       expect(mockRepository.getActiveBookReservations).toHaveBeenCalledWith(
@@ -118,9 +127,11 @@ describe('IReservationProjectionRepository', () => {
       vi.mocked(mockRepository.getReservationsByStatus).mockResolvedValue(
         mockPaginatedResult,
       )
+
       const result = await mockRepository.getReservationsByStatus(
         RESERVATION_STATUS.CREATED,
       )
+
       expect(result.data).toHaveLength(1)
       expect(result.data[0]).toEqual(mockSDKReservation)
       expect(mockRepository.getReservationsByStatus).toHaveBeenCalledWith(
@@ -134,8 +145,10 @@ describe('IReservationProjectionRepository', () => {
       vi.mocked(mockRepository.countActiveReservationsByUser).mockResolvedValue(
         1,
       )
+
       const count =
         await mockRepository.countActiveReservationsByUser(mockUserId)
+
       expect(count).toBe(1)
       expect(mockRepository.countActiveReservationsByUser).toHaveBeenCalledWith(
         mockUserId,

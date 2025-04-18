@@ -28,7 +28,7 @@
     "local": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsx --watch ./src/index.ts",
+        "command": "tsx --watch ./src/api/server.ts",
         "cwd": "{projectRoot}"
       }
     }

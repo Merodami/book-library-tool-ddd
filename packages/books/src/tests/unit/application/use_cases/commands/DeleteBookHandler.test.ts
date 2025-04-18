@@ -1,33 +1,36 @@
-import { EventBus } from '@book-library-tool/event-store'
-import { Errors } from '@book-library-tool/shared'
-import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
-import { DeleteBookCommand } from '@books/commands/DeleteBookCommand.js'
-import { DeleteBookHandler } from '@books/commands/DeleteBookHandler.js'
+import {
+  BOOK_CREATED,
+  BOOK_DELETED,
+  type DomainEvent,
+  type EventBus,
+} from '@book-library-tool/event-store'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { Book } from '@books/entities/Book.js'
-import { IBookRepository } from '@books/repositories/IBookRepository.js'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { IBookRepository } from '@books/repositories/IBookRepository.js'
+import type { DeleteBookCommand } from '@books/use_cases/commands/DeleteBookCommand.js'
+import { DeleteBookHandler } from '@books/use_cases/commands/DeleteBookHandler.js'
+import { randomUUID } from 'crypto'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('DeleteBookHandler', () => {
-  let mockRepository: IBookRepository
-  let mockEventBus: EventBus
+  let repository: IBookRepository
+  let eventBus: EventBus
   let handler: DeleteBookHandler
-  let mockDomainEvent: any
-  let mockBook: Partial<Book>
-  let mockDeletedBook: Partial<Book>
 
-  const aggregateId = 'test-aggregate-id'
-  const validIsbn = '978-3-16-148410-0'
-  const events = [
+  const isbn = '978-3-16-148410-0'
+  const aggregateId = randomUUID()
+
+  const baseEvents: DomainEvent[] = [
     {
       aggregateId,
-      eventType: 'BookCreated',
+      eventType: BOOK_CREATED,
       payload: {
-        isbn: validIsbn,
-        title: 'Test Book',
-        author: 'Test Author',
+        isbn,
+        title: 'Orig',
+        author: 'Auth',
         publicationYear: 2023,
-        publisher: 'Test Publisher',
-        price: 19.99,
+        publisher: 'Pub',
+        price: 15,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -37,109 +40,118 @@ describe('DeleteBookHandler', () => {
     },
   ]
 
-  const validCommand: DeleteBookCommand = {
-    isbn: validIsbn,
-  }
-
   beforeEach(() => {
-    mockRepository = {
-      saveEvents: vi.fn().mockResolvedValue(undefined),
-      appendBatch: vi.fn().mockResolvedValue(undefined),
-      getEventsForAggregate: vi.fn().mockResolvedValue(events),
+    repository = {
       findAggregateIdByISBN: vi.fn().mockResolvedValue(aggregateId),
-    }
+      getEventsForAggregate: vi.fn().mockResolvedValue(baseEvents),
+      saveEvents: vi.fn().mockResolvedValue(undefined),
+    } as unknown as IBookRepository
 
-    mockEventBus = {
+    eventBus = {
       publish: vi.fn().mockResolvedValue(undefined),
-      init: vi.fn().mockResolvedValue(undefined),
-      subscribe: vi.fn().mockResolvedValue(undefined),
-      subscribeToAll: vi.fn().mockResolvedValue(undefined),
-      unsubscribe: vi.fn().mockResolvedValue(undefined),
-      unsubscribeFromAll: vi.fn().mockResolvedValue(undefined),
-      getSubscribers: vi.fn().mockReturnValue([]),
-      getAllSubscribers: vi.fn().mockReturnValue([]),
+      init: vi.fn(),
+      subscribe: vi.fn(),
+      subscribeToAll: vi.fn(),
+      unsubscribe: vi.fn(),
+      unsubscribeFromAll: vi.fn(),
+      getSubscribers: vi.fn(),
+      getAllSubscribers: vi.fn(),
+      shutdown: vi.fn(),
+      startConsuming: vi.fn(),
+      bindEventTypes: vi.fn(),
+      checkHealth: vi.fn(),
     } as unknown as EventBus
 
-    mockBook = {
-      id: aggregateId,
-      version: 0,
-      delete: vi.fn(),
-      clearDomainEvents: vi.fn(),
-    }
+    handler = new DeleteBookHandler(repository, eventBus)
+  })
 
-    mockDeletedBook = {
+  it('successfully deletes an existing book', async () => {
+    const fakeBook = Object.assign(Object.create(Book.prototype), {
       id: aggregateId,
       version: 1,
+      deletedAt: undefined,
       clearDomainEvents: vi.fn(),
-    }
+    }) as Book
 
-    mockDomainEvent = {
+    const deleteEvt: DomainEvent = {
       aggregateId,
-      eventType: 'BookDeleted',
-      payload: {
-        deletedAt: expect.any(String),
-      },
-      timestamp: expect.any(Date),
-      version: 1,
+      eventType: BOOK_DELETED,
+      payload: { deletedAt: expect.any(String as any) },
+      timestamp: expect.any(Date as any),
+      version: 2,
       schemaVersion: 1,
     }
 
-    vi.spyOn(Book, 'rehydrate').mockReturnValue(mockBook as Book)
-    ;(mockBook.delete as any).mockReturnValue({
-      book: mockDeletedBook,
-      event: mockDomainEvent,
-    })
+    vi.spyOn(Book, 'rehydrate').mockReturnValue(fakeBook)
+    fakeBook.delete = vi
+      .fn()
+      .mockReturnValue({ book: fakeBook, event: deleteEvt })
 
-    handler = new DeleteBookHandler(mockRepository, mockEventBus)
-  })
+    const command: DeleteBookCommand = { isbn }
+    const result = await handler.execute(command)
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  it('should delete a book and return it when the ISBN exists', async () => {
-    // Act
-    const result = await handler.execute(validCommand)
-
-    // Assert
-    expect(result).toBe(mockDeletedBook)
-    expect(mockRepository.findAggregateIdByISBN).toHaveBeenCalledWith(
-      validCommand.isbn,
-    )
-    expect(mockRepository.getEventsForAggregate).toHaveBeenCalledWith(
+    expect(result).toBe(true)
+    expect(repository.findAggregateIdByISBN).toHaveBeenCalledWith(isbn)
+    expect(repository.getEventsForAggregate).toHaveBeenCalledWith(aggregateId)
+    expect(Book.rehydrate).toHaveBeenCalledWith(baseEvents)
+    expect(fakeBook.delete).toHaveBeenCalled()
+    expect(repository.saveEvents).toHaveBeenCalledWith(
       aggregateId,
+      [deleteEvt],
+      fakeBook.version,
     )
-    expect(Book.rehydrate).toHaveBeenCalledWith(events)
-    expect(mockBook.delete).toHaveBeenCalled()
-    expect(mockRepository.appendBatch).toHaveBeenCalledWith(
-      aggregateId,
-      [mockDomainEvent],
-      0,
-    )
-    expect(mockEventBus.publish).toHaveBeenCalledWith(mockDomainEvent)
-    expect(mockDeletedBook.clearDomainEvents).toHaveBeenCalled()
+    expect(eventBus.publish).toHaveBeenCalledWith(deleteEvt)
+    expect(fakeBook.clearDomainEvents).toHaveBeenCalled()
   })
 
-  it('should throw an error when the ISBN does not exist', async () => {
-    // Arrange
-    mockRepository.findAggregateIdByISBN = vi.fn().mockResolvedValue(null)
+  it('throws ApplicationError if ISBN not found', async () => {
+    vi.spyOn(repository, 'findAggregateIdByISBN').mockResolvedValue(null)
 
-    // Act & Assert
-    await expect(handler.execute(validCommand)).rejects.toThrow(
+    const command: DeleteBookCommand = { isbn }
+
+    await expect(handler.execute(command)).rejects.toEqual(
       new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book with ISBN ${validCommand.isbn} not found`,
+        `Book with isbn ${isbn} not found.`,
       ),
     )
 
-    expect(mockRepository.findAggregateIdByISBN).toHaveBeenCalledWith(
-      validCommand.isbn,
+    expect(repository.getEventsForAggregate).not.toHaveBeenCalled()
+  })
+
+  it('throws ApplicationError if no events found', async () => {
+    vi.spyOn(repository, 'getEventsForAggregate').mockResolvedValue([])
+
+    const command: DeleteBookCommand = { isbn }
+
+    await expect(handler.execute(command)).rejects.toEqual(
+      new Errors.ApplicationError(
+        404,
+        ErrorCode.BOOK_NOT_FOUND,
+        `Book with isbn ${isbn} not found.`,
+      ),
     )
-    expect(mockRepository.getEventsForAggregate).not.toHaveBeenCalled()
-    expect(Book.rehydrate).not.toHaveBeenCalled()
-    expect(mockBook.delete).not.toHaveBeenCalled()
-    expect(mockRepository.appendBatch).not.toHaveBeenCalled()
-    expect(mockEventBus.publish).not.toHaveBeenCalled()
+  })
+
+  it('throws ApplicationError if book is already deleted', async () => {
+    const fakeBook = Object.assign(Object.create(Book.prototype), {
+      id: aggregateId,
+      version: 1,
+      deletedAt: new Date(),
+      clearDomainEvents: vi.fn(),
+    }) as Book
+
+    vi.spyOn(Book, 'rehydrate').mockReturnValue(fakeBook)
+
+    const command: DeleteBookCommand = { isbn }
+
+    await expect(handler.execute(command)).rejects.toEqual(
+      new Errors.ApplicationError(
+        410,
+        ErrorCode.BOOK_ALREADY_DELETED,
+        `Book with isbn ${isbn} already deleted.`,
+      ),
+    )
   })
 })

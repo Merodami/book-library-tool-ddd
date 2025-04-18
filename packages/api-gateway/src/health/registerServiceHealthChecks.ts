@@ -1,80 +1,57 @@
-import { HealthCheckDependency, logger } from '@book-library-tool/shared'
-import { Redis } from 'ioredis'
+import type { HealthCheckConfig } from '@book-library-tool/http'
+import { logger } from '@book-library-tool/shared'
 
 /**
- * Register health checks for backend services
- *
- * Note: This function only prepares the health check dependencies.
- * The actual registration happens via the createFastifyServer function
- * which expects the healthChecks array directly.
+ * Register health checks for all services
+ * @param isLocalDev - Whether running in development mode
+ * @returns Array of health check configurations
  */
 export async function registerServiceHealthChecks(
   isLocalDev: boolean,
-): Promise<HealthCheckDependency[]> {
-  // Define services to check
-  const serviceChecks = [
+): Promise<HealthCheckConfig[]> {
+  const healthChecks: HealthCheckConfig[] = []
+
+  // Add health checks for each service
+  const services = [
     {
-      name: 'graphql',
-      url: process.env.GRAPHQL_GATEWAY_HEALTH_URL ?? 'http://localhost:9668',
-    },
-    {
-      name: 'books-service',
+      name: 'books',
       url: process.env.BOOKS_API_URL ?? 'http://localhost:3001',
     },
     {
-      name: 'reservations-service',
+      name: 'reservations',
       url: process.env.RESERVATIONS_API_URL ?? 'http://localhost:3002',
     },
     {
-      name: 'wallets-service',
+      name: 'wallets',
       url: process.env.WALLETS_API_URL ?? 'http://localhost:3003',
     },
     {
-      name: 'redis',
-      url: process.env.REDIS_URL ?? 'redis://localhost:6379',
+      name: 'graphql',
+      url: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4001',
     },
   ]
 
-  // Create health check dependencies for each service
-  const healthChecks: HealthCheckDependency[] = serviceChecks.map(
-    (service) => ({
-      name: service.name,
+  for (const service of services) {
+    healthChecks.push({
+      name: `${service.name}-service`,
       check: async () => {
         try {
-          if (service.name === 'redis') {
-            const redis = new Redis(service.url)
-
-            await redis.ping()
-            await redis.quit()
-
-            return true
-          }
-
-          const response = await fetch(`${service.url}/health/liveness`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            signal: AbortSignal.timeout(3000),
-          })
+          const response = await fetch(`${service.url}/health`)
 
           return response.ok
         } catch (error) {
           if (isLocalDev) {
-            logger.warn(`${service.name} health check failed`)
-            logger.warn(error)
+            logger.warn(`Health check failed for ${service.name}:`, error)
           }
 
           return false
         }
       },
       details: {
-        type: service.name === 'redis' ? 'Redis' : 'REST API',
-        url: service.url,
+        type: 'Service',
+        essential: true,
       },
-    }),
-  )
-
-  if (isLocalDev) {
-    logger.info('Registered health checks for all backend services')
+    })
   }
 
   return healthChecks

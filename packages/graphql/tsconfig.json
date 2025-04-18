@@ -41,9 +41,6 @@
     },
     {
       "path": "../redis"
-    },
-    {
-      "path": "../api-gateway"
     }
   ]
 }

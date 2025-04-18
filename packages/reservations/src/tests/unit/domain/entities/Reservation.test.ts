@@ -6,9 +6,8 @@ import {
   RESERVATION_REJECTED,
 } from '@book-library-tool/event-store'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
+import { Reservation } from '@reservations/entities/Reservation.js'
 import { describe, expect, it, vi } from 'vitest'
-
-import { Reservation } from '../../../../domain/entities/Reservation.js'
 
 describe('Reservation Entity', () => {
   const mockUserId = 'user-123'
@@ -53,6 +52,7 @@ describe('Reservation Entity', () => {
       } as schemas.ReservationDTO)
 
       const expectedDueDate = new Date(mockReservedAt)
+
       expectedDueDate.setDate(expectedDueDate.getDate() + 7)
 
       expect(reservation.dueDate.toISOString()).toBe(
@@ -67,6 +67,7 @@ describe('Reservation Entity', () => {
         userId: mockUserId,
         isbn: mockIsbn,
       } as schemas.ReservationDTO)
+
       reservation.setPaymentPending()
 
       const { event } = reservation.confirm(
@@ -84,6 +85,7 @@ describe('Reservation Entity', () => {
         userId: mockUserId,
         isbn: mockIsbn,
       } as schemas.ReservationDTO)
+
       reservation.setPaymentPending()
       reservation.confirm('payment-ref-123', 'credit-card', mockFeeCharged)
 
@@ -132,6 +134,7 @@ describe('Reservation Entity', () => {
         userId: mockUserId,
         isbn: mockIsbn,
       } as schemas.ReservationDTO)
+
       reservation.setPaymentPending()
       reservation.confirm('payment-ref-123', 'credit-card', mockFeeCharged)
 
@@ -158,6 +161,7 @@ describe('Reservation Entity', () => {
         feeCharged: mockFeeCharged,
         retailPrice: mockRetailPrice,
       } as schemas.ReservationDTO)
+
       newReservation.rehydrate([event])
 
       expect(newReservation.userId).toBe(mockUserId)

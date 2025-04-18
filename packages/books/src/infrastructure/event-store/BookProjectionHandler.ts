@@ -27,8 +27,6 @@ export class BookProjectionHandler {
       publicationYear: event.payload.publicationYear,
       publisher: event.payload.publisher,
       price: event.payload.price,
-      createdAt: event.timestamp.toISOString(),
-      updatedAt: event.timestamp.toISOString(),
     })
   }
 

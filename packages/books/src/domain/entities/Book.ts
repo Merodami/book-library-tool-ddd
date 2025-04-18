@@ -1,12 +1,13 @@
 import { schemas } from '@book-library-tool/api'
-import { AggregateRoot, DomainEvent } from '@book-library-tool/event-store'
+import {
+  AggregateRoot,
+  BOOK_CREATED,
+  BOOK_DELETED,
+  BOOK_UPDATED,
+  DomainEvent,
+} from '@book-library-tool/event-store'
 import { makeValidator } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
 import { logger } from '@book-library-tool/shared'
-
-// Book domain event type constants
-export const BOOK_CREATED = 'BookCreated'
-export const BOOK_UPDATED = 'BookUpdated'
-export const BOOK_DELETED = 'BookDeleted'
 
 // Schema validator for Book
 const assertSchema = makeValidator(schemas.BookSchema)

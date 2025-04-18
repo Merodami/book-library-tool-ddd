@@ -148,6 +148,40 @@ export default [
           ignoreDeclarationMerge: true,
         },
       ],
+      'padding-line-between-statements': [
+        'error',
+        // Const
+        // always blank line before any non-const after a const
+        { blankLine: 'always', prev: 'const', next: '*' },
+        // always blank line after any non-const before a const
+        { blankLine: 'always', prev: '*', next: 'const' },
+        // but don’t enforce blank lines between two consts
+        { blankLine: 'any', prev: 'const', next: 'const' },
+
+        // Let
+        // always blank line before any non-let after a let
+        { blankLine: 'always', prev: 'let', next: '*' },
+        // always blank line after any non-let before a let
+        { blankLine: 'always', prev: '*', next: 'let' },
+        // but don’t enforce blank lines between two lets
+        { blankLine: 'any', prev: 'let', next: 'let' },
+
+        // Return
+        // always blank line before any non-return after a return
+        { blankLine: 'always', prev: 'return', next: '*' },
+        // always blank line after any non-return before a return
+        { blankLine: 'always', prev: '*', next: 'return' },
+        // but don’t enforce blank lines between two returns
+        { blankLine: 'any', prev: 'return', next: 'return' },
+
+        // For
+        // always blank line before any non-for after a for
+        { blankLine: 'always', prev: 'for', next: '*' },
+        // always blank line after any non-for before a for
+        { blankLine: 'always', prev: '*', next: 'for' },
+        // but don’t enforce blank lines between two fors
+        { blankLine: 'any', prev: 'for', next: 'for' },
+      ],
     },
   },
 

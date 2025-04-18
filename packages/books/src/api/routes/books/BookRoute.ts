@@ -33,7 +33,11 @@ export function createBookRouter(
 ): FastifyPluginAsync {
   return async (fastify: FastifyInstance) => {
     // Instantiate individual handlers
-    const createHandler = new CreateBookHandler(bookRepository, eventBus)
+    const createHandler = new CreateBookHandler(
+      bookRepository,
+      bookProjectionRepository,
+      eventBus,
+    )
     const updateHandler = new UpdateBookHandler(bookRepository, eventBus)
     const deleteHandler = new DeleteBookHandler(bookRepository, eventBus)
     const getHandler = new GetBookHandler(bookProjectionRepository)

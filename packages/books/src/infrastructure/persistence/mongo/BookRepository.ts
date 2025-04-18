@@ -35,6 +35,7 @@ export class BookRepository
       return Book.rehydrate(events)
     } catch (error) {
       logger.error('Failed to rehydrate book:', error)
+
       return null
     }
   }
@@ -58,7 +59,7 @@ export class BookRepository
       const events = await this.collection
         .find({
           'payload.isbn': isbn,
-          eventType: { $in: [BOOK_CREATED] },
+          eventType: { $in: [BOOK_CREATED, BOOK_DELETED] },
         })
         .sort({ version: 1 })
         .toArray()
