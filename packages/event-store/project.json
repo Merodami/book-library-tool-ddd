@@ -16,7 +16,7 @@
     "depcheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "depcheck",
+        "command": "yarn knip --workspace={projectName}",
         "cwd": "{projectRoot}"
       }
     },

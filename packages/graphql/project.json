@@ -1,0 +1,48 @@
+{
+  "name": "@book-library-tool/graphql",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": ["@book-library-tool/sdk"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --noEmit",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "depcheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn knip --workspace={projectName}",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "graphql-gen": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "commands": [
+          "until [ -f ../api/dist/openapi.json ]; do echo 'Waiting for openapi.json...'; sleep 1; done",
+          "npx mesh-compose -o ./supergraph.graphql"
+        ],
+        "parallel": false,
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

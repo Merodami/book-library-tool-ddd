@@ -1,5 +1,5 @@
-import type { CreateBookCommand } from '@commands/CreateBookCommand.js'
-import { CreateBookHandler } from '@commands/CreateBookHandler.js'
+import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
+import { CreateBookHandler } from '@books/commands/CreateBookHandler.js'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export class CreateBookController {

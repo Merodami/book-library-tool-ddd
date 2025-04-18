@@ -1,4 +1,5 @@
 import { schemas } from '@book-library-tool/api'
+import { paginationHook } from '@book-library-tool/http'
 import { GetWalletController } from '@wallets/controllers/wallets/GetWalletController.js'
 import { GetWalletHandler } from '@wallets/queries/GetWalletHandler.js'
 import type { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
@@ -19,14 +20,17 @@ export function createWalletQueryRouter(
     const getWalletController = new GetWalletController(getWalletHandler)
 
     // Define query routes
-    fastify.get(
+    fastify.get<{
+      Params: Pick<schemas.UserDTO, 'userId'>
+    }>(
       '/:userId',
       {
+        onRequest: [paginationHook],
         schema: {
           params: schemas.UserIdParameterSchema,
         },
       },
-      getWalletController.getWallet.bind(getWalletController),
+      (request, reply) => getWalletController.getWallet(request, reply),
     )
   }
 }

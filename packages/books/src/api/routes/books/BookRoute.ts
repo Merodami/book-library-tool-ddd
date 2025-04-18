@@ -1,15 +1,15 @@
 import { schemas } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
-import { CreateBookHandler } from '@commands/CreateBookHandler.js'
-import { DeleteBookHandler } from '@commands/DeleteBookHandler.js'
-import { UpdateBookHandler } from '@commands/UpdateBookHandler.js'
-import { CreateBookController } from '@controllers/books/CreateBookController.js'
-import { DeleteBookController } from '@controllers/books/DeleteBookController.js'
-import { GetBookController } from '@controllers/books/GetBookController.js'
-import { UpdateBookController } from '@controllers/books/UpdateBookController.js'
-import { GetBookHandler } from '@queries/GetBookHandler.js'
-import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
-import type { IBookRepository } from '@repositories/IBookRepository.js'
+import { CreateBookHandler } from '@books/commands/CreateBookHandler.js'
+import { DeleteBookHandler } from '@books/commands/DeleteBookHandler.js'
+import { UpdateBookHandler } from '@books/commands/UpdateBookHandler.js'
+import { CreateBookController } from '@books/controllers/books/CreateBookController.js'
+import { DeleteBookController } from '@books/controllers/books/DeleteBookController.js'
+import { GetBookController } from '@books/controllers/books/GetBookController.js'
+import { UpdateBookController } from '@books/controllers/books/UpdateBookController.js'
+import { GetBookHandler } from '@books/queries/GetBookHandler.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import type { IBookRepository } from '@books/repositories/IBookRepository.js'
 import { FastifyInstance, FastifyPluginAsync } from 'fastify'
 
 /**
@@ -33,7 +33,11 @@ export function createBookRouter(
 ): FastifyPluginAsync {
   return async (fastify: FastifyInstance) => {
     // Instantiate individual handlers
-    const createHandler = new CreateBookHandler(bookRepository, eventBus)
+    const createHandler = new CreateBookHandler(
+      bookRepository,
+      bookProjectionRepository,
+      eventBus,
+    )
     const updateHandler = new UpdateBookHandler(bookRepository, eventBus)
     const deleteHandler = new DeleteBookHandler(bookRepository, eventBus)
     const getHandler = new GetBookHandler(bookProjectionRepository)

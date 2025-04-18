@@ -32,5 +32,12 @@
   },
   "include": ["src"],
   "exclude": ["dist", "../../node_modules", "node_modules"],
-  "references": []
+  "references": [
+    {
+      "path": "../types"
+    },
+    {
+      "path": "../shared"
+    }
+  ]
 }

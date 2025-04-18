@@ -1,4 +1,4 @@
-import { Book } from '@entities/Book.js'
+import { Book } from '@books/entities/Book.js'
 import { describe, expect, it } from 'vitest'
 
 describe('Book', () => {

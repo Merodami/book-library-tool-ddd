@@ -5,8 +5,8 @@ import {
   type DomainEvent,
 } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { Book } from '@entities/Book.js'
-import { IBookRepository } from '@repositories/IBookRepository.js'
+import { Book } from '@books/entities/Book.js'
+import { IBookRepository } from '@books/repositories/IBookRepository.js'
 
 /**
  * Event-sourced repository implementation for the Book aggregate.
@@ -35,6 +35,7 @@ export class BookRepository
       return Book.rehydrate(events)
     } catch (error) {
       logger.error('Failed to rehydrate book:', error)
+
       return null
     }
   }
@@ -58,7 +59,7 @@ export class BookRepository
       const events = await this.collection
         .find({
           'payload.isbn': isbn,
-          eventType: { $in: [BOOK_CREATED] },
+          eventType: { $in: [BOOK_CREATED, BOOK_DELETED] },
         })
         .sort({ version: 1 })
         .toArray()

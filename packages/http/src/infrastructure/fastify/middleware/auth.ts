@@ -63,9 +63,9 @@ export const fastifyAuth = fp(async function (
 
       try {
         // Verify and decode the token
-        const decoded = jwt.verify(token, secret) as JwtPayload
+        const _decoded = jwt.verify(token, secret) as JwtPayload
 
-        request.user = decoded
+        // ToDo: Auth logic
       } catch (error) {
         logger.info('Invalid API token', { error })
 

@@ -81,7 +81,7 @@ async function handleCacheHit<T>(
   className: string,
   methodName: string,
   instance: any,
-  originalMethod: (...args: any[]) => Promise<T>,
+  originalMethod: (...methodArgs: any[]) => Promise<T>,
   args: any[],
   cachedResult: T,
 ): Promise<T> {
@@ -129,7 +129,7 @@ async function handleCacheMiss<T>(
   className: string,
   methodName: string,
   instance: any,
-  originalMethod: (...args: any[]) => Promise<T>,
+  originalMethod: (...methodArgs: any[]) => Promise<T>,
   args: any[],
 ): Promise<T> {
   // Execute the original method
@@ -148,6 +148,7 @@ async function handleCacheMiss<T>(
   // Cache the result if it matches the condition (or if no condition specified)
   if (!options.condition || options.condition(result)) {
     await globalCacheService?.set(cacheKey, result, options.ttl)
+
     logger.debug(`Cached result for ${cacheKey} with TTL ${options.ttl}s`)
   }
 
@@ -164,7 +165,7 @@ async function handleCacheMiss<T>(
  */
 async function refreshCacheInBackground<T>(
   instance: any,
-  method: (...args: any[]) => Promise<T>,
+  method: (...methodArgs: any[]) => Promise<T>,
   args: any[],
   key: string,
   options: CacheOptions,
@@ -174,6 +175,7 @@ async function refreshCacheInBackground<T>(
 
     if (!options.condition || options.condition(freshResult)) {
       await globalCacheService?.set(key, freshResult, options.ttl)
+
       logger.debug(`Background refresh of ${key} complete`)
     }
   } catch (error) {
@@ -198,7 +200,7 @@ async function handleCacheError<T>(
   className: string,
   methodName: string,
   instance: any,
-  originalMethod: (...args: any[]) => Promise<T>,
+  originalMethod: (...methodArgs: any[]) => Promise<T>,
   args: any[],
 ): Promise<T> {
   const errorMessage = error instanceof Error ? error.message : String(error)
@@ -224,7 +226,10 @@ export function Cache<T = any>(options: CacheOptions) {
     propertyKey: string,
     descriptor: PropertyDescriptor,
   ) {
-    const originalMethod = descriptor.value as (...args: any[]) => Promise<T>
+    const originalMethod = descriptor.value as (
+      ...methodArgs: any[]
+    ) => Promise<T>
+
     const className = target.constructor.name
 
     descriptor.value = async function (...args: any[]): Promise<T> {

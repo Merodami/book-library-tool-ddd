@@ -3,10 +3,6 @@ import { OpenAPIV3 } from 'openapi-types'
 import { registry } from '../schemaRegistry.js'
 
 // Environment variables
-const HEALTH_CHECK_MEMORY_THRESHOLD = parseInt(
-  process.env.HEALTH_CHECK_MEMORY_THRESHOLD || '15',
-  10,
-)
 const BOOKS_API_URL = process.env.BOOKS_API_URL || 'http://localhost:3001'
 const RESERVATIONS_API_URL =
   process.env.RESERVATIONS_API_URL || 'http://localhost:3002'

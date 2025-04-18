@@ -1,6 +1,6 @@
-import { Cache } from '@book-library-tool/redis/src/application/decorators/cache.js'
-import { GetBookHandler } from '@queries/GetBookHandler.js'
-import type { GetBookQuery } from '@queries/GetBookQuery.js'
+import { Cache } from '@book-library-tool/redis'
+import { GetBookHandler } from '@books/queries/GetBookHandler.js'
+import type { GetBookQuery } from '@books/queries/GetBookQuery.js'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export class GetBookController {

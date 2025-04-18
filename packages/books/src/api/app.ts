@@ -4,12 +4,14 @@ import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
 import { logger } from '@book-library-tool/shared'
-import { BookEventSubscriptions } from '@event-store/BookEventSubscriptions.js'
-import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
-import { BookProjectionRepository } from '@persistence/mongo/BookProjectionRepository.js'
-import { BookRepository } from '@persistence/mongo/BookRepository.js'
-import { createBookRouter } from '@routes/books/BookRoute.js'
-import { createCatalogRouter } from '@routes/catalog/CatalogRoute.js'
+import { BookEventSubscriptions } from '@books/event-store/BookEventSubscriptions.js'
+import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
+import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
+import { BookRepository } from '@books/persistence/mongo/BookRepository.js'
+import { createBookRouter } from '@books/routes/books/BookRoute.js'
+import { createCatalogRouter } from '@books/routes/catalog/CatalogRoute.js'
+
+import { BookDocument } from '../infrastructure/persistence/mongo/documents/BookDocument.js'
 
 async function startBookService() {
   // Create and connect the database service (write and projection share the same DB context)
@@ -66,8 +68,13 @@ async function startBookService() {
   // Instantiate the repository used for command (write) operations
   const bookRepository = new BookRepository(dbService)
 
+  const bookProjectionCollection =
+    dbService.getCollection<BookDocument>('book_projection')
+
   // Instantiate the repository used for query (read) operations: your projections
-  const bookProjectionRepository = new BookProjectionRepository(dbService)
+  const bookProjectionRepository = new BookProjectionRepository(
+    bookProjectionCollection,
+  )
 
   // Set up event subscriptions to update read models (via the projection handler)
   const bookProjectionHandler = new BookProjectionHandler(

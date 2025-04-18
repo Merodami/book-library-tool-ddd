@@ -3,8 +3,8 @@ import {
   DomainEvent,
 } from '@book-library-tool/event-store'
 import { ErrorCode } from '@book-library-tool/shared'
-import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
-import { IBookProjectionRepository } from '@repositories/IBookProjectionRepository.js'
+import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Create a mock for the repository

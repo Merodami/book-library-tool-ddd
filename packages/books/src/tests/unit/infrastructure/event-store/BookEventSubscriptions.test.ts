@@ -15,8 +15,8 @@ import {
   RESERVATION_BOOK_VALIDATION,
   RESERVATION_BOOK_VALIDATION_FAILED,
 } from '@book-library-tool/event-store'
-import { BookEventSubscriptions } from '@event-store/BookEventSubscriptions.js'
-import { BookProjectionHandler } from '@event-store/BookProjectionHandler.js'
+import { BookEventSubscriptions } from '@books/event-store/BookEventSubscriptions.js'
+import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 /**

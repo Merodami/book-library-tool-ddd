@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Books service for Book Library Tool",
-  "author": "merodami",
+  "author": "Damian Meroni (@merodami)",
   "type": "module",
   "main": "src/api/app.js",
   "dependencies": {
@@ -17,7 +17,6 @@
   },
   "devDependencies": {
     "@types/node": "^22.14.1",
-    "depcheck": "^1.4.7",
     "fast-csv": "^5.0.2",
     "he": "^1.2.0",
     "typescript": "^5.8.3"
