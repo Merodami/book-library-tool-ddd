@@ -32,17 +32,24 @@
         "cwd": "{projectRoot}"
       }
     },
+    "migrate:create": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "migrate-mongo-ts create",
+        "cwd": "{projectRoot}"
+      }
+    },
     "migrate:up": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "migrate-mongo up",
+        "command": "migrate-mongo-ts up",
         "cwd": "{projectRoot}"
       }
     },
     "migrate:down": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "migrate-mongo down",
+        "command": "migrate-mongo-ts down",
         "cwd": "{projectRoot}"
       }
     }

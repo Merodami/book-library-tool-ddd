@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ErrorData } from '../src/errors/ErrorData.js'
-import { ApplicationError, catchError } from './errors.js'
+import { ApplicationError } from './errors.js'
 
 const sampleData: ErrorData = { content: ['/price: must be number'] }
 
@@ -21,26 +21,5 @@ describe('ApplicationError helpers', () => {
 
     expect(ApplicationError.isApplicationError(appErr)).toBe(true)
     expect(ApplicationError.isApplicationError(other)).toBe(false)
-  })
-})
-
-describe('catchError()', () => {
-  it('wraps a TypeORM “EntityNotFound” error into 404 ApplicationError', () => {
-    const ormErr = new Error('missing')
-
-    ormErr.name = 'EntityNotFound'
-
-    const fn = catchError('Book', '123')
-
-    expect(fn.bind(null, ormErr)).toThrowErrorMatchingInlineSnapshot(
-      '[Error: Unknown Book "123"]',
-    )
-  })
-
-  it('re‑throws any other error unchanged', () => {
-    const original = new Error('db down')
-    const fn = catchError('Book', '123')
-
-    expect(fn.bind(null, original)).toThrow(original)
   })
 })

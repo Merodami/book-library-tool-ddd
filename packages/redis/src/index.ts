@@ -1,4 +1,6 @@
 export * from './application/decorators/cache.js'
-export * from './infrastructure/cache/memory.js'
+export * from './domain/repositories/ICacheService.js'
+export * from './infrastructure/cache/keygen.js'
 export * from './infrastructure/config/redis.js'
+export * from './infrastructure/services/memory.js'
 export * from './infrastructure/services/redis.js'

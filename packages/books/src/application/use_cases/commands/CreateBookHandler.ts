@@ -1,4 +1,5 @@
 import type { EventBus } from '@book-library-tool/event-store'
+import { EventResponse } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
 import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
 import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
@@ -18,17 +19,17 @@ export class CreateBookHandler {
     private readonly eventBus: EventBus,
   ) {}
 
-  async execute(command: CreateBookCommand): Promise<Book> {
+  async execute(
+    command: CreateBookCommand,
+  ): Promise<EventResponse & { bookId: string }> {
     // Check if the book already exists in the projection.
-    const existing = await this.projectionRepository.getBookByISBN(command.isbn)
-
-    console.log('🚀 ~ CreateBookHandler ~ execute ~ existing:', existing)
+    const existing = await this.projectionRepository.getBookByIsbn(command.isbn)
 
     if (existing) {
       throw new Errors.ApplicationError(
-        400,
+        409,
         ErrorCode.BOOK_ALREADY_EXISTS,
-        `Book with ISBN ${command.isbn} already exists.`,
+        `Book with ISBN ${command.isbn} already exists`,
       )
     }
 
@@ -45,6 +46,10 @@ export class CreateBookHandler {
     book.clearDomainEvents()
 
     // Return the book entity.
-    return book
+    return {
+      success: true,
+      bookId: book.id,
+      version: book.version,
+    }
   }
 }

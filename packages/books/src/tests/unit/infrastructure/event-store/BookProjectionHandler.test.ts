@@ -39,7 +39,6 @@ describe('BookProjectionHandler', () => {
 
   describe('handleBookCreated', () => {
     it('should save a new book projection when BookCreated event is received', async () => {
-      // Arrange
       const event: DomainEvent = {
         eventType: 'BookCreated',
         aggregateId: 'book-123',
@@ -56,10 +55,8 @@ describe('BookProjectionHandler', () => {
         schemaVersion: 1,
       }
 
-      // Act
       await handler.handleBookCreated(event)
 
-      // Assert
       expect(mockRepository.saveProjection).toHaveBeenCalledTimes(1)
       expect(mockRepository.saveProjection).toHaveBeenCalledWith({
         isbn: '978-1234567890',
@@ -74,7 +71,6 @@ describe('BookProjectionHandler', () => {
 
   describe('handleBookUpdated', () => {
     it('should update an existing book projection when BookUpdated event is received', async () => {
-      // Arrange
       const event: DomainEvent = {
         eventType: 'BookUpdated',
         aggregateId: 'book-123',
@@ -100,10 +96,8 @@ describe('BookProjectionHandler', () => {
         schemaVersion: 1,
       }
 
-      // Act
       await handler.handleBookUpdated(event)
 
-      // Assert
       expect(mockRepository.updateProjection).toHaveBeenCalledTimes(1)
       expect(mockRepository.updateProjection).toHaveBeenCalledWith('book-123', {
         title: 'New Title',
@@ -116,7 +110,6 @@ describe('BookProjectionHandler', () => {
     })
 
     it('should only update fields that have changed', async () => {
-      // Arrange
       const event: DomainEvent = {
         eventType: 'BookUpdated',
         aggregateId: 'book-123',
@@ -139,10 +132,8 @@ describe('BookProjectionHandler', () => {
         schemaVersion: 1,
       }
 
-      // Act
       await handler.handleBookUpdated(event)
 
-      // Assert
       expect(mockRepository.updateProjection).toHaveBeenCalledTimes(1)
       expect(mockRepository.updateProjection).toHaveBeenCalledWith('book-123', {
         title: 'New Title',
@@ -153,7 +144,6 @@ describe('BookProjectionHandler', () => {
 
   describe('handleBookDeleted', () => {
     it('should mark a book as deleted when BookDeleted event is received', async () => {
-      // Arrange
       const event: DomainEvent = {
         eventType: 'BookDeleted',
         aggregateId: 'book-123',
@@ -165,10 +155,8 @@ describe('BookProjectionHandler', () => {
         schemaVersion: 1,
       }
 
-      // Act
       await handler.handleBookDeleted(event)
 
-      // Assert
       expect(mockRepository.markAsDeleted).toHaveBeenCalledTimes(1)
       expect(mockRepository.markAsDeleted).toHaveBeenCalledWith(
         'book-123',
@@ -179,7 +167,6 @@ describe('BookProjectionHandler', () => {
 
   describe('handleReservationValidateBook', () => {
     it('should return valid book validation result when book exists', async () => {
-      // Arrange
       const event: DomainEvent = {
         eventType: 'ReservationBookValidation',
         aggregateId: 'reservation-123',
@@ -200,10 +187,8 @@ describe('BookProjectionHandler', () => {
         price: 29.99,
       })
 
-      // Act
       const result = await handler.handleReservationValidateBook(event)
 
-      // Assert
       expect(mockRepository.findBookForReservation).toHaveBeenCalledTimes(1)
       expect(mockRepository.findBookForReservation).toHaveBeenCalledWith(
         '978-1234567890',
@@ -226,7 +211,6 @@ describe('BookProjectionHandler', () => {
     })
 
     it('should return invalid book validation result when book does not exist', async () => {
-      // Arrange
       const event: DomainEvent = {
         eventType: 'ReservationBookValidation',
         aggregateId: 'reservation-123',
@@ -242,10 +226,8 @@ describe('BookProjectionHandler', () => {
       // Mock the findBookForReservation response to return null (book not found)
       mockRepository.findBookForReservation.mockResolvedValue(null)
 
-      // Act
       const result = await handler.handleReservationValidateBook(event)
 
-      // Assert
       expect(mockRepository.findBookForReservation).toHaveBeenCalledTimes(1)
       expect(result).toEqual({
         eventType: BOOK_VALIDATION_RESULT,

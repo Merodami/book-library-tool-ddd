@@ -1,7 +1,8 @@
-import { Cache } from '@book-library-tool/redis'
+import { Cache, httpRequestKeyGenerator } from '@book-library-tool/redis'
+import { Book as BookDTO } from '@book-library-tool/sdk'
 import { GetBookHandler } from '@books/queries/GetBookHandler.js'
 import type { GetBookQuery } from '@books/queries/GetBookQuery.js'
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyRequest } from 'fastify'
 
 export class GetBookController {
   constructor(private readonly getBookHandler: GetBookHandler) {
@@ -9,30 +10,49 @@ export class GetBookController {
   }
 
   /**
-   * GET /books/:isbn
-   * Retrieves a book by ISBN.
+   * GET /books/:id
+   * Retrieves a book by ID.
    */
   @Cache({
     ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
-    prefix: 'book:details',
+    prefix: 'book',
+    keyGenerator: httpRequestKeyGenerator,
     condition: (result) => result !== null,
   })
   async getBook(
     request: FastifyRequest<{
-      Params: { isbn: string }
+      Params: { id: string }
     }>,
-    reply: FastifyReply,
-  ): Promise<void> {
-    const { isbn } = request.params
+  ): Promise<BookDTO> {
+    const { id } = request.params
 
-    const query: GetBookQuery = {
-      isbn,
+    // Get fields from query parameters if provided
+    const query = request.query as { fields?: string }
+
+    // Parse fields if provided, otherwise undefined
+    const fields = query.fields?.split(',')
+
+    // Validate requested fields against allowed set
+    const allowedFields = [
+      'id',
+      'isbn',
+      'title',
+      'author',
+      'publicationYear',
+      'publisher',
+      'price',
+      'createdAt',
+      'updatedAt',
+    ]
+    const validFields = fields?.filter((field) => allowedFields.includes(field))
+
+    const bookQuery: GetBookQuery = {
+      id,
     }
 
-    // Call the handler directly to get the book
-    const book = await this.getBookHandler.execute(query)
+    // Pass fields to the handler
+    const result = await this.getBookHandler.execute(bookQuery, validFields)
 
-    // Respond with a 200 status code and the book data
-    reply.code(200).send(book)
+    return result
   }
 }

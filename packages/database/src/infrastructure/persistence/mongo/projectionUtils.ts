@@ -90,6 +90,7 @@ export function buildProjection(fields: string[] = []): Record<string, 0 | 1> {
 
   for (const f of fields) {
     assertValidFieldName(f)
+    // ToDo: Resolve this eslint-disable
     /* eslint-disable security/detect-object-injection */
     proj[f] = 1
   }

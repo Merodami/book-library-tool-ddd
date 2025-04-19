@@ -36,13 +36,8 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
 
     const db = client.db('book-library-test')
 
-    collection = db.collection<BookDocument>('books')
+    collection = db.collection<BookDocument>('book_projection')
     repository = new BookProjectionRepository(collection)
-  })
-
-  afterAll(async () => {
-    await client.close()
-    await container.stop()
   })
 
   beforeEach(async () => {
@@ -61,6 +56,11 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
     }
 
     await repository.saveProjection(baseBook)
+  })
+
+  afterAll(async () => {
+    await client.close()
+    await container.stop()
   })
 
   describe('getBookByISBN', () => {
@@ -97,7 +97,7 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
       const query: CatalogSearchQuery = { skip: 0, limit: 10 }
       const resp: PaginatedBookResponse = await repository.getAllBooks(query)
 
-      expect(resp.data.length).toBe(2)
+      expect(resp.data).toHaveLength(2)
       expect(resp.pagination.total).toBe(2)
     })
 
@@ -158,7 +158,7 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
 
       const all = await repository.getAllBooks({ skip: 0, limit: 10 })
 
-      expect(all.data.length).toBe(0)
+      expect(all.data).toHaveLength(0)
 
       const found = await repository.findBookForReservation('978-3-16-148410-0')
 

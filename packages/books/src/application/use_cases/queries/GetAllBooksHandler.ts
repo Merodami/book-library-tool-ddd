@@ -2,7 +2,7 @@ import type {
   CatalogSearchQuery,
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
-import { ErrorCode, Errors } from '@book-library-tool/shared'
+import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 
 export class GetAllBooksHandler {
@@ -22,17 +22,33 @@ export class GetAllBooksHandler {
     query: CatalogSearchQuery,
     fields?: string[],
   ): Promise<PaginatedBookResponse> {
-    // Retrieve all events for the given aggregate ID.
-    const books = await this.projectionRepository.getAllBooks(query, fields)
+    try {
+      // Retrieve all events for the given aggregate ID.
+      const books = await this.projectionRepository.getAllBooks(query, fields)
 
-    if (!books || books.data.length === 0) {
+      if (!books) {
+        return {
+          data: [],
+          pagination: {
+            total: 0,
+            page: query.page || 1,
+            limit: query.limit || 10,
+            pages: 0,
+            hasNext: false,
+            hasPrev: false,
+          },
+        }
+      }
+
+      return books
+    } catch (err) {
+      logger.error('Error retrieving books catalog:', err)
+
       throw new Errors.ApplicationError(
-        404,
-        ErrorCode.BOOK_NOT_FOUND,
-        `No books found.`,
+        500,
+        ErrorCode.INTERNAL_ERROR,
+        'Error retrieving books catalog',
       )
     }
-
-    return books
   }
 }

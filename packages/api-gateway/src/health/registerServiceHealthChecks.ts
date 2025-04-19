@@ -27,7 +27,7 @@ export async function registerServiceHealthChecks(
     },
     {
       name: 'graphql',
-      url: process.env.GRAPHQL_GATEWAY_URL ?? 'http://localhost:4001',
+      url: process.env.GRAPHQL_GATEWAY_HEALTH_URL ?? 'http://localhost:9668',
     },
   ]
 

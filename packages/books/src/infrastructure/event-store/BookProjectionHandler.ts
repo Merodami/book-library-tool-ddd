@@ -11,7 +11,9 @@ import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRe
  * ensuring that the read model accurately reflects the current state of books in the system.
  */
 export class BookProjectionHandler {
-  constructor(private readonly repository: IBookProjectionRepository) {}
+  constructor(
+    private readonly projectionRepository: IBookProjectionRepository,
+  ) {}
 
   /**
    * Handles the creation of a new book by inserting its projection into MongoDB.
@@ -20,7 +22,8 @@ export class BookProjectionHandler {
    * @param event - The domain event containing the book creation data
    */
   async handleBookCreated(event: DomainEvent): Promise<void> {
-    await this.repository.saveProjection({
+    await this.projectionRepository.saveProjection({
+      id: event.payload.id,
       isbn: event.payload.isbn,
       title: event.payload.title,
       author: event.payload.author,
@@ -65,9 +68,13 @@ export class BookProjectionHandler {
     }
 
     // Add updatedAt to the updates
-    updates.updatedAt = event.timestamp.toISOString()
+    updates.updatedAt = event.timestamp
 
-    await this.repository.updateProjection(event.aggregateId, updates)
+    await this.projectionRepository.updateProjection(
+      event.aggregateId,
+      updates,
+      event.timestamp,
+    )
   }
 
   /**
@@ -78,7 +85,10 @@ export class BookProjectionHandler {
    * @param event - The domain event containing the book deletion data
    */
   async handleBookDeleted(event: DomainEvent): Promise<void> {
-    await this.repository.markAsDeleted(event.aggregateId, event.timestamp)
+    await this.projectionRepository.markAsDeleted(
+      event.aggregateId,
+      event.timestamp,
+    )
   }
 
   /**
@@ -96,7 +106,7 @@ export class BookProjectionHandler {
     const { reservationId, isbn } = event.payload
 
     // Check if the book exists in the projection table
-    const book = await this.repository.findBookForReservation(isbn)
+    const book = await this.projectionRepository.findBookForReservation(isbn)
 
     // Create the validation result event
     const validationResultEvent: DomainEvent = {

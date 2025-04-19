@@ -44,7 +44,7 @@ export interface IBookRepository {
   getEventsForAggregate(aggregateId: string): Promise<DomainEvent[]>
 
   /**
-   * Finds the aggregate ID associated with an ISBN
+   * Finds the aggregate ID associated with an ID
    */
-  findAggregateIdByISBN(isbn: string): Promise<string | null>
+  findAggregateIdById(id: string): Promise<string | null>
 }

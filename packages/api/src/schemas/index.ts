@@ -1,6 +1,7 @@
 export * from './books.js'
 export * from './catalog.js'
 export * from './errors.js'
+export * from './events.js'
 export * from './pagination.js'
 export * from './reservations.js'
 export * from './users.js'

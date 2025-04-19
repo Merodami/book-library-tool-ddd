@@ -11,11 +11,11 @@ import { PaginationMetadataSchema } from './pagination.js'
  */
 export const BookIdParameterSchema = Type.Object(
   {
-    isbn: Type.String({ minLength: 1 }),
+    id: Type.String({ minLength: 1 }),
   },
   {
     $id: '#/components/parameters/BookIdParameter',
-    description: 'The book ISBN',
+    description: 'The book ID',
   },
 )
 export type BookIdParameter = Static<typeof BookIdParameterSchema>
@@ -80,6 +80,7 @@ export const BookUpdateRequestRef = Type.Ref(
  */
 export const BookSchema = Type.Object(
   {
+    id: Type.Optional(Type.String({ minLength: 1 })),
     isbn: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     title: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     author: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
@@ -87,8 +88,12 @@ export const BookSchema = Type.Object(
     publisher: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     price: Type.Number({ minimum: 0 }),
     createdAt: Type.Optional(Type.String({ format: 'date-time' })),
-    updatedAt: Type.Optional(Type.String({ format: 'date-time' })),
-    deletedAt: Type.Optional(Type.String({ format: 'date-time' })),
+    updatedAt: Type.Optional(
+      Type.String({ format: 'date-time', nullable: true }),
+    ),
+    deletedAt: Type.Optional(
+      Type.String({ format: 'date-time', nullable: true }),
+    ),
   },
   { $id: '#/components/schemas/Book' },
 )

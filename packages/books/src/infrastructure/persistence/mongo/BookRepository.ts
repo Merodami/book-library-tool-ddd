@@ -54,11 +54,11 @@ export class BookRepository
    * @returns The UUID of the active Book aggregate, or null if no active book exists
    * @throws {ApplicationError} If there's an error during the lookup process
    */
-  async findAggregateIdByISBN(isbn: string): Promise<string | null> {
+  async findAggregateIdById(id: string): Promise<string | null> {
     try {
       const events = await this.collection
         .find({
-          'payload.isbn': isbn,
+          'payload.id': id,
           eventType: { $in: [BOOK_CREATED, BOOK_DELETED] },
         })
         .sort({ version: 1 })
@@ -87,7 +87,7 @@ export class BookRepository
       throw new Errors.ApplicationError(
         500,
         ErrorCode.BOOK_LOOKUP_FAILED,
-        `Failed to retrieve active book for ISBN ${isbn}: ${msg}`,
+        `Failed to retrieve active book for ID ${id}: ${msg}`,
       )
     }
   }

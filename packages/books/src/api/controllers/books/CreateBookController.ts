@@ -1,6 +1,7 @@
+import { EventResponse } from '@book-library-tool/sdk'
 import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
 import { CreateBookHandler } from '@books/commands/CreateBookHandler.js'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyRequest } from 'fastify'
 
 export class CreateBookController {
   constructor(private readonly createBookHandler: CreateBookHandler) {
@@ -16,8 +17,7 @@ export class CreateBookController {
     request: FastifyRequest<{
       Body: CreateBookCommand
     }>,
-    reply: FastifyReply,
-  ) {
+  ): Promise<EventResponse & { bookId: string }> {
     const { isbn, title, author, publicationYear, publisher, price } =
       request.body
 
@@ -32,11 +32,8 @@ export class CreateBookController {
     }
 
     // Call the handler directly to create the book
-    await this.createBookHandler.execute(command)
+    const result = await this.createBookHandler.execute(command)
 
-    // Respond with a 201 status code
-    return reply
-      .code(201)
-      .send({ message: 'Book created successfully', book: command })
+    return result
   }
 }

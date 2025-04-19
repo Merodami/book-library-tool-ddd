@@ -1,7 +1,9 @@
 import { schemas } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
+import { BookCreateRequest } from '@book-library-tool/sdk'
 import { CreateBookHandler } from '@books/commands/CreateBookHandler.js'
 import { DeleteBookHandler } from '@books/commands/DeleteBookHandler.js'
+import { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
 import { UpdateBookHandler } from '@books/commands/UpdateBookHandler.js'
 import { CreateBookController } from '@books/controllers/books/CreateBookController.js'
 import { DeleteBookController } from '@books/controllers/books/DeleteBookController.js'
@@ -10,7 +12,7 @@ import { UpdateBookController } from '@books/controllers/books/UpdateBookControl
 import { GetBookHandler } from '@books/queries/GetBookHandler.js'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import type { IBookRepository } from '@books/repositories/IBookRepository.js'
-import { FastifyInstance, FastifyPluginAsync } from 'fastify'
+import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 
 /**
  * Creates and configures a Fastify plugin for book-related endpoints.
@@ -38,8 +40,16 @@ export function createBookRouter(
       bookProjectionRepository,
       eventBus,
     )
-    const updateHandler = new UpdateBookHandler(bookRepository, eventBus)
-    const deleteHandler = new DeleteBookHandler(bookRepository, eventBus)
+    const updateHandler = new UpdateBookHandler(
+      bookRepository,
+      bookProjectionRepository,
+      eventBus,
+    )
+    const deleteHandler = new DeleteBookHandler(
+      bookRepository,
+      bookProjectionRepository,
+      eventBus,
+    )
     const getHandler = new GetBookHandler(bookProjectionRepository)
 
     // Create specialized controllers
@@ -49,6 +59,7 @@ export function createBookRouter(
     const getBookController = new GetBookController(getHandler)
 
     // Define routes
+
     /**
      * POST /books
      * Creates a new book in the system.
@@ -64,63 +75,85 @@ export function createBookRouter(
           body: schemas.BookCreateRequestSchema,
         },
       },
-      createBookController.createBook,
+      async (request: FastifyRequest<{ Body: BookCreateRequest }>, reply) => {
+        const result = await createBookController.createBook(request)
+
+        reply.code(200).send(result)
+      },
     )
 
     /**
-     * PATCH /books/:isbn
+     * PATCH /books/:id
      * Updates an existing book's information.
      *
-     * @route PATCH /:isbn
-     * @param {string} req.params.isbn - ISBN of the book to update
+     * @route PATCH /:id
+     * @param {string} req.params.id - ID of the book to update
      * @param {BookUpdateRequest} req.body - Book update data
      * @returns {Book} The updated book
      */
     fastify.patch(
-      '/:isbn',
+      '/:id',
       {
         schema: {
           params: schemas.BookIdParameterSchema,
           body: schemas.BookUpdateRequestSchema,
         },
       },
-      updateBookController.updateBook,
+      async (
+        request: FastifyRequest<{
+          Params: { id: string }
+          Body: Omit<UpdateBookCommand, 'id'>
+        }>,
+        reply,
+      ) => {
+        const result = await updateBookController.updateBook(request)
+
+        reply.code(200).send(result)
+      },
     )
 
     /**
-     * DELETE /books/:isbn
+     * DELETE /books/:id
      * Removes a book from the system.
      *
-     * @route DELETE /:isbn
-     * @param {string} req.params.isbn - ISBN of the book to delete
+     * @route DELETE /:id
+     * @param {string} req.params.id - ID of the book to delete
      * @returns {void}
      */
     fastify.delete(
-      '/:isbn',
+      '/:id',
       {
         schema: {
           params: schemas.BookIdParameterSchema,
         },
       },
-      deleteBookController.deleteBook,
+      async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
+        const result = await deleteBookController.deleteBook(request)
+
+        reply.code(200).send(result)
+      },
     )
 
     /**
-     * GET /books/:isbn
+     * GET /books/:id
      * Retrieves a book's information.
      *
-     * @route GET /:isbn
-     * @param {string} req.params.isbn - ISBN of the book to retrieve
+     * @route GET /:id
+     * @param {string} req.params.id - ID of the book to retrieve
      * @returns {Book} The requested book
      */
     fastify.get(
-      '/:isbn',
+      '/:id',
       {
         schema: {
           params: schemas.BookIdParameterSchema,
         },
       },
-      getBookController.getBook,
+      async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
+        const result = await getBookController.getBook(request)
+
+        reply.code(200).send(result)
+      },
     )
   }
 }
