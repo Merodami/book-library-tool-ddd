@@ -1,4 +1,3 @@
-// tests/integration/infrastructure/repositories/BookProjectionRepository.test.ts
 import type {
   Book,
   BookUpdateRequest,
@@ -11,11 +10,12 @@ import { Collection, MongoClient } from 'mongodb'
 import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
-describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () => {
+describe('BookProjectionRepository Integration', () => {
   let container: StartedTestContainer
   let client: MongoClient
   let collection: Collection<BookDocument>
   let repository: BookProjectionRepository
+  let testBookId: string
 
   beforeAll(async () => {
     container = await new GenericContainer('mongo:6.0')
@@ -45,6 +45,7 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
 
     // Insert baseline book via repository to ensure correct mapping
     const baseBook: Book = {
+      id: 'test-id-123', // Add ID field
       isbn: '978-3-16-148410-0',
       title: 'Test Book',
       author: 'Test Author',
@@ -56,6 +57,11 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
     }
 
     await repository.saveProjection(baseBook)
+
+    // Save the ID for later use
+    const savedBook = await collection.findOne({ isbn: baseBook.isbn })
+
+    testBookId = savedBook?.id || 'test-id-123'
   })
 
   afterAll(async () => {
@@ -63,9 +69,10 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
     await container.stop()
   })
 
-  describe('getBookByISBN', () => {
+  describe('getBookByIsbn', () => {
     it('returns the book when it exists', async () => {
-      const result = await repository.getBookByISBN('978-3-16-148410-0')
+      // Changed from getBookByISBN to getBookByIsbn
+      const result = await repository.getBookByIsbn('978-3-16-148410-0')
 
       expect(result).not.toBeNull()
       expect(result?.isbn).toBe('978-3-16-148410-0')
@@ -73,7 +80,8 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
     })
 
     it('returns null for non-existent ISBN', async () => {
-      const result = await repository.getBookByISBN('no-such')
+      // Changed from getBookByISBN to getBookByIsbn
+      const result = await repository.getBookByIsbn('no-such')
 
       expect(result).toBeNull()
     })
@@ -82,6 +90,7 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
   describe('getAllBooks', () => {
     it('returns paginated books', async () => {
       const second: Book = {
+        id: 'test-id-456', // Add ID field
         isbn: '978-3-16-148410-1',
         title: 'Another',
         author: 'Author',
@@ -94,7 +103,7 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
 
       await repository.saveProjection(second)
 
-      const query: CatalogSearchQuery = { skip: 0, limit: 10 }
+      const query: CatalogSearchQuery = { page: 1, limit: 10 }
       const resp: PaginatedBookResponse = await repository.getAllBooks(query)
 
       expect(resp.data).toHaveLength(2)
@@ -102,7 +111,7 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
     })
 
     it('filters by title', async () => {
-      const query: CatalogSearchQuery = { title: 'Test', skip: 0, limit: 10 }
+      const query: CatalogSearchQuery = { title: 'Test', page: 1, limit: 10 }
       const resp = await repository.getAllBooks(query)
 
       expect(resp.data.every((b) => b.title.includes('Test'))).toBe(true)
@@ -112,6 +121,7 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
   describe('saveProjection and updateProjection', () => {
     it('saves and updates correctly', async () => {
       const newBook: Book = {
+        id: 'test-id-789', // Add ID field
         isbn: '978-3-16-148410-2',
         title: 'New',
         author: 'New',
@@ -124,21 +134,29 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
 
       await repository.saveProjection(newBook)
 
-      let fetched = await repository.getBookByISBN(newBook.isbn)
+      // Changed from getBookByISBN to getBookByIsbn
+      let fetched = await repository.getBookByIsbn(newBook.isbn)
 
       expect(fetched).not.toBeNull()
 
-      const doc = await collection.findOne({ isbn: newBook.isbn })!
-      const id = doc?._id.toString()
+      const doc = await collection.findOne({ isbn: newBook.isbn })
+
+      if (!doc) {
+        throw new Error('Book document not found')
+      }
+
+      const id = doc.id
       const updates: BookUpdateRequest = { title: 'Updated', author: 'Edited' }
 
       if (!id) {
         throw new Error('Book ID is null')
       }
 
-      await repository.updateProjection(id, updates)
+      // Include updatedAt timestamp as third parameter
+      await repository.updateProjection(id, updates, new Date())
 
-      fetched = await repository.getBookByISBN(newBook.isbn)
+      // Changed from getBookByISBN to getBookByIsbn
+      fetched = await repository.getBookByIsbn(newBook.isbn)
       expect(fetched?.title).toBe('Updated')
       expect(fetched?.author).toBe('Edited')
     })
@@ -146,17 +164,12 @@ describe('BookProjectionRepository Integration (Testcontainers v10.24.2)', () =>
 
   describe('markAsDeleted and findBookForReservation', () => {
     it('soft-deletes and excludes', async () => {
-      const doc = await collection.findOne({ isbn: '978-3-16-148410-0' })!
-      const id = doc?._id.toString()
+      // Use the saved testBookId directly instead of looking it up again
       const ts = new Date()
 
-      if (!id) {
-        throw new Error('Book ID is null')
-      }
+      await repository.markAsDeleted(testBookId, ts)
 
-      await repository.markAsDeleted(id, ts)
-
-      const all = await repository.getAllBooks({ skip: 0, limit: 10 })
+      const all = await repository.getAllBooks({ page: 1, limit: 10 })
 
       expect(all.data).toHaveLength(0)
 

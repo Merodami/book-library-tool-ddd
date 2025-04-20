@@ -64,11 +64,13 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
 
     it('returns the aggregateId for a single BOOK_CREATED event', async () => {
       const aggId = randomUUID()
+      const bookId = randomUUID() // Different ID to test lookup by ID field
+
       const createEvt: DomainEvent = {
         aggregateId: aggId,
         eventType: BOOK_CREATED,
         payload: {
-          id: 'isbn-1', // Adding id field to match payload expectations
+          id: bookId, // Use separate ID field
           isbn: 'isbn-1',
           title: 'T',
           author: 'A',
@@ -87,18 +89,20 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         .getCollection<DomainEvent>('event_store')
         .insertOne(createEvt)
 
-      const found = await repository.findAggregateIdById('isbn-1')
+      const found = await repository.findAggregateIdById(bookId)
 
       expect(found).toBe(aggId)
     })
 
     it('returns null if deleted', async () => {
       const aggId = randomUUID()
+      const bookId = randomUUID() // Different ID to test lookup by ID field
+
       const createEvt: DomainEvent = {
         aggregateId: aggId,
         eventType: BOOK_CREATED,
         payload: {
-          id: aggId, // Use the aggregateId as the id (not isbn)
+          id: bookId, // Use separate ID field
           isbn: 'isbn-2',
           title: 'T',
           author: 'A',
@@ -112,6 +116,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         version: 1,
         schemaVersion: 1,
       }
+
       const deleteEvt: DomainEvent = {
         aggregateId: aggId,
         eventType: BOOK_DELETED,
@@ -125,20 +130,22 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         .getCollection<DomainEvent>('event_store')
         .insertMany([createEvt, deleteEvt])
 
-      // Use the aggregateId to look up, not the isbn
-      const found = await repository.findAggregateIdById(aggId)
+      // Search by book ID, not aggregate ID
+      const found = await repository.findAggregateIdById(bookId)
 
       expect(found).toBeNull()
     })
 
     it('ignores deleted aggregates when multiple exist', async () => {
-      const id1 = randomUUID(),
-        id2 = randomUUID()
+      const id1 = randomUUID() // First aggregate ID
+      const id2 = randomUUID() // Second aggregate ID
+      const bookId = randomUUID() // Common book ID for both aggregates
+
       const event1: DomainEvent = {
         aggregateId: id1,
         eventType: BOOK_CREATED,
         payload: {
-          id: id1, // Use aggregateId1 as the id
+          id: bookId, // Same book ID for multiple aggregates
           isbn: 'isbn-3',
           title: '',
           author: '',
@@ -152,6 +159,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         version: 1,
         schemaVersion: 1,
       }
+
       const event2: DomainEvent = {
         aggregateId: id1,
         eventType: BOOK_DELETED,
@@ -160,11 +168,12 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         version: 2,
         schemaVersion: 1,
       }
+
       const event3: DomainEvent = {
         aggregateId: id2,
         eventType: BOOK_CREATED,
         payload: {
-          id: id2, // Use aggregateId2 as the id
+          id: bookId, // Same book ID reused
           isbn: 'isbn-3',
           title: '',
           author: '',
@@ -183,9 +192,10 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
       await repository.saveEvents(id1, [event2], 1)
       await repository.saveEvents(id2, [event3], 0)
 
-      // Use id2 to look up, not isbn
-      const found = await repository.findAggregateIdById(id2)
+      // Search by book ID, which exists in multiple aggregates
+      const found = await repository.findAggregateIdById(bookId)
 
+      // Should return the non-deleted aggregate
       expect(found).toBe(id2)
     })
   })
@@ -193,7 +203,6 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
   describe('getById / rehydration', () => {
     it('rehydrates with create, update, delete events', async () => {
       const { book, event: createEvt } = Book.create({
-        id: 'isbn-4', // Adding id field to match payload expectations
         isbn: 'isbn-4',
         title: 'Orig',
         author: 'Auth',
@@ -215,6 +224,118 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
       expect(rehydrated?.title).toBe('Updated')
       expect(rehydrated?.isDeleted()).toBe(true)
       expect(rehydrated?.version).toBe(3)
+    })
+  })
+
+  describe('saveEvents', () => {
+    it('should save a sequence of events with correct versioning', async () => {
+      const aggId = randomUUID()
+      const bookId = randomUUID()
+
+      const event1: DomainEvent = {
+        aggregateId: aggId,
+        eventType: BOOK_CREATED,
+        payload: {
+          id: bookId,
+          isbn: 'isbn-test',
+          title: 'Original Title',
+          author: 'Author',
+          publicationYear: 2023,
+          publisher: 'Publisher',
+          price: 19.99,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        timestamp: new Date(),
+        version: 1, // This will be overridden by repository
+        schemaVersion: 1,
+      }
+
+      await repository.saveEvents(aggId, [event1], 0)
+
+      const storedEvents = await repository.getEventsForAggregate(aggId)
+
+      expect(storedEvents).toHaveLength(1)
+      expect(storedEvents[0].version).toBe(1)
+      expect(storedEvents[0].globalVersion).toBeDefined()
+      expect(storedEvents[0].metadata).toBeDefined()
+      expect(storedEvents[0].metadata?.correlationId).toBeDefined()
+    })
+  })
+
+  describe('appendBatch', () => {
+    it('should append multiple events atomically', async () => {
+      const aggId = randomUUID()
+      const bookId = randomUUID()
+
+      // Create initial event
+      const initialEvent: DomainEvent = {
+        aggregateId: aggId,
+        eventType: BOOK_CREATED,
+        payload: {
+          id: bookId,
+          isbn: 'isbn-batch',
+          title: 'Batch Test',
+          author: 'Batch Author',
+          publicationYear: 2023,
+          publisher: 'Batch Publisher',
+          price: 29.99,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        timestamp: new Date(),
+        version: 1,
+        schemaVersion: 1,
+      }
+
+      // Create batch of events to append
+      const batchEvents: DomainEvent[] = [
+        {
+          aggregateId: aggId,
+          eventType: 'BOOK_TITLE_CHANGED',
+          payload: {
+            previous: 'Batch Test',
+            updated: 'New Batch Title',
+          },
+          timestamp: new Date(),
+          version: 2, // Will be set by repository
+          schemaVersion: 1,
+        },
+        {
+          aggregateId: aggId,
+          eventType: 'BOOK_PRICE_CHANGED',
+          payload: {
+            previous: 29.99,
+            updated: 39.99,
+          },
+          timestamp: new Date(),
+          version: 3, // Will be set by repository
+          schemaVersion: 1,
+        },
+      ]
+
+      // First save the initial event
+      await repository.saveEvents(aggId, [initialEvent], 0)
+
+      // Then append the batch
+      await repository.appendBatch(aggId, batchEvents, 1)
+
+      // Verify all events were stored with correct versions
+      const storedEvents = await repository.getEventsForAggregate(aggId)
+
+      expect(storedEvents).toHaveLength(3)
+      expect(storedEvents[0].version).toBe(1)
+      expect(storedEvents[1].version).toBe(2)
+      expect(storedEvents[2].version).toBe(3)
+
+      // Verify global versioning is sequential
+      expect(storedEvents[1].globalVersion!).toBe(
+        storedEvents[0].globalVersion! + 1,
+      )
+
+      expect(storedEvents[2].globalVersion!).toBe(
+        storedEvents[1].globalVersion! + 1,
+      )
     })
   })
 })
