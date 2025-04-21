@@ -1,6 +1,5 @@
 import { logger } from '@book-library-tool/shared'
 import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
-import { RedisCacheService } from '@database/cache/redis/RedisCacheService.js'
 import {
   Collection,
   Db,
@@ -36,7 +35,6 @@ export class MongoDatabaseService {
   private client: MongoClient | null = null
   private db: Db | null = null
   private dbName: string
-  private cacheService: RedisCacheService
   private metrics: MongoMetrics = {
     queryCount: 0,
     queryTime: 0,
@@ -46,35 +44,28 @@ export class MongoDatabaseService {
 
   /**
    * Constructor for MongoDatabaseService.
-   * Initializes the MongoClient and Db instances to null.
+   * Initializes the service with the given database name.
+   * Sets up a shutdown hook to close the connection.
    */
   constructor(dbName: string) {
     this.dbName = dbName
-    this.cacheService = new RedisCacheService()
 
-    // Handle process termination signals
     process.on('SIGTERM', async () => {
-      await this.cacheService.dispose()
+      await this.disconnect()
     })
   }
 
   /**
-   * Connects to MongoDB using the MONGO_URI and MONGO_DB_NAME_LIBRARY environment variables.
-   * If a connection is already established, it reuses the existing connection.
-   *
-   * @returns A promise that resolves when the connection is successfully established.
-   * @throws An error if the MONGO_URI is not defined.
+   * Connects to MongoDB using the MONGO_URI and optional DB name.
+   * Reuses existing connection if already connected.
+   * @throws if MONGO_URI is undefined
    */
   async connect(): Promise<void> {
-    if (this.db) {
-      return
-    }
+    if (this.db) return
 
     const uri = process.env.MONGO_URI
 
-    if (!uri) {
-      throw new Error('MONGO_URI is not defined in the environment variables')
-    }
+    if (!uri) throw new Error('MONGO_URI is not defined')
 
     const options: MongoClientOptions = {
       maxPoolSize: 50,
@@ -101,89 +92,63 @@ export class MongoDatabaseService {
   }
 
   /**
-   * Retrieves the connected MongoDB database instance.
-   *
-   * @returns The MongoDB Db instance.
-   * @throws An error if the database connection has not been established.
+   * Retrieves the connected MongoDB Db instance.
+   * @throws if not connected
    */
   getDb(): Db {
-    if (!this.db) {
+    if (!this.db)
       throw new Error('Database not connected. Call connect() first.')
-    }
 
     return this.db
   }
 
   /**
-   * Retrieves a type‑safe collection from the connected MongoDB database.
-   *
-   * @param name - The name of the MongoDB collection.
-   * @returns The MongoDB Collection instance.
-   * @throws An error if the database connection has not been established.
+   * Retrieves a type‑safe collection from MongoDB.
+   * @throws if not connected
    */
   getCollection<T extends Document = Document>(name: string): Collection<T> {
-    if (!this.db) {
+    if (!this.db)
       throw new Error('Database not connected. Call connect() first.')
-    }
 
     return this.db.collection<T>(name)
   }
 
   /**
-   * Disconnects from the MongoDB database.
-   *
-   * @returns A promise that resolves when the connection is closed.
+   * Disconnects from MongoDB.
    */
   async disconnect(): Promise<void> {
     if (this.client) {
       await this.client.close()
       this.client = null
       this.db = null
+
       logger.info('Disconnected from MongoDB')
     }
   }
 
   /**
    * Determines if an error is transient and can be retried.
-   * @param error - The error to check
-   * @returns true if the error is transient, false otherwise
+   * @param error - error to inspect
    */
   private isTransientError(error: unknown): boolean {
-    if (!(error instanceof MongoError)) {
-      return false
-    }
+    if (!(error instanceof MongoError)) return false
 
-    // List of transient error codes that can be retried
     const transientErrorCodes = [
-      6, // HostUnreachable
-      7, // HostNotFound
-      89, // NetworkTimeout
-      91, // ShutdownInProgress
-      189, // PrimarySteppedDown
-      262, // ExceededTimeLimit
-      9001, // SocketException
-      10107, // NotMaster
-      11600, // InterruptedAtShutdown
-      11602, // InterruptedDueToReplStateChange
-      13435, // NotMasterNoSlaveOk
-      13436, // NotMasterOrSecondary
+      6, 7, 89, 91, 189, 262, 9001, 10107, 11600, 11602, 13435, 13436,
     ]
+    const code = (error as MongoError & { code?: number }).code
 
-    const errorCode = (error as MongoError & { code?: number }).code
     return (
-      (errorCode !== undefined && transientErrorCodes.includes(errorCode)) ||
-      error.message.includes('network error') ||
-      error.message.includes('connection reset') ||
-      error.message.includes('socket exception')
+      (code !== undefined && transientErrorCodes.includes(code)) ||
+      (error instanceof Error &&
+        /network error|connection reset|socket exception/i.test(error.message))
     )
   }
 
   /**
    * Executes an operation with retry logic for transient failures.
-   * @param operation - The operation to execute
-   * @param maxRetries - Maximum number of retry attempts
-   * @returns The result of the operation
-   * @throws The last error if all retries fail
+   * @param operation fn returning a promise
+   * @param maxRetries max attempts
    */
   private async withRetry<T>(
     operation: () => Promise<T>,
@@ -191,62 +156,39 @@ export class MongoDatabaseService {
   ): Promise<T> {
     let lastError: Error = new Error('No operation attempted')
 
-    for (let i = 0; i < maxRetries; i++) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await operation()
       } catch (error) {
         lastError = error as Error
+
         if (this.isTransientError(error)) {
           this.metrics.retryCount++
-          const delay = 1000 * Math.pow(2, i)
+
+          const delay = 1000 * 2 ** (attempt - 1)
+
           logger.warn(
-            `Retry attempt ${i + 1}/${maxRetries} after ${delay}ms: ${error.message}`,
+            `Retry ${attempt}/${maxRetries} in ${delay}ms: ${lastError.message}`,
           )
-          await new Promise((resolve) => setTimeout(resolve, delay))
+
+          await new Promise((res) => setTimeout(res, delay))
+
           continue
         }
-        throw error
+
+        throw lastError
       }
     }
+
     throw lastError
   }
 
   /**
-   * Gets the current metrics for the database service.
-   * @returns The current metrics
-   */
-  getMetrics(): MongoMetrics {
-    return { ...this.metrics }
-  }
-
-  /**
-   * Resets the metrics counters.
-   */
-  resetMetrics(): void {
-    this.metrics = {
-      queryCount: 0,
-      queryTime: 0,
-      errorCount: 0,
-      retryCount: 0,
-    }
-  }
-
-  /**
-   * Invalidates cache entries for a specific collection
-   */
-  async invalidateCache(collectionName: string): Promise<void> {
-    await this.cacheService.invalidateCollection(collectionName)
-  }
-
-  /**
-   * Clears the entire cache
-   */
-  async clearCache(): Promise<void> {
-    await this.cacheService.clear()
-  }
-
-  /**
-   * Generic pagination method for any collection with retry logic and caching
+   * Generic pagination for any collection with retry logic.
+   * @param collection - Mongo collection
+   * @param query - filter
+   * @param pagination - page & limit
+   * @param options - projection and sort
    */
   async paginateCollection<T extends Document = Document>(
     collection: Collection<T>,
@@ -255,115 +197,90 @@ export class MongoDatabaseService {
     options?: {
       projection?: Record<string, number>
       sort?: Record<string, 1 | -1>
-      cacheTtl?: number
     },
   ): Promise<PaginatedResult<WithId<T>>> {
-    const startTime = Date.now()
-    const collectionName = collection.collectionName
-    const cacheKey = this.cacheService.generateCacheKey(
-      collectionName,
-      query as Record<string, unknown>,
-    )
+    const start = Date.now()
 
-    // Try to get from cache first if cacheTtl is specified
-    if (options?.cacheTtl) {
-      const cached =
-        await this.cacheService.get<PaginatedResult<WithId<T>>>(cacheKey)
-      if (cached) {
-        return cached
-      }
-    }
+    const limit = pagination.limit
+      ? Math.max(1, Math.floor(pagination.limit))
+      : parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10', 10)
 
-    try {
-      const { page: possiblePage, limit: possibleLimit } = pagination
+    const page = pagination.page ? Math.max(1, Math.floor(pagination.page)) : 1
 
-      const limit = possibleLimit
-        ? Math.floor(Number(possibleLimit))
-        : parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10', 10)
+    const total = await this.withRetry(() => collection.countDocuments(query))
 
-      const page = possiblePage ? Math.floor(Number(possiblePage)) : 1
+    const pages = Math.ceil(total / limit)
 
-      const totalItems = await this.withRetry(() =>
-        collection.countDocuments(query),
-      )
-
-      const totalPages = Math.ceil(totalItems / limit)
-
-      const cursor = collection
-        .find(query, {
-          projection: {
-            _id: 0,
-            createdAt: 0,
-            updatedAt: 0,
-            ...options?.projection,
-          },
-        })
-        .sort(options?.sort || {})
-        .skip((page - 1) * limit)
-        .limit(limit)
-
-      const rawData = await this.withRetry(() => cursor.toArray())
-      const data = rawData.map(({ _id, ...rest }) => rest as WithId<T>)
-
-      const result = {
-        data,
-        pagination: {
-          page,
-          limit,
-          total: totalItems,
-          pages: totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
+    const cursor = collection
+      .find(query, {
+        projection: {
+          _id: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          ...options?.projection,
         },
-      }
+      })
+      .sort(options?.sort || {})
+      .skip((page - 1) * limit)
+      .limit(limit)
 
-      // Cache the result if cacheTtl is specified
-      if (options?.cacheTtl) {
-        await this.cacheService.set(cacheKey, result, options.cacheTtl)
-      }
+    const docs = await this.withRetry(() => cursor.toArray())
 
-      this.metrics.queryCount++
-      this.metrics.queryTime += Date.now() - startTime
+    const data = docs.map(({ _id, ...rest }) => rest as WithId<T>)
 
-      return result
-    } catch (error) {
-      this.metrics.errorCount++
-      this.metrics.queryTime += Date.now() - startTime
-      throw error
+    this.metrics.queryCount++
+    this.metrics.queryTime += Date.now() - start
+
+    return {
+      data,
+      pagination: {
+        total,
+        pages,
+        page,
+        limit,
+        hasNext: page < pages,
+        hasPrev: page > 1,
+      },
     }
   }
 
   /**
    * Checks the health of the MongoDB connection.
-   * @returns Promise resolving to a health status object
+   * @returns status and details
    */
   async checkHealth(): Promise<{ status: string; details: any }> {
     if (!this.client || !this.db) {
-      return {
-        status: 'DOWN',
-        details: { reason: 'Not initialized or connection lost' },
-      }
+      return { status: 'DOWN', details: { reason: 'Not connected' } }
     }
 
     try {
-      // Test connection by executing a ping command
-      await this.client.db().admin().ping()
+      await this.db.admin().ping()
 
       return {
         status: 'UP',
-        details: {
-          dbName: this.dbName,
-          metrics: this.getMetrics(),
-        },
+        details: { dbName: this.dbName, metrics: { ...this.metrics } },
       }
     } catch (error) {
       return {
         status: 'DOWN',
         details: {
           reason: error instanceof Error ? error.message : String(error),
-          dbName: this.dbName,
         },
       }
     }
+  }
+
+  /**
+   * Returns current metrics.
+   */
+  getMetrics(): MongoMetrics {
+    return { ...this.metrics }
+  }
+
+  /**
+   * Resets metrics counters to zero.
+   */
+  resetMetrics(): void {
+    this.metrics = { queryCount: 0, queryTime: 0, errorCount: 0, retryCount: 0 }
   }
 }

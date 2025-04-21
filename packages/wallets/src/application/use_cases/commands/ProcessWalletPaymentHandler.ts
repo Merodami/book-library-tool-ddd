@@ -107,6 +107,7 @@ export class ProcessWalletPaymentHandler {
       logger.info(
         `Successfully processed payment for reservation ${reservationId}`,
       )
+
       return true
     } catch (error) {
       logger.error(`Payment processing failed: ${error.message}`)

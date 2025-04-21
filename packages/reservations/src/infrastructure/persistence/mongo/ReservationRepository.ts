@@ -34,6 +34,7 @@ export class ReservationRepository
       return Reservation.rehydrate(events)
     } catch (error) {
       logger.error('Failed to rehydrate reservation:', error)
+
       return null
     }
   }

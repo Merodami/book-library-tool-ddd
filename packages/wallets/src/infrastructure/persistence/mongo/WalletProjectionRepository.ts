@@ -81,6 +81,7 @@ export class WalletProjectionRepository implements IWalletProjectionRepository {
       }
 
       logger.debug(`Finding wallet for user: ${userId}`)
+
       const wallet = await this.collection.findOne(
         {
           userId,
@@ -136,6 +137,7 @@ export class WalletProjectionRepository implements IWalletProjectionRepository {
       logger.info(`Created wallet projection for user ${walletData.userId}`)
     } catch (error) {
       const errorMessage = `Error saving wallet for user ${walletData.userId}: ${error.message}`
+
       logger.error(errorMessage)
 
       if (error instanceof MongoError) {
@@ -181,6 +183,7 @@ export class WalletProjectionRepository implements IWalletProjectionRepository {
       )
     } catch (error) {
       const errorMessage = `Error updating wallet balance for ID ${id}: ${error.message}`
+
       logger.error(errorMessage)
 
       if (error instanceof MongoError) {

@@ -100,7 +100,7 @@ name = "authorization"
 [health]
 enabled = true
 listen = "0.0.0.0:9668"
-path = "/health/liveness"
+path = "/health"
 
 # Operation limits
 [operation_limits]

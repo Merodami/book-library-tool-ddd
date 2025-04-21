@@ -31,7 +31,9 @@ export class Money {
    */
   add(other: Money): Money {
     const result = new Money(0)
+
     result.value = this.value.add(other.value)
+
     return result
   }
 
@@ -40,7 +42,9 @@ export class Money {
    */
   subtract(other: Money): Money {
     const result = new Money(0)
+
     result.value = this.value.subtract(other.value)
+
     return result
   }
 
@@ -49,7 +53,9 @@ export class Money {
    */
   multiply(factor: number): Money {
     const result = new Money(0)
+
     result.value = this.value.multiply(factor)
+
     return result
   }
 

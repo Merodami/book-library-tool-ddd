@@ -1,10 +1,8 @@
 import type {
-  Book,
+  Book as BookDTO,
   CatalogSearchQuery,
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
-import { BookUpdateRequest } from '@book-library-tool/sdk'
-
 export interface IBookProjectionRepository {
   /**
    * Retrieve all book projections with optional field selection.
@@ -19,28 +17,46 @@ export interface IBookProjectionRepository {
   ): Promise<PaginatedBookResponse>
 
   /**
+   * Retrieve a single book projection by its ID with optional field selection.
+   *
+   * @param id - The ID of the book
+   * @param fields - Optional array of fields to return. If not provided, returns all fields.
+   * @returns A promise that resolves to a Book object if found, or null otherwise
+   */
+  getBookById(id: string, fields?: string[]): Promise<BookDTO | null>
+
+  /**
    * Retrieve a single book projection by its ISBN with optional field selection.
    *
    * @param isbn - The ISBN of the book
    * @param fields - Optional array of fields to return. If not provided, returns all fields.
    * @returns A promise that resolves to a Book object if found, or null otherwise
    */
-  getBookByISBN(isbn: string, fields?: string[]): Promise<Book | null>
+  getBookByIsbn(isbn: string, fields?: string[]): Promise<BookDTO | null>
 
   /**
    * Save a new book projection.
    *
    * @param bookProjection - The book projection to save
    */
-  saveProjection(bookProjection: Book): Promise<void>
+  saveProjection(bookProjection: BookDTO): Promise<void>
 
   /**
-   * Update an existing book projection.
-   *
-   * @param id - The ID of the book to update
-   * @param updates - The updates to apply
+   * Partially update the projection for a given book ID.
+   * @param id - aggregate/book ID
+   * @param changes - only the fields you want to modify
+   * @param updatedAt - when this change happened
    */
-  updateProjection(id: string, updates: BookUpdateRequest): Promise<void>
+  updateProjection(
+    id: string,
+    changes: Partial<
+      Pick<
+        BookDTO,
+        'title' | 'author' | 'publicationYear' | 'publisher' | 'price' | 'isbn'
+      >
+    >,
+    updatedAt: Date | string,
+  ): Promise<void>
 
   /**
    * Mark a book as deleted.
@@ -56,5 +72,5 @@ export interface IBookProjectionRepository {
    * @param isbn - The ISBN of the book to find
    * @returns The book data if found, null otherwise
    */
-  findBookForReservation(isbn: string): Promise<Book | null>
+  findBookForReservation(isbn: string): Promise<BookDTO | null>
 }

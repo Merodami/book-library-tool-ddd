@@ -35,6 +35,7 @@ export class WalletRepository
       return Wallet.rehydrate(events)
     } catch (error) {
       logger.error(`Failed to rehydrate wallet: ${error.message}`)
+
       return null
     }
   }
@@ -47,6 +48,7 @@ export class WalletRepository
   async findByUserId(userId: string): Promise<Wallet | null> {
     if (!userId) {
       logger.error('Invalid userId provided to findByUserId')
+
       return null
     }
 
@@ -63,6 +65,7 @@ export class WalletRepository
 
       if (events.length === 0) {
         logger.debug(`No wallet found for user ${userId}`)
+
         return null
       }
 
@@ -77,6 +80,7 @@ export class WalletRepository
 
       if (isDeleted) {
         logger.debug(`Wallet for user ${userId} exists but is deleted`)
+
         return null
       }
 
@@ -84,6 +88,7 @@ export class WalletRepository
       return this.rehydrateFromEvents(walletEvents)
     } catch (error) {
       logger.error(`Error finding wallet for user ${userId}: ${error.message}`)
+
       return null
     }
   }
@@ -105,6 +110,7 @@ export class WalletRepository
 
     if (!events || events.length === 0) {
       logger.debug(`No events to save for wallet ${wallet.id}`)
+
       return
     }
 

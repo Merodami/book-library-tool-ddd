@@ -61,6 +61,7 @@ export class BookReturnHandler {
 
       // Get fee per day from environment or use default
       const feePerDay = parseInt(process.env.LATE_FEE_PER_DAY ?? '0.2', 10)
+
       logger.debug(`Using late fee per day: ${feePerDay}€`)
 
       // Apply late fee to existing wallet

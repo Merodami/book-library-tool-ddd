@@ -1,4 +1,5 @@
 {
+  // Spell‑checker
   "cSpell.words": [
     "Damian Meroni (@merodami)",
     "depcheckrc",
@@ -18,6 +19,7 @@
     "rabbitmqadmin",
     "rabbitmqctl",
     "supergraph",
+    "typebox",
     "uuidv",
     "vitest"
   ],
@@ -50,12 +52,6 @@
   "[dotenv]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
   },
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
   "[toml]": {
     "editor.defaultFormatter": "tamasfe.even-better-toml"
   }

@@ -5,20 +5,23 @@ import {
   type EventBus,
 } from '@book-library-tool/event-store'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
+import type { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
 import { Book } from '@books/entities/Book.js'
+import type { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import type { IBookRepository } from '@books/repositories/IBookRepository.js'
-import { UpdateBookCommand } from '@books/use_cases/commands/UpdateBookCommand.js'
 import { UpdateBookHandler } from '@books/use_cases/commands/UpdateBookHandler.js'
 import { randomUUID } from 'crypto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-describe('UpdateBookHandler Unit Tests', () => {
+describe('UpdateBookHandler', () => {
   let repository: IBookRepository
+  let projectionRepository: IBookProjectionRepository
   let eventBus: EventBus
   let handler: UpdateBookHandler
 
   const isbn = '978-3-16-148410-0'
-  const aggregateId = randomUUID()
+  const bookId = randomUUID()
+  const aggregateId = bookId // Same ID is used now
 
   // Base creation event stream
   const baseEvents: DomainEvent[] = [
@@ -42,7 +45,7 @@ describe('UpdateBookHandler Unit Tests', () => {
   ]
 
   const validCommand: UpdateBookCommand = {
-    isbn,
+    id: bookId,
     title: 'Updated Title',
     author: 'Updated Author',
     publicationYear: 2024,
@@ -52,16 +55,40 @@ describe('UpdateBookHandler Unit Tests', () => {
 
   beforeEach(() => {
     repository = {
-      findAggregateIdByISBN: vi.fn().mockResolvedValue(aggregateId),
+      findAggregateIdById: vi.fn().mockResolvedValue(aggregateId),
       getEventsForAggregate: vi.fn().mockResolvedValue(baseEvents),
       saveEvents: vi.fn().mockResolvedValue(undefined),
+      appendBatch: vi.fn().mockResolvedValue(undefined),
     } as unknown as IBookRepository
+
+    projectionRepository = {
+      getBookById: vi.fn().mockResolvedValue({
+        id: bookId,
+        isbn,
+        title: 'Original',
+        author: 'Author',
+        publicationYear: 2023,
+        publisher: 'Pub',
+        price: 10,
+      }),
+    } as unknown as IBookProjectionRepository
 
     eventBus = {
       publish: vi.fn().mockResolvedValue(undefined),
+      init: vi.fn(),
+      subscribe: vi.fn(),
+      subscribeToAll: vi.fn(),
+      unsubscribe: vi.fn(),
+      unsubscribeFromAll: vi.fn(),
+      getSubscribers: vi.fn(),
+      getAllSubscribers: vi.fn(),
+      shutdown: vi.fn(),
+      startConsuming: vi.fn(),
+      bindEventTypes: vi.fn(),
+      checkHealth: vi.fn(),
     } as unknown as EventBus
 
-    handler = new UpdateBookHandler(repository, eventBus)
+    handler = new UpdateBookHandler(repository, projectionRepository, eventBus)
   })
 
   it('updates and publishes the BookUpdated event', async () => {
@@ -113,12 +140,14 @@ describe('UpdateBookHandler Unit Tests', () => {
       .fn()
       .mockReturnValue({ book: fakeBook, event: updateEvent })
 
-    // Execute
     const result = await handler.execute(validCommand)
 
-    // Assertions
-    expect(result).toBe(fakeBook)
-    expect(repository.findAggregateIdByISBN).toHaveBeenCalledWith(isbn)
+    expect(result).toEqual({
+      success: true,
+      bookId: fakeBook.id,
+      version: fakeBook.version,
+    })
+    expect(projectionRepository.getBookById).toHaveBeenCalledWith(bookId)
     expect(repository.getEventsForAggregate).toHaveBeenCalledWith(aggregateId)
     expect(Book.rehydrate).toHaveBeenCalledWith(baseEvents)
     expect(fakeBook.update).toHaveBeenCalledWith({
@@ -137,15 +166,16 @@ describe('UpdateBookHandler Unit Tests', () => {
     expect(fakeBook.clearDomainEvents).toHaveBeenCalled()
   })
 
-  it('throws BOOK_NOT_FOUND when ISBN missing', async () => {
-    vi.spyOn(repository, 'findAggregateIdByISBN').mockResolvedValue(null)
+  it('throws BOOK_NOT_FOUND when book not found in projection', async () => {
+    vi.spyOn(projectionRepository, 'getBookById').mockResolvedValue(null)
     await expect(handler.execute(validCommand)).rejects.toEqual(
       new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book with ISBN ${isbn} not found`,
+        `Book with ID ${bookId} not found.`,
       ),
     )
+    expect(repository.getEventsForAggregate).not.toHaveBeenCalled()
   })
 
   it('throws BOOK_NOT_FOUND when no events', async () => {
@@ -154,26 +184,7 @@ describe('UpdateBookHandler Unit Tests', () => {
       new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book with ISBN ${isbn} not found`,
-      ),
-    )
-  })
-
-  it('throws BOOK_ALREADY_DELETED when already deleted', async () => {
-    const deletedBook = Object.assign(Object.create(Book.prototype), {
-      id: aggregateId,
-      version: 1,
-      deletedAt: new Date(),
-      clearDomainEvents: vi.fn(),
-    }) as Book
-
-    vi.spyOn(Book, 'rehydrate').mockReturnValue(deletedBook)
-
-    await expect(handler.execute(validCommand)).rejects.toEqual(
-      new Errors.ApplicationError(
-        410,
-        ErrorCode.BOOK_ALREADY_DELETED,
-        `Book with ISBN ${isbn} already deleted`,
+        `Book with ID ${bookId} not found.`,
       ),
     )
   })

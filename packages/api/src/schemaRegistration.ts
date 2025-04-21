@@ -8,6 +8,7 @@ import {
 } from './schemas/books.js'
 import { CatalogSearchQuerySchema } from './schemas/catalog.js'
 import { ErrorResponseSchema } from './schemas/errors.js'
+import { EventResponseSchema } from './schemas/events.js'
 import {
   PaginatedResultSchema,
   PaginationMetadataSchema,
@@ -100,3 +101,6 @@ registry.register('LateReturnRequest', LateReturnRequestSchema)
 // Parameter schemas
 registry.register('BookIdParameter', BookIdParameterSchema)
 registry.register('UserIdParameter', UserIdParameterSchema)
+
+// Event schemas
+registry.register('EventResponse', EventResponseSchema)

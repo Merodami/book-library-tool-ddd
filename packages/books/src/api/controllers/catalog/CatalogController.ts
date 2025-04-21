@@ -1,4 +1,4 @@
-import { Cache } from '@book-library-tool/redis'
+import { Cache, httpRequestKeyGenerator } from '@book-library-tool/redis'
 import type { CatalogSearchQuery } from '@book-library-tool/sdk'
 import { GetAllBooksHandler } from '@books/queries/GetAllBooksHandler.js'
 import type { FastifyRequest } from 'fastify'
@@ -14,25 +14,33 @@ export class CatalogController {
    */
   @Cache({
     ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
-    prefix: 'catalog:books',
+    prefix: 'catalog',
+    keyGenerator: httpRequestKeyGenerator,
     condition: (result) => result && result.data && Array.isArray(result.data),
   })
   async getAllBooks(request: FastifyRequest) {
+    // Convert query params to CatalogSearchQuery directly
     const query = request.query as CatalogSearchQuery
 
-    // Convert query to CatalogSearchQuery format
-    const { fields: _, ...rest } = query
+    // Validate requested fields against allowed set
+    const allowedFields = [
+      'id',
+      'isbn',
+      'title',
+      'author',
+      'publicationYear',
+      'publisher',
+      'price',
+      'createdAt',
+      'updatedAt',
+    ]
 
-    const searchQuery: CatalogSearchQuery = {
-      ...rest,
-      fields: query.fields,
-    }
-
-    const response = await this.getAllBooksHandler.execute(
-      searchQuery,
-      query.fields,
+    const validFields = query.fields?.filter((field) =>
+      allowedFields.includes(field),
     )
 
-    return response
+    const result = await this.getAllBooksHandler.execute(query, validFields)
+
+    return result
   }
 }

@@ -2,10 +2,10 @@ import { ObjectId } from 'mongodb'
 
 /**
  * Database document representation of a book with MongoDB native types
- * This is what's actually stored in the database (with Date objects)
  */
 export interface BookDocument {
   _id: ObjectId
+  id: string
   isbn: string
   title: string
   author: string
@@ -13,6 +13,6 @@ export interface BookDocument {
   publisher: string
   price: number
   createdAt: Date
-  updatedAt: Date
-  deletedAt?: Date
+  updatedAt?: Date | null
+  deletedAt?: Date | null
 }

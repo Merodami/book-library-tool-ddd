@@ -2,6 +2,7 @@ import { logger } from '@book-library-tool/shared'
 
 import { ICacheService } from '../../domain/repositories/ICacheService.js'
 import { CacheOptions } from '../../domain/types/cache.js'
+import { defaultKeyGenerator } from '../../infrastructure/cache/keygen.js'
 
 // Global cache service reference that will be set during app initialization
 let globalCacheService: ICacheService | null = null
@@ -49,17 +50,9 @@ function generateCacheKey(
   methodName: string,
   args: any[],
 ): string {
-  // Use custom key generator if provided, otherwise use default
-  if (options.keyGenerator) {
-    return options.keyGenerator(options.prefix, methodName, args)
-  }
+  const generator = options.keyGenerator ?? defaultKeyGenerator
 
-  // Default key generation logic
-  const request = args[0]
-  const params = request?.params || {}
-  const query = request?.query || {}
-
-  return `${options.prefix}:${methodName}:${JSON.stringify(params)}:${JSON.stringify(query)}`
+  return generator(options.prefix, methodName, args)
 }
 
 /**

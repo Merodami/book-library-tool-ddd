@@ -209,22 +209,6 @@ export class ApplicationError extends Error {
 }
 
 /**
- * Creates a function to handle TypeORM EntityNotFound errors
- * @param entityType - The type of entity that was not found
- * @param entityId - The ID of the entity that was not found
- * @returns A function that handles errors and throws appropriate ApplicationError
- */
-export const catchError =
-  (entityType: string, entityId: string) => (err: Error) => {
-    // TypeORM error "EntityNotFound"
-    if (err.name === 'EntityNotFound') {
-      throw new ApplicationError(404, `Unknown ${entityType} "${entityId}"`)
-    } else {
-      throw err
-    }
-  }
-
-/**
  * Creates a standardized application error
  * @param code - The error code from ErrorCode enum
  * @param message - Optional custom error message

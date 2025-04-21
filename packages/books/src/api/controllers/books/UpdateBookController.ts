@@ -1,6 +1,7 @@
+import { EventResponse } from '@book-library-tool/sdk'
 import type { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
 import { UpdateBookHandler } from '@books/commands/UpdateBookHandler.js'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyRequest } from 'fastify'
 
 export class UpdateBookController {
   constructor(private readonly updateBookHandler: UpdateBookHandler) {
@@ -8,22 +9,21 @@ export class UpdateBookController {
   }
 
   /**
-   * PATCH /books/:isbn
+   * PATCH /books/:id
    * Partially updates a book. Generates a BookUpdated event,
    * persists it, and publishes it.
    */
   async updateBook(
     request: FastifyRequest<{
-      Params: { isbn: string }
-      Body: Omit<UpdateBookCommand, 'isbn'>
+      Params: { id: string }
+      Body: Omit<UpdateBookCommand, 'id'>
     }>,
-    reply: FastifyReply,
-  ): Promise<void> {
-    const { isbn } = request.params
+  ): Promise<EventResponse & { bookId: string }> {
+    const { id } = request.params
     const { title, author, publicationYear, publisher, price } = request.body
 
     const command: UpdateBookCommand = {
-      isbn,
+      id,
       title,
       author,
       publicationYear,
@@ -32,11 +32,8 @@ export class UpdateBookController {
     }
 
     // Call the handler directly to update the book
-    await this.updateBookHandler.execute(command)
+    const result = await this.updateBookHandler.execute(command)
 
-    // Respond with a 200 status code
-    reply
-      .code(200)
-      .send({ message: 'Book updated successfully', book: command })
+    return result
   }
 }

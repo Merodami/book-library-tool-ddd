@@ -44,6 +44,7 @@ export async function executeHealthChecks(
     try {
       // Execute the health check
       const isHealthy = await dependency.check()
+
       let details = { ...dependency.details }
 
       // Add additional system details for system checks

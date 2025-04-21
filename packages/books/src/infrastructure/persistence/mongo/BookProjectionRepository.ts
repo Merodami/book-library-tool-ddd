@@ -6,12 +6,11 @@ import {
   convertDateStrings,
 } from '@book-library-tool/database'
 import type {
-  Book,
+  Book as BookDTO,
   CatalogSearchQuery,
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
-import { ErrorCode, logger } from '@book-library-tool/shared'
-import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
+import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import { Collection, ObjectId } from 'mongodb'
 
@@ -40,7 +39,9 @@ export class BookProjectionRepository implements IBookProjectionRepository {
     fields?: string[],
   ): Promise<PaginatedBookResponse> {
     // Base filter excludes soft-deleted records
-    const dbQuery: Record<string, unknown> = { deletedAt: { $exists: false } }
+    const dbQuery: Record<string, unknown> = {
+      $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+    }
 
     // Text-based filters on title, author, publisher
     Object.assign(
@@ -92,6 +93,7 @@ export class BookProjectionRepository implements IBookProjectionRepository {
 
     // Execute query and map documents to domain models
     const docs = await cursor.toArray()
+
     const data = docs.map((d) =>
       mapToDomain(
         assertDocument<BookDocument>(d, [
@@ -121,15 +123,18 @@ export class BookProjectionRepository implements IBookProjectionRepository {
   }
 
   /**
-   * Retrieves a single book by its ISBN, excluding soft-deleted records.
-   * @param isbn - Unique book identifier
+   * Retrieves a single book by its ID, excluding soft-deleted records.
+   * @param id - Unique book identifier
    * @param fields - Optional list of fields to include
    * @returns Domain Book object or null if not found
    * @throws ApplicationError on data mapping errors
    */
-  async getBookByISBN(isbn: string, fields?: string[]): Promise<Book | null> {
+  async getBookById(id: string, fields?: string[]): Promise<BookDTO | null> {
     const doc = await this.collection.findOne(
-      { isbn, deletedAt: { $exists: false } },
+      {
+        id,
+        $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+      },
       { projection: buildProjection(fields) },
     )
 
@@ -138,6 +143,53 @@ export class BookProjectionRepository implements IBookProjectionRepository {
     try {
       return mapToDomain(
         assertDocument<BookDocument>(doc, [
+          'id',
+          'isbn',
+          'title',
+          'author',
+          'publicationYear',
+          'publisher',
+          'price',
+          'createdAt',
+          'updatedAt',
+        ]),
+      )
+    } catch (err) {
+      logger.error(`Invalid book doc for ID ${id}:`, err)
+
+      throw new Errors.ApplicationError(
+        500,
+        ErrorCode.INTERNAL_ERROR,
+        'Invalid book data',
+      )
+    }
+  }
+
+  /**
+   * Retrieves a single book by its ISBN, excluding soft-deleted records.
+   * @param isbn - Unique book identifier
+   * @param fields - Optional list of fields to include
+   * @returns Domain Book object or null if not found
+   * @throws ApplicationError on data mapping errors
+   */
+  async getBookByIsbn(
+    isbn: string,
+    fields?: string[],
+  ): Promise<BookDTO | null> {
+    const doc = await this.collection.findOne(
+      {
+        isbn,
+        $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+      },
+      { projection: buildProjection(fields) },
+    )
+
+    if (!doc) return null
+
+    try {
+      return mapToDomain(
+        assertDocument<BookDocument>(doc, [
+          'id',
           'isbn',
           'title',
           'author',
@@ -150,7 +202,8 @@ export class BookProjectionRepository implements IBookProjectionRepository {
       )
     } catch (err) {
       logger.error(`Invalid book doc for ISBN ${isbn}:`, err)
-      throw new ApplicationError(
+
+      throw new Errors.ApplicationError(
         500,
         ErrorCode.INTERNAL_ERROR,
         'Invalid book data',
@@ -162,7 +215,7 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * Saves a new book projection to MongoDB.
    * @param book - Domain Book object to persist
    */
-  async saveProjection(book: Book): Promise<void> {
+  async saveProjection(book: BookDTO): Promise<void> {
     const doc = mapToDocument(book)
 
     await this.collection.insertOne({ ...doc, _id: new ObjectId() })
@@ -174,16 +227,57 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * @param id - Document ObjectId as string
    * @param updates - Partial Book data with optional dates
    */
-  async updateProjection(id: string, updates: Partial<Book>): Promise<void> {
-    const mongoUpdates = convertDateStrings(updates as Record<string, unknown>)
+  async updateProjection(
+    id: string,
+    changes: Partial<
+      Pick<
+        BookDTO,
+        'title' | 'author' | 'publicationYear' | 'publisher' | 'price' | 'isbn'
+      >
+    >,
+    updatedAt: Date | string,
+  ): Promise<void> {
+    const allowed: Array<keyof typeof changes> = [
+      'title',
+      'author',
+      'publicationYear',
+      'publisher',
+      'price',
+      'isbn',
+    ]
+    const setFields: Record<string, unknown> = {}
 
-    if (!('updatedAt' in updates)) {
-      mongoUpdates.updatedAt = new Date()
+    // ToDo: Remove this once we have a proper ID generator
+    for (const key of allowed) {
+      /* eslint-disable-next-line security/detect-object-injection */
+      if (changes[key] !== undefined) {
+        /* eslint-disable-next-line security/detect-object-injection */
+        setFields[key] = changes[key]!
+      }
     }
-    await this.collection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: mongoUpdates },
+
+    setFields.updatedAt =
+      updatedAt instanceof Date ? updatedAt : new Date(updatedAt)
+
+    if (Object.keys(setFields).length === 0) {
+      return
+    }
+
+    const result = await this.collection.updateOne(
+      {
+        id,
+        $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+      },
+      { $set: setFields },
     )
+
+    if (result.matchedCount === 0) {
+      throw new Errors.ApplicationError(
+        410,
+        ErrorCode.BOOK_NOT_FOUND,
+        `Book projection with id "${id}" not found or already deleted.`,
+      )
+    }
   }
 
   /**
@@ -192,10 +286,22 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * @param timestamp - Deletion timestamp
    */
   async markAsDeleted(id: string, timestamp: Date): Promise<void> {
-    await this.collection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { deletedAt: timestamp, updatedAt: timestamp } },
-    )
+    const filter = {
+      id,
+      $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+    }
+
+    const result = await this.collection.updateOne(filter, {
+      $set: { deletedAt: timestamp, updatedAt: timestamp },
+    })
+
+    if (result.matchedCount === 0) {
+      throw new Errors.ApplicationError(
+        404,
+        ErrorCode.BOOK_NOT_FOUND,
+        `Book projection with id "${id}" not found or already deleted.`,
+      )
+    }
   }
 
   /**
@@ -203,7 +309,7 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * @param isbn - Unique book identifier
    * @returns Domain Book object or null if not found
    */
-  async findBookForReservation(isbn: string): Promise<Book | null> {
+  async findBookForReservation(isbn: string): Promise<BookDTO | null> {
     const doc = await this.collection.findOne({
       isbn,
       deletedAt: { $exists: false },
@@ -221,8 +327,9 @@ export class BookProjectionRepository implements IBookProjectionRepository {
 /**
  * Helper: map MongoDB document to domain Book.
  */
-function mapToDomain(doc: BookDocument): Book {
+function mapToDomain(doc: BookDocument): BookDTO {
   return {
+    id: doc.id,
     isbn: doc.isbn,
     title: doc.title,
     author: doc.author,
@@ -230,7 +337,7 @@ function mapToDomain(doc: BookDocument): Book {
     publisher: doc.publisher,
     price: doc.price,
     createdAt: doc.createdAt.toISOString(),
-    updatedAt: doc.updatedAt.toISOString(),
+    updatedAt: doc.updatedAt?.toISOString(),
     deletedAt: doc.deletedAt?.toISOString(),
   }
 }
@@ -238,7 +345,7 @@ function mapToDomain(doc: BookDocument): Book {
 /**
  * Helper: map domain Book to MongoDB document (no _id).
  */
-function mapToDocument(book: Book): Omit<BookDocument, '_id'> {
+function mapToDocument(book: BookDTO): Omit<BookDocument, '_id'> {
   // Use shared util to convert ISO date strings to Date objects
   const dates = convertDateStrings({
     createdAt: book.createdAt,
@@ -247,6 +354,8 @@ function mapToDocument(book: Book): Omit<BookDocument, '_id'> {
   } as Record<string, unknown>) as Record<string, Date | undefined>
 
   return {
+    // ToDo: Remove this once we have a proper ID generator
+    id: book.id || '',
     isbn: book.isbn,
     title: book.title,
     author: book.author,

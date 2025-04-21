@@ -21,6 +21,7 @@ export const paginationHook: onRequestHookHandler = async (
 ): Promise<void> => {
   // Apply limit constraints from environment variables or default values
   let limit: number = parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10')
+
   const maxLimit: number = parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100')
 
   try {

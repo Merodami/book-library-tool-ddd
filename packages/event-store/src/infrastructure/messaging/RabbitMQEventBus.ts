@@ -57,6 +57,7 @@ export class RabbitMQEventBus implements EventBus {
       while (this.initializing) {
         await new Promise((resolve) => setTimeout(resolve, 100))
       }
+
       return
     }
 
@@ -102,6 +103,7 @@ export class RabbitMQEventBus implements EventBus {
   private async setupExchanges(): Promise<void> {
     // Set up the dead letter exchange
     const deadLetterExchange = `${this.exchangeName}.deadletter`
+
     await this.channel.assertExchange(deadLetterExchange, 'topic', {
       durable: true,
       autoDelete: false,
@@ -109,6 +111,7 @@ export class RabbitMQEventBus implements EventBus {
 
     // Set up the alternate exchange
     const alternateExchange = `${this.exchangeName}.alternate`
+
     await this.channel.assertExchange(alternateExchange, 'fanout', {
       durable: true,
       autoDelete: false,
@@ -148,10 +151,12 @@ export class RabbitMQEventBus implements EventBus {
         'x-queue-mode': 'default',
       },
     })
+
     this.queueName = queue
 
     // Create and bind dead letter queue
     const dlqName = `${this.queueName}.deadletter`
+
     await this.channel.assertQueue(dlqName, {
       durable: true,
       exclusive: false,
@@ -161,6 +166,7 @@ export class RabbitMQEventBus implements EventBus {
 
     // Create and bind unroutable queue
     const unroutableQueueName = `${this.serviceName}.unroutable`
+
     await this.channel.assertQueue(unroutableQueueName, {
       durable: true,
       exclusive: false,
@@ -178,6 +184,7 @@ export class RabbitMQEventBus implements EventBus {
     for (const { eventType, handler } of this.pendingSubscriptions) {
       this.subscribeNow(eventType, handler)
     }
+
     this.pendingSubscriptions = []
   }
 
@@ -220,9 +227,13 @@ export class RabbitMQEventBus implements EventBus {
 
         try {
           logger.debug(`Processing message ${messageId} [${routingKey}]`)
+
           const startTime = Date.now()
+
           await this.handleMessage(msg)
+
           const processingTime = Date.now() - startTime
+
           logger.debug(`Processed message ${messageId} in ${processingTime}ms`)
         } catch (error) {
           await this.handleMessageProcessingError(
@@ -263,6 +274,7 @@ export class RabbitMQEventBus implements EventBus {
     if (retryCount <= 3) {
       // Retry with exponential backoff
       const delay = 1000 * Math.pow(2, retryCount - 1)
+
       logger.info(
         `Retrying message ${messageId} (${retryCount}/3) after ${delay}ms`,
       )
@@ -273,6 +285,7 @@ export class RabbitMQEventBus implements EventBus {
 
       // Setup for delayed retry using RabbitMQ's dead-letter + TTL pattern
       const retryQueueName = `${this.queueName}.retry.${retryCount}`
+
       await this.channel.assertQueue(retryQueueName, {
         durable: true,
         arguments: {
@@ -304,6 +317,7 @@ export class RabbitMQEventBus implements EventBus {
   private consumeUnroutableMessages(): void {
     const unroutableQueueName = `${this.serviceName}.unroutable`
     const processingInterval = 3000 // Start with 3 seconds
+
     let consecutiveEmpty = 0
     let processing = false
 
@@ -312,6 +326,7 @@ export class RabbitMQEventBus implements EventBus {
       if (processing) return
 
       processing = true
+
       let processedCount = 0
 
       try {
@@ -441,10 +456,12 @@ export class RabbitMQEventBus implements EventBus {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       logger.error('Max reconnection attempts reached, giving up')
       process.exit(1)
+
       return
     }
 
     this.reconnectAttempts++
+
     const delay = Math.min(30000, 1000 * Math.pow(2, this.reconnectAttempts))
 
     logger.info(
@@ -555,6 +572,7 @@ export class RabbitMQEventBus implements EventBus {
           logger.error('Failed to initialize during subscribe:', error)
         })
       }
+
       return
     }
 
@@ -570,7 +588,9 @@ export class RabbitMQEventBus implements EventBus {
   ): void {
     if (!this.handlers.has(eventType)) {
       this.handlers.set(eventType, [])
+
       const bindingKey = eventType === '*' ? '#' : eventType
+
       this.channel
         .bindQueue(this.queueName, this.exchangeName, bindingKey)
         .then(() => {
@@ -608,26 +628,33 @@ export class RabbitMQEventBus implements EventBus {
       const index = this.pendingSubscriptions.findIndex(
         (sub) => sub.eventType === eventType && sub.handler === handler,
       )
+
       if (index !== -1) {
         this.pendingSubscriptions.splice(index, 1)
+
         return true
       }
+
       return false
     }
 
     const handlers = this.handlers.get(eventType)
+
     if (!handlers) return false
 
     const index = handlers.indexOf(handler)
+
     if (index === -1) return false
     handlers.splice(index, 1)
 
     if (handlers.length === 0) {
       const bindingKey = eventType === '*' ? '#' : eventType
+
       this.channel
         .unbindQueue(this.queueName, this.exchangeName, bindingKey)
         .catch((error: Error) => logger.error('Error unbinding queue:', error))
     }
+
     return true
   }
 
@@ -680,6 +707,7 @@ export class RabbitMQEventBus implements EventBus {
    */
   async republishUnroutableMessages(): Promise<void> {
     const unroutableQueueName = `${this.serviceName}.unroutable`
+
     let processed = 0
 
     // Process up to 100 messages at a time

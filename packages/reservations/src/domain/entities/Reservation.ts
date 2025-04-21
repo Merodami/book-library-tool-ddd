@@ -183,7 +183,9 @@ export class Reservation extends AggregateRoot {
               new Date(event.timestamp),
               new Date(event.timestamp),
             )
+
             temp.version = event.version
+
             return temp
           }
           throw new Error('First event must be a ReservationCreated event')

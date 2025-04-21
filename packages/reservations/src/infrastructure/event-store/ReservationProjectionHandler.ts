@@ -34,6 +34,7 @@ export class ReservationProjectionHandler {
     // Calculate the due date (typically 14 days from creation)
     const createdDate = new Date(event.timestamp)
     const dueDate = new Date(createdDate)
+
     dueDate.setDate(createdDate.getDate() + 14) // 2 weeks loan period
 
     await this.repository.saveReservation({
@@ -255,6 +256,7 @@ export class ReservationProjectionHandler {
       logger.warn(
         `No reservation found with ID ${event.aggregateId} to update payment declined status`,
       )
+
       return
     }
 

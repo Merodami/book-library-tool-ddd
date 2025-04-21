@@ -7,43 +7,51 @@ import { GetBookQuery } from '@books/use_cases/queries/GetBookQuery.js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('GetBookHandler', () => {
-  let mockProjectionRepository: IBookProjectionRepository
+  let mockBookProjectionRepository: IBookProjectionRepository
   let handler: GetBookHandler
   let mockBook: Book
 
+  const validId = 'test-id'
   const validIsbn = '978-3-16-148410-0'
-
   const validQuery: GetBookQuery = {
-    isbn: validIsbn,
+    id: validId,
   }
 
   beforeEach(() => {
     mockBook = {
-      id: 'test-id',
+      id: validId,
       isbn: validIsbn,
       title: 'Test Book',
       author: 'Test Author',
       publicationYear: 2023,
       publisher: 'Test Publisher',
       price: 19.99,
+      createdAt: '2023-01-01T00:00:00.000Z',
+      updatedAt: null,
+      deletedAt: null,
     } as Book
 
-    mockProjectionRepository = {
-      getBookByISBN: vi.fn().mockResolvedValue(mockBook),
+    mockBookProjectionRepository = {
+      getBookById: vi.fn().mockResolvedValue(mockBook),
+      getBookByIsbn: vi.fn().mockResolvedValue(mockBook),
       getAllBooks: vi.fn().mockResolvedValue({
         data: [],
-        totalItems: 0,
-        page: 1,
-        limit: 10,
-        totalPages: 0,
+        pagination: {
+          total: 0,
+          page: 1,
+          limit: 10,
+          pages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
       }),
       saveProjection: vi.fn().mockResolvedValue(undefined),
       updateProjection: vi.fn().mockResolvedValue(undefined),
       markAsDeleted: vi.fn().mockResolvedValue(undefined),
       findBookForReservation: vi.fn().mockResolvedValue(null),
-    }
+    } as unknown as IBookProjectionRepository
 
-    handler = new GetBookHandler(mockProjectionRepository)
+    handler = new GetBookHandler(mockBookProjectionRepository)
   })
 
   afterEach(() => {
@@ -51,31 +59,79 @@ describe('GetBookHandler', () => {
   })
 
   it('should return a book when it exists', async () => {
-    // Act
     const result = await handler.execute(validQuery)
 
-    // Assert
-    expect(result).toBe(mockBook)
-    expect(mockProjectionRepository.getBookByISBN).toHaveBeenCalledWith(
-      validQuery.isbn,
+    expect(result).toEqual(mockBook) // Changed toBe to toEqual for object comparison
+    expect(mockBookProjectionRepository.getBookById).toHaveBeenCalledWith(
+      validQuery.id,
+      undefined,
     )
   })
 
   it('should throw an error when the book does not exist', async () => {
-    // Arrange
-    mockProjectionRepository.getBookByISBN = vi.fn().mockResolvedValue(null)
+    mockBookProjectionRepository.getBookById = vi.fn().mockResolvedValue(null)
 
-    // Act & Assert
-    await expect(handler.execute(validQuery)).rejects.toThrow(
+    await expect(handler.execute(validQuery)).rejects.toEqual(
       new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book with ISBN ${validQuery.isbn} not found`,
+        `Book with ID ${validQuery.id} not found`,
       ),
     )
 
-    expect(mockProjectionRepository.getBookByISBN).toHaveBeenCalledWith(
-      validQuery.isbn,
+    expect(mockBookProjectionRepository.getBookById).toHaveBeenCalledWith(
+      validQuery.id,
+      undefined,
     )
+  })
+
+  it('should pass additional fields parameter when provided', async () => {
+    const fields = ['title', 'author', 'price']
+
+    await handler.execute(validQuery, fields)
+
+    expect(mockBookProjectionRepository.getBookById).toHaveBeenCalledWith(
+      validQuery.id,
+      fields,
+    )
+  })
+
+  it('should work with numeric ID', async () => {
+    const numericIdQuery: GetBookQuery = {
+      id: '123', // Numeric ID as string
+    }
+
+    await handler.execute(numericIdQuery)
+
+    expect(mockBookProjectionRepository.getBookById).toHaveBeenCalledWith(
+      numericIdQuery.id,
+      undefined,
+    )
+  })
+
+  it('should throw error with proper ID in message', async () => {
+    mockBookProjectionRepository.getBookById = vi.fn().mockResolvedValue(null)
+
+    const specialQuery: GetBookQuery = {
+      id: 'special-123',
+    }
+
+    await expect(handler.execute(specialQuery)).rejects.toEqual(
+      new Errors.ApplicationError(
+        404,
+        ErrorCode.BOOK_NOT_FOUND,
+        `Book with ID special-123 not found`,
+      ),
+    )
+  })
+
+  it('should handle errors from the repository and preserve the error stack', async () => {
+    const testError = new Error('Database connection failed')
+
+    mockBookProjectionRepository.getBookById = vi
+      .fn()
+      .mockRejectedValue(testError)
+
+    await expect(handler.execute(validQuery)).rejects.toThrow(testError)
   })
 })

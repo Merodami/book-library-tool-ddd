@@ -7,7 +7,12 @@ import {
   DomainEvent,
 } from '@book-library-tool/event-store'
 import { makeValidator } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
-import { logger } from '@book-library-tool/shared'
+import {
+  ErrorCode,
+  Errors,
+  getDefaultMessageForError,
+  logger,
+} from '@book-library-tool/shared'
 
 // Schema validator for Book
 const assertSchema = makeValidator(schemas.BookSchema)
@@ -82,6 +87,7 @@ export class Book extends AggregateRoot {
       eventType: BOOK_CREATED,
       payload: {
         ...command,
+        id: book.id,
         createdAt: timestamp.toISOString(),
         updatedAt: timestamp.toISOString(),
       },
@@ -105,14 +111,20 @@ export class Book extends AggregateRoot {
   } {
     // Check if book is deleted
     if (this.deletedAt) {
-      throw new Error(
+      throw new Errors.ApplicationError(
+        422,
+        ErrorCode.BOOK_ALREADY_DELETED,
         `Book with id ${this.id} has been deleted and cannot be updated.`,
       )
     }
 
     // Only process if there are actual changes
     if (!this.hasChanges(command)) {
-      throw new Error('Update request contains no changes to apply')
+      throw new Errors.ApplicationError(
+        422,
+        ErrorCode.NO_CHANGES,
+        getDefaultMessageForError(ErrorCode.NO_CHANGES),
+      )
     }
 
     const updatedProps: BookProps = {

@@ -21,6 +21,7 @@ export class RedisConfigService {
     if (!RedisConfigService.instance) {
       RedisConfigService.instance = new RedisConfigService()
     }
+
     return RedisConfigService.instance
   }
 

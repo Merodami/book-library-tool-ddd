@@ -4,6 +4,7 @@ import sonarjs from 'eslint-plugin-sonarjs'
 import tsParser from '@typescript-eslint/parser'
 import tsPlugin from '@typescript-eslint/eslint-plugin'
 import prettier from 'eslint-config-prettier'
+import vitest from 'eslint-plugin-vitest'
 
 // New plugin imports:
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
@@ -21,6 +22,7 @@ export default [
 
   // 3) General config (Node environment, plugin rules, custom rules)
   {
+    files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       parser: tsParser,
       ecmaVersion: 2020,
@@ -85,7 +87,7 @@ export default [
 
   // 4) Override for TypeScript files
   {
-    files: ['**/*.ts', '**/*.tsx'], // Updated glob patterns
+    files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -155,7 +157,7 @@ export default [
         { blankLine: 'always', prev: 'const', next: '*' },
         // always blank line after any non-const before a const
         { blankLine: 'always', prev: '*', next: 'const' },
-        // but don’t enforce blank lines between two consts
+        // but don't enforce blank lines between two consts
         { blankLine: 'any', prev: 'const', next: 'const' },
 
         // Let
@@ -163,7 +165,7 @@ export default [
         { blankLine: 'always', prev: 'let', next: '*' },
         // always blank line after any non-let before a let
         { blankLine: 'always', prev: '*', next: 'let' },
-        // but don’t enforce blank lines between two lets
+        // but don't enforce blank lines between two lets
         { blankLine: 'any', prev: 'let', next: 'let' },
 
         // Return
@@ -171,7 +173,7 @@ export default [
         { blankLine: 'always', prev: 'return', next: '*' },
         // always blank line after any non-return before a return
         { blankLine: 'always', prev: '*', next: 'return' },
-        // but don’t enforce blank lines between two returns
+        // but don't enforce blank lines between two returns
         { blankLine: 'any', prev: 'return', next: 'return' },
 
         // For
@@ -179,7 +181,7 @@ export default [
         { blankLine: 'always', prev: 'for', next: '*' },
         // always blank line after any non-for before a for
         { blankLine: 'always', prev: '*', next: 'for' },
-        // but don’t enforce blank lines between two fors
+        // but don't enforce blank lines between two for
         { blankLine: 'any', prev: 'for', next: 'for' },
       ],
     },
@@ -190,6 +192,8 @@ export default [
     files: [
       '**/*.test.js',
       '**/*.test.ts',
+      '**/*.spec.js',
+      '**/*.spec.ts',
       '**/tests/**/*',
       '**/__mocks__/**/*',
     ],
@@ -208,11 +212,63 @@ export default [
         xdescribe: 'readonly',
         xit: 'readonly',
         xtest: 'readonly',
+        vi: 'readonly',
       },
+    },
+    plugins: {
+      vitest,
     },
     rules: {
       'no-import-assign': 'off',
       'no-shadow': 'off',
+      'vitest/consistent-test-it': [
+        'error',
+        { fn: 'it', withinDescribe: 'it' },
+      ],
+      'vitest/no-conditional-tests': 'error',
+      'vitest/no-disabled-tests': 'warn',
+      'vitest/no-focused-tests': 'error',
+      'vitest/no-identical-title': 'error',
+      'vitest/prefer-hooks-in-order': 'error',
+      'vitest/prefer-hooks-on-top': 'error',
+      'vitest/prefer-to-be': 'error',
+      'vitest/prefer-to-contain': 'error',
+      'vitest/prefer-to-have-length': 'error',
+      'vitest/valid-expect': 'error',
+      'padding-line-between-statements': [
+        'error',
+        // Const
+        // always blank line before any non-const after a const
+        { blankLine: 'always', prev: 'const', next: '*' },
+        // always blank line after any non-const before a const
+        { blankLine: 'always', prev: '*', next: 'const' },
+        // but don't enforce blank lines between two consts
+        { blankLine: 'any', prev: 'const', next: 'const' },
+
+        // Let
+        // always blank line before any non-let after a let
+        { blankLine: 'always', prev: 'let', next: '*' },
+        // always blank line after any non-let before a let
+        { blankLine: 'always', prev: '*', next: 'let' },
+        // but don't enforce blank lines between two lets
+        { blankLine: 'any', prev: 'let', next: 'let' },
+
+        // Return
+        // always blank line before any non-return after a return
+        { blankLine: 'always', prev: 'return', next: '*' },
+        // always blank line after any non-return before a return
+        { blankLine: 'always', prev: '*', next: 'return' },
+        // but don't enforce blank lines between two returns
+        { blankLine: 'any', prev: 'return', next: 'return' },
+
+        // For
+        // always blank line before any non-for after a for
+        { blankLine: 'always', prev: 'for', next: '*' },
+        // always blank line after any non-for before a for
+        { blankLine: 'always', prev: '*', next: 'for' },
+        // but don't enforce blank lines between two for
+        { blankLine: 'any', prev: 'for', next: 'for' },
+      ],
     },
   },
 ]

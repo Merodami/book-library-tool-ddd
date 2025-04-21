@@ -39,6 +39,7 @@ export class GetWalletController {
 
     if (!wallet) {
       await reply.status(404).send({ message: 'Wallet not found' })
+
       return
     }
 

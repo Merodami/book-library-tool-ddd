@@ -31,8 +31,10 @@ function removeIdProperties(obj: any): any {
       // eslint-disable-next-line security/detect-object-injection
       newObj[key] = removeIdProperties(obj[key])
     }
+
     return newObj
   }
+
   return obj
 }
 
@@ -56,8 +58,10 @@ function removeCustomKeywords(
       // eslint-disable-next-line security/detect-object-injection
       newObj[key] = removeCustomKeywords(obj[key], keysToRemove)
     }
+
     return newObj
   }
+
   return obj
 }
 
@@ -105,6 +109,7 @@ async function main() {
 
     // Prepare the output directory (e.g. "dist")
     const outputDir = fromRoot('dist')
+
     await fs.ensureDir(outputDir)
 
     // Allowed file paths - defined explicitly to avoid security/detect-non-literal-fs-filename

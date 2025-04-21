@@ -42,6 +42,7 @@ async function createUserAndGenerateToken() {
 
   // Validate if the email already exists
   const existingUser = await usersCollection.findOne({ email })
+
   if (existingUser) {
     logger.error(`User with email ${email} already exists.`)
     process.exit(1)

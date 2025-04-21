@@ -25,20 +25,28 @@ describe('GetAllBooksHandler', () => {
   beforeEach(() => {
     mockBooks = [
       {
+        id: '123e4567-e89b-12d3-a456-426614174000',
         isbn: '978-3-16-148410-0',
         title: 'Test Book 1',
         author: 'Test Author 1',
         publicationYear: 2023,
         publisher: 'Test Publisher',
         price: 19.99,
+        createdAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: null,
+        deletedAt: null,
       },
       {
+        id: '123e4567-e89b-12d3-a456-426614174001',
         isbn: '978-3-16-148410-1',
         title: 'Test Book 2',
         author: 'Test Author 2',
         publicationYear: 2024,
         publisher: 'Test Publisher',
         price: 29.99,
+        createdAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: null,
+        deletedAt: null,
       },
     ] as Book[]
 
@@ -55,13 +63,14 @@ describe('GetAllBooksHandler', () => {
     }
 
     mockProjectionRepository = {
-      getBookByISBN: vi.fn().mockResolvedValue(null),
+      getBookById: vi.fn().mockResolvedValue(null),
+      getBookByIsbn: vi.fn().mockResolvedValue(null),
       getAllBooks: vi.fn().mockResolvedValue(mockPaginatedResponse),
       saveProjection: vi.fn().mockResolvedValue(undefined),
       updateProjection: vi.fn().mockResolvedValue(undefined),
       markAsDeleted: vi.fn().mockResolvedValue(undefined),
       findBookForReservation: vi.fn().mockResolvedValue(null),
-    }
+    } as unknown as IBookProjectionRepository
 
     handler = new GetAllBooksHandler(mockProjectionRepository)
   })
@@ -71,46 +80,71 @@ describe('GetAllBooksHandler', () => {
   })
 
   it('should return all books when query is valid', async () => {
-    // Act
     const result = await handler.execute(validQuery)
 
-    // Assert
-    expect(result).toBe(mockPaginatedResponse)
+    expect(result).toEqual(mockPaginatedResponse) // Changed toBe to toEqual
     expect(mockProjectionRepository.getAllBooks).toHaveBeenCalledWith(
       validQuery,
+      undefined,
     )
   })
 
   it('should use default values when parameters are missing', async () => {
-    // Arrange
     const partialQuery: Partial<CatalogSearchQuery> = {
       title: 'Test Book',
     }
 
-    // Act
     const result = await handler.execute(partialQuery as CatalogSearchQuery)
 
-    // Assert
-    expect(result).toBe(mockPaginatedResponse)
+    expect(result).toEqual(mockPaginatedResponse) // Changed toBe to toEqual
     expect(mockProjectionRepository.getAllBooks).toHaveBeenCalledWith(
       partialQuery,
+      undefined,
     )
   })
 
   it('should handle request with only pagination parameters', async () => {
-    // Arrange
     const paginationQuery: Partial<CatalogSearchQuery> = {
       page: 2,
       limit: 20,
     }
 
-    // Act
     const result = await handler.execute(paginationQuery as CatalogSearchQuery)
 
-    // Assert
-    expect(result).toBe(mockPaginatedResponse)
+    expect(result).toEqual(mockPaginatedResponse) // Changed toBe to toEqual
     expect(mockProjectionRepository.getAllBooks).toHaveBeenCalledWith(
       paginationQuery,
+      undefined,
     )
+  })
+
+  it('should pass fields parameter to repository when provided', async () => {
+    const fields = ['title', 'author', 'price']
+
+    const result = await handler.execute(validQuery, fields)
+
+    expect(result).toEqual(mockPaginatedResponse)
+    expect(mockProjectionRepository.getAllBooks).toHaveBeenCalledWith(
+      validQuery,
+      fields,
+    )
+  })
+
+  it('should return empty data when repository returns null', async () => {
+    mockProjectionRepository.getAllBooks = vi.fn().mockResolvedValue(null)
+
+    const result = await handler.execute(validQuery)
+
+    expect(result).toEqual({
+      data: [],
+      pagination: {
+        total: 0,
+        page: validQuery.page,
+        limit: validQuery.limit,
+        pages: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+    })
   })
 })

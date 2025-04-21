@@ -62,6 +62,9 @@ export enum ErrorCode {
 
   // Not found errors
   URL_NOT_FOUND = 'URL_NOT_FOUND',
+
+  // No changes errors
+  NO_CHANGES = 'NO_CHANGES',
 }
 
 /**
@@ -69,19 +72,6 @@ export enum ErrorCode {
  */
 export function getStatusCodeForError(code: ErrorCode): number {
   switch (code) {
-    case ErrorCode.BOOK_NOT_FOUND:
-    case ErrorCode.RESERVATION_NOT_FOUND:
-    case ErrorCode.WALLET_NOT_FOUND:
-    case ErrorCode.USER_NOT_FOUND:
-    case ErrorCode.URL_NOT_FOUND:
-      return 404
-
-    case ErrorCode.BOOK_ALREADY_EXISTS:
-    case ErrorCode.RESERVATION_ALREADY_EXISTS:
-    case ErrorCode.DUPLICATE_ENTITY:
-    case ErrorCode.COMPLEXITY_LIMIT_EXCEEDED:
-      return 409
-
     case ErrorCode.BOOK_VALIDATION_FAILED:
     case ErrorCode.RESERVATION_CANNOT_BE_RETURNED:
     case ErrorCode.RESERVATION_CANNOT_BE_CANCELLED:
@@ -96,6 +86,22 @@ export function getStatusCodeForError(code: ErrorCode): number {
 
     case ErrorCode.FORBIDDEN:
       return 403
+
+    case ErrorCode.BOOK_NOT_FOUND:
+    case ErrorCode.RESERVATION_NOT_FOUND:
+    case ErrorCode.WALLET_NOT_FOUND:
+    case ErrorCode.USER_NOT_FOUND:
+    case ErrorCode.URL_NOT_FOUND:
+      return 404
+
+    case ErrorCode.BOOK_ALREADY_EXISTS:
+    case ErrorCode.RESERVATION_ALREADY_EXISTS:
+    case ErrorCode.DUPLICATE_ENTITY:
+    case ErrorCode.COMPLEXITY_LIMIT_EXCEEDED:
+      return 409
+
+    case ErrorCode.NO_CHANGES:
+      return 422
 
     case ErrorCode.INTERNAL_ERROR:
     case ErrorCode.CONCURRENCY_CONFLICT:
@@ -188,6 +194,9 @@ export function getDefaultMessageForError(code: ErrorCode): string {
 
     case ErrorCode.URL_NOT_FOUND:
       return 'The requested URL was not found'
+
+    case ErrorCode.NO_CHANGES:
+      return 'Update request contains no changes to apply.'
 
     default:
       return 'An error occurred'

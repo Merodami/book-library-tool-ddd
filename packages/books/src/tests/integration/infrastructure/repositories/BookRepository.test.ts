@@ -45,14 +45,14 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
     repository = new BookRepository(dbService)
   })
 
+  beforeEach(async () => {
+    await dbService.getCollection<DomainEvent>('event_store').deleteMany({})
+  })
+
   afterAll(async () => {
     await dbService.disconnect()
     await container.stop()
     await client.close()
-  })
-
-  beforeEach(async () => {
-    await dbService.getCollection<DomainEvent>('event_store').deleteMany({})
   })
 
   describe('findAggregateIdByISBN', () => {

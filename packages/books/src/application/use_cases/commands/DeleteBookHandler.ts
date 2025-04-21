@@ -1,6 +1,8 @@
 import { EventBus } from '@book-library-tool/event-store'
+import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { Book } from '@books/entities/Book.js'
+import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import { IBookRepository } from '@books/repositories/IBookRepository.js'
 
 import { DeleteBookCommand } from './DeleteBookCommand.js'
@@ -8,6 +10,7 @@ import { DeleteBookCommand } from './DeleteBookCommand.js'
 export class DeleteBookHandler {
   constructor(
     private readonly bookRepository: IBookRepository,
+    private readonly projectionRepository: IBookProjectionRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -18,18 +21,20 @@ export class DeleteBookHandler {
    * @param isbn - The Book's unique identifier.
    * @returns True if deletion succeeded.
    */
-  async execute(command: DeleteBookCommand): Promise<boolean> {
-    const aggregateId = await this.bookRepository.findAggregateIdByISBN(
-      command.isbn,
-    )
+  async execute(
+    command: DeleteBookCommand,
+  ): Promise<EventResponse & { bookId: string }> {
+    const existing = await this.projectionRepository.getBookById(command.id)
 
-    if (!aggregateId) {
+    if (!existing || !existing.id) {
       throw new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book with isbn ${command.isbn} not found.`,
+        `Book with ID ${command.id} not found`,
       )
     }
+
+    const aggregateId = existing.id
 
     // Load the aggregate's events and rehydrate its current state.
     const events = await this.bookRepository.getEventsForAggregate(aggregateId)
@@ -38,7 +43,7 @@ export class DeleteBookHandler {
       throw new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book with isbn ${command.isbn} not found.`,
+        `Book with id ${command.id} not found.`,
       )
     }
 
@@ -48,7 +53,7 @@ export class DeleteBookHandler {
       throw new Errors.ApplicationError(
         410,
         ErrorCode.BOOK_ALREADY_DELETED,
-        `Book with isbn ${command.isbn} already deleted.`,
+        `Book with id ${command.id} already deleted.`,
       )
     }
 
@@ -67,6 +72,10 @@ export class DeleteBookHandler {
 
     currentBook.clearDomainEvents()
 
-    return true
+    return {
+      success: true,
+      bookId: aggregateId,
+      version: currentBook.version,
+    }
   }
 }

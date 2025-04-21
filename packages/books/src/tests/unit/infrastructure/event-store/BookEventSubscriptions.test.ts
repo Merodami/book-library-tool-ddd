@@ -112,13 +112,11 @@ describe('BookEventSubscriptions', () => {
    * Tests that the subscription setup correctly registers handlers for all required event types.
    */
   it('should subscribe to all required event types', () => {
-    // Act
     BookEventSubscriptions(
       mockEventBus,
       mockProjectionHandler as unknown as BookProjectionHandler,
     )
 
-    // Assert
     expect(mockEventBus.subscribe).toHaveBeenCalledTimes(4)
     expect(mockEventBus.subscribe).toHaveBeenCalledWith(
       BOOK_CREATED,
@@ -143,7 +141,6 @@ describe('BookEventSubscriptions', () => {
    * Verifies that the correct handler is called with the event data.
    */
   it('should handle BOOK_CREATED events correctly', async () => {
-    // Arrange
     BookEventSubscriptions(
       mockEventBus,
       mockProjectionHandler as unknown as BookProjectionHandler,
@@ -174,10 +171,8 @@ describe('BookEventSubscriptions', () => {
       schemaVersion: 1,
     }
 
-    // Act
     await createdHandler(mockEvent)
 
-    // Assert
     expect(mockProjectionHandler.handleBookCreated).toHaveBeenCalledWith(
       mockEvent,
     )
@@ -188,7 +183,6 @@ describe('BookEventSubscriptions', () => {
    * Verifies that the correct handler is called with the event data.
    */
   it('should handle BOOK_UPDATED events correctly', async () => {
-    // Arrange
     BookEventSubscriptions(
       mockEventBus,
       mockProjectionHandler as unknown as BookProjectionHandler,
@@ -228,10 +222,8 @@ describe('BookEventSubscriptions', () => {
       schemaVersion: 1,
     }
 
-    // Act
     await updatedHandler(mockEvent)
 
-    // Assert
     expect(mockProjectionHandler.handleBookUpdated).toHaveBeenCalledWith(
       mockEvent,
     )
@@ -242,7 +234,6 @@ describe('BookEventSubscriptions', () => {
    * Verifies that the correct handler is called with the event data.
    */
   it('should handle BOOK_DELETED events correctly', async () => {
-    // Arrange
     BookEventSubscriptions(
       mockEventBus,
       mockProjectionHandler as unknown as BookProjectionHandler,
@@ -268,10 +259,8 @@ describe('BookEventSubscriptions', () => {
       schemaVersion: 1,
     }
 
-    // Act
     await deletedHandler(mockEvent)
 
-    // Assert
     expect(mockProjectionHandler.handleBookDeleted).toHaveBeenCalledWith(
       mockEvent,
     )
@@ -279,10 +268,9 @@ describe('BookEventSubscriptions', () => {
 
   /**
    * Tests the handling of RESERVATION_BOOK_VALIDATION events.
-   * Verifies that the validation handler is called and the result is published.
+   * Verifies that the correct handler is called with the event data.
    */
   it('should handle RESERVATION_BOOK_VALIDATION events correctly', async () => {
-    // Arrange
     BookEventSubscriptions(
       mockEventBus,
       mockProjectionHandler as unknown as BookProjectionHandler,
@@ -297,7 +285,7 @@ describe('BookEventSubscriptions', () => {
       throw new Error('Handler not found')
     }
 
-    const mockValidationEvent: DomainEvent = {
+    const mockEvent: DomainEvent = {
       eventType: RESERVATION_BOOK_VALIDATION,
       aggregateId: 'reservation-123',
       payload: {
@@ -309,7 +297,7 @@ describe('BookEventSubscriptions', () => {
       schemaVersion: 1,
     }
 
-    const mockValidationResultEvent: DomainEvent = {
+    const validationResult: DomainEvent = {
       eventType: BOOK_VALIDATION_RESULT,
       aggregateId: '123-456-789',
       payload: {
@@ -325,25 +313,22 @@ describe('BookEventSubscriptions', () => {
     }
 
     mockProjectionHandler.handleReservationValidateBook.mockResolvedValue(
-      mockValidationResultEvent,
+      validationResult,
     )
 
-    // Act
-    await validationHandler(mockValidationEvent)
+    await validationHandler(mockEvent)
 
-    // Assert
     expect(
       mockProjectionHandler.handleReservationValidateBook,
-    ).toHaveBeenCalledWith(mockValidationEvent)
-    expect(mockEventBus.publish).toHaveBeenCalledWith(mockValidationResultEvent)
+    ).toHaveBeenCalledWith(mockEvent)
+    expect(mockEventBus.publish).toHaveBeenCalledWith(validationResult)
   })
 
   /**
-   * Tests error handling for BOOK_CREATED events.
-   * Verifies that errors are logged but don't crash the application.
+   * Tests error handling when an event handler throws an error.
+   * Verifies that the error is properly logged and an error event is published.
    */
-  it('should handle errors when handling BOOK_CREATED events', async () => {
-    // Arrange
+  it('should handle errors in event handlers correctly', async () => {
     BookEventSubscriptions(
       mockEventBus,
       mockProjectionHandler as unknown as BookProjectionHandler,
@@ -361,74 +346,35 @@ describe('BookEventSubscriptions', () => {
     const mockEvent: DomainEvent = {
       eventType: BOOK_CREATED,
       aggregateId: 'book-123',
-      payload: {},
-      timestamp: new Date(),
-      version: 1,
-      schemaVersion: 1,
-    }
-
-    const error = new Error('Test error')
-    mockProjectionHandler.handleBookCreated.mockRejectedValue(error)
-
-    // Act
-    await createdHandler(mockEvent)
-
-    // Assert - should not throw but should log error
-    expect(mockProjectionHandler.handleBookCreated).toHaveBeenCalledWith(
-      mockEvent,
-    )
-    expect(logger.error).toHaveBeenCalledWith(
-      'Error handling BOOK_CREATED event: Error: Test error',
-    )
-  })
-
-  /**
-   * Tests error handling for RESERVATION_BOOK_VALIDATION events.
-   * Verifies that validation errors result in error events being published.
-   */
-  it('should handle errors in RESERVATION_BOOK_VALIDATION by publishing an error event', async () => {
-    // Arrange
-    BookEventSubscriptions(
-      mockEventBus,
-      mockProjectionHandler as unknown as BookProjectionHandler,
-    )
-
-    // Extract the handler function that was registered
-    const validationHandler = mockEventBus.subscribe.mock.calls.find(
-      (call) => call[0] === RESERVATION_BOOK_VALIDATION,
-    )?.[1]
-
-    if (!validationHandler) {
-      throw new Error('Handler not found')
-    }
-
-    const mockValidationEvent: DomainEvent = {
-      eventType: RESERVATION_BOOK_VALIDATION,
-      aggregateId: 'reservation-123',
       payload: {
-        reservationId: 'reservation-123',
         isbn: '123-456-789',
+        title: 'Test Book',
+        author: 'Test Author',
+        publicationYear: 2023,
+        publisher: 'Test Publisher',
+        price: 29.99,
       },
       timestamp: new Date(),
       version: 1,
       schemaVersion: 1,
     }
 
-    const error = new Error('Validation error')
-    mockProjectionHandler.handleReservationValidateBook.mockRejectedValue(error)
+    const error = new Error('Test error')
 
-    // Act
-    await validationHandler(mockValidationEvent)
+    mockProjectionHandler.handleBookCreated.mockRejectedValue(error)
 
-    // Assert
+    await createdHandler(mockEvent)
+
+    expect(logger.error).toHaveBeenCalledWith(
+      `Error handling BOOK_CREATED event: ${error}`,
+    )
+
     expect(createErrorEvent).toHaveBeenCalledWith(
-      mockValidationEvent,
+      mockEvent,
       error,
       RESERVATION_BOOK_VALIDATION_FAILED,
     )
+
     expect(mockEventBus.publish).toHaveBeenCalled()
-    expect(logger.error).toHaveBeenCalledWith(
-      'Error validating book for reservation: Error: Validation error',
-    )
   })
 })

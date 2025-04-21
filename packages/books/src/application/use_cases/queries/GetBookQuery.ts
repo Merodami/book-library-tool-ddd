@@ -1,6 +1,6 @@
 /**
- * Query for retrieving a book by its unique identifier (ISBN).
+ * Query for retrieving a book by its unique identifier (ID).
  */
 export interface GetBookQuery {
-  isbn: string
+  id: string
 }
