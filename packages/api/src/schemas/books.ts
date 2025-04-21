@@ -26,6 +26,7 @@ export const ALLOWED_BOOK_SORT_FIELDS = [
   'price',
   'createdAt',
   'updatedAt',
+  'deletedAt',
 ] as const
 
 export type BookSortField = (typeof ALLOWED_BOOK_SORT_FIELDS)[number]

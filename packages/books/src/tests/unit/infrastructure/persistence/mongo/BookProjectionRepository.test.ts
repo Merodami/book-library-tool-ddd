@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import { Book, BookUpdateRequest } from '@book-library-tool/sdk'
+import { BookUpdateRequest } from '@book-library-tool/sdk'
 import { ErrorCode } from '@book-library-tool/shared'
 import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
 import { BookDocument } from '@books/persistence/mongo/documents/BookDocument.js'
@@ -161,7 +161,7 @@ describe('BookProjectionRepository', () => {
     })
 
     it('should apply field projection when fields are specified', async () => {
-      const fields = ['title', 'author']
+      const fields = ['title', 'author'] as schemas.BookField[]
 
       await repository.getBookByIsbn(mockBook.isbn!, fields)
 
@@ -299,7 +299,7 @@ describe('BookProjectionRepository', () => {
 
     it('should throw an error when required fields are missing', async () => {
       // Missing required fields
-      const incompleteBook: Book = {
+      const incompleteBook: schemas.BookDTO = {
         id: mockId,
         title: 'Incomplete Book',
         // Missing other required fields

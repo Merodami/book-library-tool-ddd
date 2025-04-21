@@ -11,7 +11,7 @@ import {
 // --------------------------------
 
 export const ALLOWED_RESERVATION_FIELDS = [
-  'reservationId',
+  'id',
   'userId',
   'isbn',
   'reservedAt',
@@ -19,18 +19,24 @@ export const ALLOWED_RESERVATION_FIELDS = [
   'status',
   'feeCharged',
   'retailPrice',
-  'createdAt',
-  'updatedAt',
-  'deletedAt',
 ] as const
 
+export type ReservationField = (typeof ALLOWED_RESERVATION_FIELDS)[number]
+
 export const ALLOWED_RESERVATION_SORT_FIELDS = [
+  'userId',
+  'isbn',
   'reservedAt',
   'dueDate',
   'status',
   'feeCharged',
   'createdAt',
+  'updatedAt',
+  'deletedAt',
 ] as const
+
+export type ReservationSortField =
+  (typeof ALLOWED_RESERVATION_SORT_FIELDS)[number]
 
 // --------------------------------
 // Query Schemas

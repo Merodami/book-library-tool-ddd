@@ -63,11 +63,13 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
 
     it('returns the aggregateId for a single BOOK_CREATED event', async () => {
       const aggId = randomUUID()
+      const bookId = randomUUID()
+
       const createEvt: DomainEvent = {
         aggregateId: aggId,
         eventType: BOOK_CREATED,
         payload: {
-          id: 'isbn-1', // Adding id field to match payload expectations
+          id: bookId,
           isbn: 'isbn-1',
           title: 'T',
           author: 'A',
@@ -86,7 +88,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         .getCollection<DomainEvent>('event_store')
         .insertOne(createEvt)
 
-      const found = await repository.findAggregateIdById('isbn-1')
+      const found = await repository.findAggregateIdById(bookId)
 
       expect(found).toBe(aggId)
     })
@@ -97,7 +99,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         aggregateId: aggId,
         eventType: BOOK_CREATED,
         payload: {
-          id: aggId, // Use the aggregateId as the id (not isbn)
+          id: aggId,
           isbn: 'isbn-2',
           title: 'T',
           author: 'A',
@@ -137,7 +139,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         aggregateId: id1,
         eventType: BOOK_CREATED,
         payload: {
-          id: id1, // Use aggregateId1 as the id
+          id: id1,
           isbn: 'isbn-3',
           title: '',
           author: '',
@@ -163,7 +165,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         aggregateId: id2,
         eventType: BOOK_CREATED,
         payload: {
-          id: id2, // Use aggregateId2 as the id
+          id: id2,
           isbn: 'isbn-3',
           title: '',
           author: '',

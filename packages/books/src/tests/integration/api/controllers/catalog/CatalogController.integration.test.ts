@@ -23,9 +23,9 @@ vi.mock('@book-library-tool/redis', () => ({
 }))
 
 // Sample in-memory books
-const sampleBooks: Book[] = [
+const sampleBooks: schemas.BookDTO[] = [
   {
-    id: 'book-1',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
     isbn: '978-3-16-148410-0',
     title: 'Book One',
     author: 'Author One',
@@ -36,7 +36,7 @@ const sampleBooks: Book[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'book-2',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a11',
     isbn: '978-3-16-148410-1',
     title: 'Second Book',
     author: 'Author Two',
@@ -95,7 +95,7 @@ const mockRepo: IBookProjectionRepository = {
 
         // Field selection using lodash.pick
         if (fields && fields.length) {
-          filtered = filtered.map((b) => pick(b, fields) as Book)
+          filtered = filtered.map((b) => pick(b, fields) as schemas.BookDTO)
         }
 
         const page = Number(query.page ?? 1)

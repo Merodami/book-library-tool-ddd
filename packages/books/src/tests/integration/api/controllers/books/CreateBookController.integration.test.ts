@@ -15,9 +15,9 @@ import supertest from 'supertest'
 const handler = {
   execute: vi.fn().mockResolvedValue({
     success: true,
-    bookId: 'book-123',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
     version: 1,
-  } as EventResponse & { bookId: string }),
+  } as EventResponse & { id: string }),
 }
 
 describe('CreateBookController Integration Tests', () => {
@@ -57,7 +57,7 @@ describe('CreateBookController Integration Tests', () => {
 
     expect(res.body).toMatchObject({
       success: true,
-      bookId: expect.any(String),
+      id: expect.any(String),
       version: 1,
     })
     expect(handler.execute).toHaveBeenCalledWith(cmd)

@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import type { Book, BookUpdateRequest } from '@book-library-tool/sdk'
+import type { BookUpdateRequest } from '@book-library-tool/sdk'
 import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
 import type { BookDocument } from '@books/persistence/mongo/documents/BookDocument.js'
 import { Collection, MongoClient } from 'mongodb'
@@ -40,8 +40,8 @@ describe('BookProjectionRepository Integration', () => {
     await collection.deleteMany({})
 
     // Insert baseline book via repository to ensure correct mapping
-    const baseBook: Book = {
-      id: 'test-id-123', // Add ID field
+    const baseBook: schemas.BookDTO = {
+      id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
       isbn: '978-3-16-148410-0',
       title: 'Test Book',
       author: 'Test Author',
@@ -57,7 +57,7 @@ describe('BookProjectionRepository Integration', () => {
     // Save the ID for later use
     const savedBook = await collection.findOne({ isbn: baseBook.isbn })
 
-    testBookId = savedBook?.id || 'test-id-123'
+    testBookId = savedBook?.id || '5a1018f2-3526-4275-a84b-784e4f2e5a10'
   })
 
   afterAll(async () => {
@@ -85,8 +85,8 @@ describe('BookProjectionRepository Integration', () => {
 
   describe('getAllBooks', () => {
     it('returns paginated books', async () => {
-      const second: Book = {
-        id: 'test-id-456', // Add ID field
+      const second: schemas.BookDTO = {
+        id: '5a1018f2-3526-4275-a84b-784e4f2e5a11',
         isbn: '978-3-16-148410-1',
         title: 'Another',
         author: 'Author',
@@ -121,7 +121,7 @@ describe('BookProjectionRepository Integration', () => {
 
   describe('saveProjection and updateProjection', () => {
     it('saves and updates correctly', async () => {
-      const newBook: Book = {
+      const newBook: schemas.BookDTO = {
         id: '46decb22-c152-482b-909e-693c20e416a6',
         isbn: '978-3-16-148410-2',
         title: 'New',

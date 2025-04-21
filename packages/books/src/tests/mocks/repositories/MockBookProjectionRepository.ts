@@ -1,6 +1,6 @@
 import { schemas } from '@book-library-tool/api'
-import type { CatalogSearchQuery } from '@book-library-tool/sdk'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { pick } from 'lodash-es'
 import { vi } from 'vitest'
 
 /**
@@ -8,7 +8,7 @@ import { vi } from 'vitest'
  */
 export const sampleBooks: schemas.BookDTO[] = [
   {
-    id: 'book-1',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
     isbn: '978-3-16-148410-0',
     title: 'Book One',
     author: 'Author One',
@@ -19,7 +19,7 @@ export const sampleBooks: schemas.BookDTO[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'book-2',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a11',
     isbn: '978-3-16-148410-1',
     title: 'Book Two',
     author: 'Author Two',
@@ -30,7 +30,7 @@ export const sampleBooks: schemas.BookDTO[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'book-3',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a12',
     isbn: '978-3-16-148410-2',
     title: 'Book Three',
     author: 'Author Three',
@@ -58,7 +58,10 @@ export function createMockBookProjectionRepository(
     getAllBooks: vi
       .fn()
       .mockImplementation(
-        async (query: CatalogSearchQuery, fields?: string[]) => {
+        async (
+          query: schemas.CatalogSearchQuery,
+          fields?: schemas.BookField[],
+        ) => {
           let filteredBooks = [...books]
 
           // Apply filtering if specified
@@ -139,13 +142,13 @@ export function createMockBookProjectionRepository(
               }
 
               if (typeof fieldA === 'string' && typeof fieldB === 'string') {
-                return query.sortOrder === 'ASC'
+                return query.sortOrder === 'asc'
                   ? fieldA.localeCompare(fieldB)
                   : fieldB.localeCompare(fieldA)
               }
 
               if (typeof fieldA === 'number' && typeof fieldB === 'number') {
-                return query.sortOrder === 'ASC'
+                return query.sortOrder === 'asc'
                   ? fieldA - fieldB
                   : fieldB - fieldA
               }
@@ -172,16 +175,13 @@ export function createMockBookProjectionRepository(
 
           if (fields && fields.length > 0) {
             resultBooks = paginatedBooks.map((book) => {
-              const filteredBook = {} as Partial<schemas.BookDTO>
+              const validFields = fields.filter((field) =>
+                schemas.ALLOWED_BOOK_FIELDS.includes(
+                  field as schemas.BookField,
+                ),
+              )
 
-              fields.forEach((field) => {
-                if (field in book) {
-                  filteredBook[field as keyof schemas.BookDTO] =
-                    book[field as keyof schemas.BookDTO]
-                }
-              })
-
-              return filteredBook as schemas.BookDTO
+              return pick(book, validFields) as schemas.BookDTO
             })
           }
 
@@ -210,16 +210,11 @@ export function createMockBookProjectionRepository(
         if (!book) return null
 
         if (fields && fields.length > 0) {
-          const filteredBook = {} as Partial<schemas.BookDTO>
+          const validFields = fields.filter((field) =>
+            schemas.ALLOWED_BOOK_FIELDS.includes(field as schemas.BookField),
+          )
 
-          fields.forEach((field) => {
-            if (field in book) {
-              filteredBook[field as keyof schemas.BookDTO] =
-                book[field as keyof schemas.BookDTO]
-            }
-          })
-
-          return filteredBook as schemas.BookDTO
+          return pick(book, validFields) as schemas.BookDTO
         }
 
         return book
@@ -233,16 +228,11 @@ export function createMockBookProjectionRepository(
         if (!book) return null
 
         if (fields && fields.length > 0) {
-          const filteredBook = {} as Partial<schemas.BookDTO>
+          const validFields = fields.filter((field) =>
+            schemas.ALLOWED_BOOK_FIELDS.includes(field as schemas.BookField),
+          )
 
-          fields.forEach((field) => {
-            if (field in book) {
-              filteredBook[field as keyof schemas.BookDTO] =
-                book[field as keyof schemas.BookDTO]
-            }
-          })
-
-          return filteredBook as schemas.BookDTO
+          return pick(book, validFields) as schemas.BookDTO
         }
 
         return book

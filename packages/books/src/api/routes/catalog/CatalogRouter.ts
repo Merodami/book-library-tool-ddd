@@ -38,10 +38,10 @@ export function createCatalogRouter(
           querystring: schemas.CatalogSearchQuerySchema,
         },
       },
-      async (request: FastifyRequest) => {
+      async (request: FastifyRequest, reply) => {
         const result = await catalogController.getAllBooks(request)
 
-        return result
+        reply.code(200).send(result)
       },
     )
   }

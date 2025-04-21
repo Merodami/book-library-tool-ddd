@@ -82,6 +82,7 @@ async function startBookService() {
   )
 
   await BookEventSubscriptions(eventBus, redisService, bookProjectionHandler)
+
   await eventBus.startConsuming()
 
   logger.info('Event subscriptions registered successfully')
@@ -157,21 +158,15 @@ async function startBookService() {
   await startServer(app, SERVER_PORT, {
     onShutdown: async () => {
       logger.info('Closing DB connection...')
-
       await dbService.disconnect()
-
       logger.info('DB connection closed.')
 
       logger.info('Closing EventBus connection...')
-
       await eventBus.shutdown()
-
       logger.info('EventBus connection closed.')
 
       logger.info('Closing Redis connection...')
-
       await redisService.disconnect()
-
       logger.info('Redis connection closed.')
     },
   })

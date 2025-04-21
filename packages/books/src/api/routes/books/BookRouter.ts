@@ -101,7 +101,7 @@ export function createBookRouter(
       },
       async (
         request: FastifyRequest<{
-          Params: { id: string }
+          Params: schemas.IdParameter
           Body: Omit<UpdateBookCommand, 'id'>
         }>,
         reply,
@@ -127,7 +127,10 @@ export function createBookRouter(
           params: schemas.IdParameterSchema,
         },
       },
-      async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
+      async (
+        request: FastifyRequest<{ Params: schemas.IdParameter }>,
+        reply,
+      ) => {
         const result = await deleteBookController.deleteBook(request)
 
         reply.code(200).send(result)
@@ -149,7 +152,10 @@ export function createBookRouter(
           params: schemas.IdParameterSchema,
         },
       },
-      async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
+      async (
+        request: FastifyRequest<{ Params: schemas.IdParameter }>,
+        reply,
+      ) => {
         const result = await getBookController.getBook(request)
 
         reply.code(200).send(result)
