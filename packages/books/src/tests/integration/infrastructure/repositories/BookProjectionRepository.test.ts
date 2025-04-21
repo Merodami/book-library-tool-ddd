@@ -174,7 +174,7 @@ describe('BookProjectionRepository Integration', () => {
 
       expect(all.data).toHaveLength(0)
 
-      const found = await repository.findBookForReservation('978-3-16-148410-0')
+      const found = await repository.getBookById('978-3-16-148410-0')
 
       expect(found).toBeNull()
     })

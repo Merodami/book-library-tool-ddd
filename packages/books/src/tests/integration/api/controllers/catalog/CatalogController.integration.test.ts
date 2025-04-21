@@ -122,7 +122,6 @@ const mockRepo: IBookProjectionRepository = {
   saveBookProjection: vi.fn(),
   updateBookProjection: vi.fn(),
   markAsDeleted: vi.fn(),
-  findBookForReservation: vi.fn(),
 }
 
 // Wire up test server at module scope

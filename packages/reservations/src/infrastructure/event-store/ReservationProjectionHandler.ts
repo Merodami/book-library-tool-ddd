@@ -1,10 +1,4 @@
-import {
-  DomainEvent,
-  RESERVATION_CANCELLED,
-  RESERVATION_CREATED,
-  RESERVATION_OVERDUE,
-  RESERVATION_RETURNED,
-} from '@book-library-tool/event-store'
+import { DomainEvent } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
@@ -48,7 +42,7 @@ export class ReservationProjectionHandler {
       id: event.aggregateId,
       userId: event.payload.userId,
       bookId: event.payload.bookId,
-      status: RESERVATION_CREATED,
+      status: RESERVATION_STATUS.CREATED,
       createdAt: createdDate.toISOString(),
       dueDate: dueDate.toISOString(),
       returnedAt: undefined,
@@ -56,6 +50,7 @@ export class ReservationProjectionHandler {
       feeCharged: event.payload.feeCharged || 0,
       retailPrice: event.payload.retailPrice || 0,
       reservedAt: createdDate.toISOString(),
+      version: event.version ?? 0,
     })
   }
 
@@ -72,7 +67,7 @@ export class ReservationProjectionHandler {
     await this.projectionRepository.updateReservationReturned(
       event.aggregateId,
       {
-        status: RESERVATION_RETURNED,
+        status: RESERVATION_STATUS.RETURNED,
         returnedAt: returnedDate.toISOString(),
         updatedAt: returnedDate.toISOString(),
       },
@@ -93,7 +88,7 @@ export class ReservationProjectionHandler {
     await this.projectionRepository.updateReservationCancelled(
       event.aggregateId,
       {
-        status: RESERVATION_CANCELLED,
+        status: RESERVATION_STATUS.CANCELLED,
         updatedAt: cancelledDate.toISOString(),
       },
       event.version,
@@ -111,7 +106,7 @@ export class ReservationProjectionHandler {
     await this.projectionRepository.updateReservationOverdue(
       event.aggregateId,
       {
-        status: RESERVATION_OVERDUE,
+        status: RESERVATION_STATUS.LATE,
         updatedAt: new Date(event.timestamp).toISOString(),
       },
       event.version,
@@ -211,11 +206,13 @@ export class ReservationProjectionHandler {
       event.aggregateId,
       {
         status: RESERVATION_STATUS.RESERVED,
-        paymentReceived: true,
-        paymentAmount: event.payload.amount,
-        paymentDate: paymentDate.toISOString(),
-        paymentMethod: event.payload.paymentMethod,
-        paymentReference: event.payload.paymentReference,
+        payment: {
+          paymentReceived: true,
+          paymentAmount: event.payload.amount,
+          paymentDate: paymentDate.toISOString(),
+          paymentMethod: event.payload.paymentMethod,
+          paymentReference: event.payload.paymentReference,
+        },
         updatedAt: new Date(event.timestamp).toISOString(),
       },
       event.version,
@@ -245,9 +242,11 @@ export class ReservationProjectionHandler {
         event.aggregateId,
         {
           status: RESERVATION_STATUS.REJECTED,
-          paymentReceived: false,
-          paymentFailReason: event.payload.reason,
-          paymentDate: paymentDate.toISOString(),
+          payment: {
+            paymentReceived: false,
+            paymentFailReason: event.payload.reason,
+            paymentDate: paymentDate.toISOString(),
+          },
           updatedAt: paymentDate.toISOString(),
         },
       )

@@ -12,6 +12,7 @@ export interface BookDocument {
   publicationYear: number
   publisher: string
   price: number
+  version: number
   createdAt: Date
   updatedAt?: Date | null
   deletedAt?: Date | null

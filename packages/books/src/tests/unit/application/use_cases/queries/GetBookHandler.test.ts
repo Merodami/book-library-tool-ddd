@@ -52,7 +52,6 @@ describe('GetBookHandler', () => {
       saveProjection: vi.fn().mockResolvedValue(undefined),
       updateProjection: vi.fn().mockResolvedValue(undefined),
       markAsDeleted: vi.fn().mockResolvedValue(undefined),
-      findBookForReservation: vi.fn().mockResolvedValue(null),
     } as unknown as IBookProjectionRepository
 
     handler = new GetBookHandler(mockBookProjectionRepository)

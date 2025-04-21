@@ -33,6 +33,11 @@ export class PaymentHandler {
       const reservationEvents =
         await this.reservationRepository.getEventsForAggregate(reservationId)
 
+      console.log(
+        '🚀 ~ PaymentHandler ~ handlePaymentSuccess ~ reservationEvents:',
+        reservationEvents,
+      )
+
       if (!reservationEvents.length) {
         throw new Errors.ApplicationError(
           404,
@@ -57,7 +62,10 @@ export class PaymentHandler {
         [newEvent],
         reservation.version,
       )
-
+      console.log(
+        '🚀 ~ PaymentHandler ~ handlePaymentSuccess ~ newEvent:',
+        newEvent,
+      )
       // Update the read model (projection)
       await this.projectionHandler.handlePaymentSuccess(newEvent)
 

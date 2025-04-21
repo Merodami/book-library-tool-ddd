@@ -18,7 +18,6 @@ const createMockRepository = () => ({
   saveBookProjection: vi.fn().mockResolvedValue(undefined),
   updateBookProjection: vi.fn().mockResolvedValue(undefined),
   markAsDeleted: vi.fn().mockResolvedValue(undefined),
-  findBookForReservation: vi.fn(),
 })
 
 describe('BookProjectionHandler', () => {
@@ -42,9 +41,9 @@ describe('BookProjectionHandler', () => {
     it('should save a new book projection when BookCreated event is received', async () => {
       const event: DomainEvent = {
         eventType: 'BookCreated',
-        aggregateId: 'book-123',
+        aggregateId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         payload: {
-          id: 'book-123',
+          id: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
           isbn: '978-1234567890',
           title: 'Test Book',
           author: 'Test Author',
@@ -61,7 +60,7 @@ describe('BookProjectionHandler', () => {
 
       expect(mockRepository.saveBookProjection).toHaveBeenCalledTimes(1)
       expect(mockRepository.saveBookProjection).toHaveBeenCalledWith({
-        id: 'book-123',
+        id: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         isbn: '978-1234567890',
         title: 'Test Book',
         author: 'Test Author',
@@ -76,7 +75,7 @@ describe('BookProjectionHandler', () => {
     it('should update an existing book projection when BookUpdated event is received', async () => {
       const event: DomainEvent = {
         eventType: 'BookUpdated',
-        aggregateId: 'book-123',
+        aggregateId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         payload: {
           previous: {
             title: 'Old Title',
@@ -103,7 +102,7 @@ describe('BookProjectionHandler', () => {
 
       expect(mockRepository.updateBookProjection).toHaveBeenCalledTimes(1)
       expect(mockRepository.updateBookProjection).toHaveBeenCalledWith(
-        'book-123',
+        '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         {
           title: 'New Title',
           author: 'New Author',
@@ -119,7 +118,7 @@ describe('BookProjectionHandler', () => {
     it('should only update fields that have changed', async () => {
       const event: DomainEvent = {
         eventType: 'BookUpdated',
-        aggregateId: 'book-123',
+        aggregateId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         payload: {
           previous: {
             title: 'Old Title',
@@ -143,7 +142,7 @@ describe('BookProjectionHandler', () => {
 
       expect(mockRepository.updateBookProjection).toHaveBeenCalledTimes(1)
       expect(mockRepository.updateBookProjection).toHaveBeenCalledWith(
-        'book-123',
+        '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         {
           title: 'New Title',
           updatedAt: event.timestamp, // Date object, not string
@@ -157,7 +156,7 @@ describe('BookProjectionHandler', () => {
     it('should mark a book as deleted when BookDeleted event is received', async () => {
       const event: DomainEvent = {
         eventType: 'BookDeleted',
-        aggregateId: 'book-123',
+        aggregateId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         payload: {
           deletedAt: '2023-01-03T12:00:00Z',
         },
@@ -170,7 +169,7 @@ describe('BookProjectionHandler', () => {
 
       expect(mockRepository.markAsDeleted).toHaveBeenCalledTimes(1)
       expect(mockRepository.markAsDeleted).toHaveBeenCalledWith(
-        'book-123',
+        '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         event.timestamp,
       )
     })
@@ -180,9 +179,10 @@ describe('BookProjectionHandler', () => {
     it('should return valid book validation result when book exists', async () => {
       const event: DomainEvent = {
         eventType: 'ReservationBookValidation',
-        aggregateId: 'reservation-123',
+        aggregateId: 'aa0e8b9b-e53a-429c-8022-c888d29b998c',
         payload: {
-          reservationId: 'reservation-123',
+          bookId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
+          reservationId: 'aa0e8b9b-e53a-429c-8022-c888d29b998c',
           isbn: '978-1234567890',
         },
         timestamp: new Date('2023-01-04T12:00:00Z'),
@@ -190,9 +190,9 @@ describe('BookProjectionHandler', () => {
         schemaVersion: 1,
       }
 
-      // Mock the findBookForReservation response to return a book
-      mockRepository.findBookForReservation.mockResolvedValue({
-        id: 'book-123',
+      // Mock the getBookById response to return a book
+      mockRepository.getBookById.mockResolvedValue({
+        id: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         isbn: '978-1234567890',
         title: 'Test Book',
         price: 29.99,
@@ -200,17 +200,17 @@ describe('BookProjectionHandler', () => {
 
       const result = await handler.handleValidateBook(event)
 
-      expect(mockRepository.findBookForReservation).toHaveBeenCalledTimes(1)
-      expect(mockRepository.findBookForReservation).toHaveBeenCalledWith(
-        '978-1234567890',
+      expect(mockRepository.getBookById).toHaveBeenCalledTimes(1)
+      expect(mockRepository.getBookById).toHaveBeenCalledWith(
+        '5a0e8b9b-e53a-429c-8022-c888d29b998c',
       )
 
       expect(result).toEqual({
         eventType: BOOK_VALIDATION_RESULT,
-        aggregateId: '978-1234567890',
+        aggregateId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
         payload: {
-          reservationId: 'reservation-123',
-          isbn: '978-1234567890',
+          bookId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
+          reservationId: 'aa0e8b9b-e53a-429c-8022-c888d29b998c',
           isValid: true,
           reason: null,
           retailPrice: 29.99,
@@ -224,9 +224,10 @@ describe('BookProjectionHandler', () => {
     it('should return invalid book validation result when book does not exist', async () => {
       const event: DomainEvent = {
         eventType: 'ReservationBookValidation',
-        aggregateId: 'reservation-123',
+        aggregateId: 'aa0e8b9b-e53a-429c-8022-c888d29b998c',
         payload: {
-          reservationId: 'reservation-123',
+          bookId: '46decb22-c152-482b-909e-693c20e416a6',
+          reservationId: 'aa0e8b9b-e53a-429c-8022-c888d29b998c',
           isbn: '978-1234567890',
         },
         timestamp: new Date('2023-01-04T12:00:00Z'),
@@ -234,18 +235,18 @@ describe('BookProjectionHandler', () => {
         schemaVersion: 1,
       }
 
-      // Mock the findBookForReservation response to return null (book not found)
-      mockRepository.findBookForReservation.mockResolvedValue(null)
+      // Mock the getBookById response to return null (book not found)
+      mockRepository.getBookById.mockResolvedValue(null)
 
       const result = await handler.handleValidateBook(event)
 
-      expect(mockRepository.findBookForReservation).toHaveBeenCalledTimes(1)
+      expect(mockRepository.getBookById).toHaveBeenCalledTimes(1)
       expect(result).toEqual({
         eventType: BOOK_VALIDATION_RESULT,
-        aggregateId: '978-1234567890',
+        aggregateId: '46decb22-c152-482b-909e-693c20e416a6',
         payload: {
-          reservationId: 'reservation-123',
-          isbn: '978-1234567890',
+          reservationId: 'aa0e8b9b-e53a-429c-8022-c888d29b998c',
+          bookId: '46decb22-c152-482b-909e-693c20e416a6',
           isValid: false,
           reason: ErrorCode.BOOK_NOT_FOUND,
           retailPrice: null,

@@ -195,15 +195,6 @@ export class BookProjectionRepository
       )
     }
   }
-
-  /**
-   * Finds an active book for reservation by bookId, excluding deleted.
-   * @param bookId - Unique book identifier
-   * @returns Domain Book object or null if not found
-   */
-  async findBookForReservation(bookId: string): Promise<schemas.Book | null> {
-    return this.findOne({ id: bookId } as Filter<BookDocument>)
-  }
 }
 
 /**
@@ -220,6 +211,7 @@ function mapToDomain(doc: Partial<BookDocument>): schemas.Book {
   if ('publicationYear' in doc) result.publicationYear = doc.publicationYear
   if ('publisher' in doc) result.publisher = doc.publisher
   if ('price' in doc) result.price = doc.price
+  if ('version' in doc) result.version = doc.version
   if ('createdAt' in doc) result.createdAt = doc.createdAt?.toISOString()
   if ('updatedAt' in doc) result.updatedAt = doc.updatedAt?.toISOString()
   if ('deletedAt' in doc) result.deletedAt = doc.deletedAt?.toISOString()
@@ -263,6 +255,7 @@ function mapToDocument(book: schemas.Book): Omit<BookDocument, '_id'> {
     publicationYear: book.publicationYear,
     publisher: book.publisher,
     price: book.price,
+    version: book.version ?? 0,
     createdAt: dates.createdAt ?? new Date(),
   }
 

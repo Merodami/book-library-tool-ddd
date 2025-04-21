@@ -122,7 +122,7 @@ export class Reservation extends AggregateRoot {
       bookId: props.bookId?.trim() || '',
       reservedAt: props.reservedAt ? new Date(props.reservedAt) : now,
       dueDate,
-      retailPrice: Number(props.retailPrice),
+      retailPrice: Number(props.retailPrice || 0),
       status:
         (props.status as RESERVATION_STATUS) || RESERVATION_STATUS.RESERVED,
       feeCharged,
@@ -532,7 +532,6 @@ export class Reservation extends AggregateRoot {
       payload: {
         id: this.id,
         userId: this.userId,
-        previousRetailPrice: this.retailPrice,
         newRetailPrice: retailPrice,
         updatedAt: now.toISOString(),
       },

@@ -53,6 +53,7 @@ describe('BookProjectionRepository', () => {
       publicationYear: mockBook.publicationYear!,
       publisher: mockBook.publisher!,
       price: mockBook.price!,
+      version: 0,
       createdAt: new Date(mockBook.createdAt!),
       updatedAt: new Date(mockBook.updatedAt!),
     }
@@ -357,47 +358,6 @@ describe('BookProjectionRepository', () => {
           $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
         },
         { $set: { deletedAt, updatedAt: deletedAt } },
-      )
-    })
-  })
-
-  describe('findBookForReservation', () => {
-    it('should return a book when it exists and is not deleted', async () => {
-      const result = await repository.findBookForReservation(mockBook.isbn!)
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          isbn: mockBook.isbn,
-          title: mockBook.title,
-          price: mockBook.price,
-        }),
-      )
-
-      // Update the expectation to match the new implementation's behavior
-      expect(mockCollection.findOne).toHaveBeenCalledWith(
-        {
-          isbn: mockBook.isbn,
-          $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-        },
-        { projection: { _id: 0 } },
-      )
-    })
-
-    it('should return null when book does not exist', async () => {
-      mockCollection.findOne = vi.fn().mockResolvedValue(null)
-
-      const result =
-        await repository.findBookForReservation('non-existent-isbn')
-
-      expect(result).toBeNull()
-
-      // Update the expectation to match the new implementation's behavior
-      expect(mockCollection.findOne).toHaveBeenCalledWith(
-        {
-          isbn: 'non-existent-isbn',
-          $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-        },
-        { projection: { _id: 0 } },
       )
     })
   })

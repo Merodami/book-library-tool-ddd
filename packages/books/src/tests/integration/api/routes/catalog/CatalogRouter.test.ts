@@ -144,7 +144,6 @@ describe('Book Router Integration Tests', () => {
       saveProjection: vi.fn().mockResolvedValue(undefined),
       updateProjection: vi.fn().mockResolvedValue(undefined),
       markAsDeleted: vi.fn().mockResolvedValue(undefined),
-      findBookForReservation: vi.fn().mockResolvedValue(mockBookData),
     } as unknown as IBookProjectionRepository
 
     mockEventBus = {

@@ -111,6 +111,7 @@ export const BookSchema = Type.Object(
       Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     ),
     price: Type.Optional(Type.Number({ minimum: 0 })),
+    version: Type.Optional(Type.Number({ minimum: 0 })),
     createdAt: Type.Optional(Type.String({ format: 'date-time' })),
     updatedAt: Type.Optional(
       Type.String({ format: 'date-time', nullable: true }),

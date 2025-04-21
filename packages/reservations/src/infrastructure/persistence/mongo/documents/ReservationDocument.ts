@@ -13,6 +13,7 @@ export interface ReservationDocument {
   status: string
   feeCharged: number
   retailPrice: number
+  version: number
   createdAt: Date
   updatedAt?: Date | null
   deletedAt?: Date | null

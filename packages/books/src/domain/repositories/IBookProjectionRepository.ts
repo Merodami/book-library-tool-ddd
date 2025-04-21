@@ -68,12 +68,4 @@ export interface IBookProjectionRepository {
    * @param timestamp - The timestamp of the deletion
    */
   markAsDeleted(id: string, timestamp: Date): Promise<void>
-
-  /**
-   * Find a book by ISBN for reservation validation.
-   *
-   * @param isbn - The ISBN of the book to find
-   * @returns The book data if found, null otherwise
-   */
-  findBookForReservation(isbn: string): Promise<schemas.Book | null>
 }

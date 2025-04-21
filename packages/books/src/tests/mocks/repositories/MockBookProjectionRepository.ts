@@ -289,12 +289,6 @@ export function createMockBookProjectionRepository(
         // Mock implementation just records the call
         return Promise.resolve()
       }),
-
-    findBookForReservation: vi.fn().mockImplementation(async (isbn: string) => {
-      const book = books.find((b) => b.isbn === isbn)
-
-      return book || null
-    }),
   }
 }
 
@@ -343,6 +337,5 @@ export function createErrorMockBookProjectionRepository(
     saveBookProjection: vi.fn().mockRejectedValue(error),
     updateBookProjection: vi.fn().mockRejectedValue(error),
     markAsDeleted: vi.fn().mockRejectedValue(error),
-    findBookForReservation: vi.fn().mockRejectedValue(error),
   }
 }

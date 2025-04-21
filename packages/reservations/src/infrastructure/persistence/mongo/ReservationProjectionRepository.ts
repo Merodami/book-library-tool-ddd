@@ -31,6 +31,11 @@ export class ReservationProjectionRepository
     updates: Partial<ReservationDocument>,
     version: number,
   ): Promise<void> {
+    console.log('=========================================')
+    console.log('🚀 ~ version:', version)
+    console.log('🚀 ~ updates:', updates)
+    console.log('🚀 ~ id:', id)
+
     const result = await this.collection.updateOne(
       { id, version: { $lt: version } },
       { $set: { ...updates, version } },
@@ -230,6 +235,7 @@ export class ReservationProjectionRepository
    * @param res - Reservation DTO to save
    */
   async saveReservationProjection(res: schemas.Reservation): Promise<void> {
+    console.log('🚀 ~ saveReservationProjection ~ res:', res)
     await this.saveProjection(res, mapToDocument)
   }
 
@@ -470,6 +476,7 @@ function mapToDomain(doc: Partial<ReservationDocument>): schemas.Reservation {
   if ('dueDate' in doc) result.dueDate = doc.dueDate?.toISOString()
   if ('feeCharged' in doc) result.feeCharged = doc.feeCharged
   if ('retailPrice' in doc) result.retailPrice = doc.retailPrice
+  if ('version' in doc) result.version = doc.version
   if ('updatedAt' in doc) result.updatedAt = doc.updatedAt?.toISOString()
   if ('deletedAt' in doc) result.deletedAt = doc.deletedAt?.toISOString()
 
@@ -504,6 +511,7 @@ function mapToDocument(
     userId: res.userId,
     bookId: res.bookId,
     status: res.status,
+    version: res.version ?? 0,
     createdAt: dates.createdAt ?? new Date(),
     reservedAt: dates.reservedAt!,
     dueDate: dates.dueDate!,
@@ -511,5 +519,5 @@ function mapToDocument(
     retailPrice: res.retailPrice ?? 0,
     updatedAt: dates.updatedAt,
     deletedAt: dates.deletedAt,
-  }
+  } as ReservationDocument & { version: number }
 }
