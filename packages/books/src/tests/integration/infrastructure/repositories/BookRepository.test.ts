@@ -1,4 +1,3 @@
-// tests/integration/infrastructure/repositories/BookRepository.test.ts
 import { MongoDatabaseService } from '@book-library-tool/database'
 import {
   BOOK_CREATED,
@@ -55,9 +54,9 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
     await client.close()
   })
 
-  describe('findAggregateIdByISBN', () => {
+  describe('findAggregateIdById', () => {
     it('returns null when no BOOK_CREATED events', async () => {
-      const id = await repository.findAggregateIdByISBN('nonexistent')
+      const id = await repository.findAggregateIdById('nonexistent')
 
       expect(id).toBeNull()
     })
@@ -68,6 +67,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         aggregateId: aggId,
         eventType: BOOK_CREATED,
         payload: {
+          id: 'isbn-1', // Adding id field to match payload expectations
           isbn: 'isbn-1',
           title: 'T',
           author: 'A',
@@ -86,7 +86,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         .getCollection<DomainEvent>('event_store')
         .insertOne(createEvt)
 
-      const found = await repository.findAggregateIdByISBN('isbn-1')
+      const found = await repository.findAggregateIdById('isbn-1')
 
       expect(found).toBe(aggId)
     })
@@ -97,6 +97,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         aggregateId: aggId,
         eventType: BOOK_CREATED,
         payload: {
+          id: aggId, // Use the aggregateId as the id (not isbn)
           isbn: 'isbn-2',
           title: 'T',
           author: 'A',
@@ -123,7 +124,8 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         .getCollection<DomainEvent>('event_store')
         .insertMany([createEvt, deleteEvt])
 
-      const found = await repository.findAggregateIdByISBN('isbn-2')
+      // Use the aggregateId to look up, not the isbn
+      const found = await repository.findAggregateIdById(aggId)
 
       expect(found).toBeNull()
     })
@@ -135,6 +137,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         aggregateId: id1,
         eventType: BOOK_CREATED,
         payload: {
+          id: id1, // Use aggregateId1 as the id
           isbn: 'isbn-3',
           title: '',
           author: '',
@@ -160,6 +163,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         aggregateId: id2,
         eventType: BOOK_CREATED,
         payload: {
+          id: id2, // Use aggregateId2 as the id
           isbn: 'isbn-3',
           title: '',
           author: '',
@@ -178,7 +182,8 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
       await repository.saveEvents(id1, [event2], 1)
       await repository.saveEvents(id2, [event3], 0)
 
-      const found = await repository.findAggregateIdByISBN('isbn-3')
+      // Use id2 to look up, not isbn
+      const found = await repository.findAggregateIdById(id2)
 
       expect(found).toBe(id2)
     })
@@ -194,6 +199,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         publisher: 'Pub',
         price: 5,
       })
+
       const { event: updateEvt } = book.update({ title: 'Updated' })
       const { event: deleteEvt } = book.delete()
 

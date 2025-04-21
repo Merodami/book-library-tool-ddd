@@ -39,6 +39,7 @@
     { "path": "packages/auth" },
     { "path": "packages/books" },
     { "path": "packages/reservations" },
-    { "path": "packages/wallets" }
+    { "path": "packages/wallets" },
+    { "path": "packages/tests" }
   ]
 }

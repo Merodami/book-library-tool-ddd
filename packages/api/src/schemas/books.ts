@@ -3,6 +3,36 @@ import { Static, Type } from '@sinclair/typebox'
 import { PaginationMetadataSchema } from './pagination.js'
 
 // --------------------------------
+// Query Schemas
+// --------------------------------
+
+export const ALLOWED_BOOK_FIELDS = [
+  'id',
+  'title',
+  'author',
+  'isbn',
+  'publicationYear',
+  'publisher',
+  'price',
+] as const
+
+export type BookField = (typeof ALLOWED_BOOK_FIELDS)[number]
+
+export const ALLOWED_BOOK_SORT_FIELDS = [
+  'id',
+  'title',
+  'author',
+  'isbn',
+  'publicationYear',
+  'publisher',
+  'price',
+  'createdAt',
+  'updatedAt',
+] as const
+
+export type BookSortField = (typeof ALLOWED_BOOK_SORT_FIELDS)[number]
+
+// --------------------------------
 // Parameter Schemas
 // --------------------------------
 
@@ -81,12 +111,18 @@ export const BookUpdateRequestRef = Type.Ref(
 export const BookSchema = Type.Object(
   {
     id: Type.Optional(Type.String({ minLength: 1 })),
-    isbn: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
-    title: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
-    author: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
-    publicationYear: Type.Number({ minimum: 0 }),
-    publisher: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
-    price: Type.Number({ minimum: 0 }),
+    isbn: Type.Optional(Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' })),
+    title: Type.Optional(
+      Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    ),
+    author: Type.Optional(
+      Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    ),
+    publicationYear: Type.Optional(Type.Number({ minimum: 0 })),
+    publisher: Type.Optional(
+      Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    ),
+    price: Type.Optional(Type.Number({ minimum: 0 })),
     createdAt: Type.Optional(Type.String({ format: 'date-time' })),
     updatedAt: Type.Optional(
       Type.String({ format: 'date-time', nullable: true }),

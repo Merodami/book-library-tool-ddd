@@ -10,12 +10,12 @@ import { Book as BookEntity } from '@books/entities/Book.js'
 import type { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import type { IBookRepository } from '@books/repositories/IBookRepository.js'
 import { randomUUID } from 'crypto'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('CreateBookHandler', () => {
-  let repo: IBookRepository
-  let proj: IBookProjectionRepository
-  let bus: EventBus
+  let repository: IBookRepository
+  let projectionRepository: IBookProjectionRepository
+  let eventBus: EventBus
   let handler: CreateBookHandler
 
   const cmd: CreateBookCommand = {
@@ -28,14 +28,16 @@ describe('CreateBookHandler', () => {
   }
 
   beforeEach(() => {
-    repo = { saveEvents: vi.fn().mockResolvedValue(undefined) } as any
-    proj = { getBookByIsbn: vi.fn().mockResolvedValue(null) } as any
-    bus = { publish: vi.fn().mockResolvedValue(undefined) } as any
+    repository = { saveEvents: vi.fn().mockResolvedValue(undefined) } as any
+    projectionRepository = {
+      getBookByIsbn: vi.fn().mockResolvedValue(null),
+    } as any
+    eventBus = { publish: vi.fn().mockResolvedValue(undefined) } as any
 
     // Create a spy on BookEntity.create BEFORE creating the handler
     vi.spyOn(BookEntity, 'create')
 
-    handler = new CreateBookHandler(repo, proj, bus)
+    handler = new CreateBookHandler(repository, projectionRepository, eventBus)
   })
 
   afterEach(() => {
@@ -71,10 +73,10 @@ describe('CreateBookHandler', () => {
     const res = await handler.execute(cmd)
 
     expect(res).toEqual({ success: true, bookId: fakeId, version: 1 })
-    expect(proj.getBookByIsbn).toHaveBeenCalledWith(cmd.isbn)
+    expect(projectionRepository.getBookByIsbn).toHaveBeenCalledWith(cmd.isbn)
     expect(BookEntity.create).toHaveBeenCalledWith(cmd)
-    expect(repo.saveEvents).toHaveBeenCalledWith(fakeId, [fakeEvent], 0)
-    expect(bus.publish).toHaveBeenCalledWith(fakeEvent)
+    expect(repository.saveEvents).toHaveBeenCalledWith(fakeId, [fakeEvent], 0)
+    expect(eventBus.publish).toHaveBeenCalledWith(fakeEvent)
     expect(fakeBook.clearDomainEvents).toHaveBeenCalled()
   })
 
@@ -82,7 +84,7 @@ describe('CreateBookHandler', () => {
     // Reset the mock to ensure it's clean
     vi.mocked(BookEntity.create).mockReset()
 
-    vi.spyOn(proj, 'getBookByIsbn').mockResolvedValue({
+    vi.spyOn(projectionRepository, 'getBookByIsbn').mockResolvedValue({
       id: randomUUID(),
       isbn: cmd.isbn,
       title: 'X',
@@ -101,7 +103,7 @@ describe('CreateBookHandler', () => {
     )
 
     expect(BookEntity.create).not.toHaveBeenCalled()
-    expect(repo.saveEvents).not.toHaveBeenCalled()
-    expect(bus.publish).not.toHaveBeenCalled()
+    expect(repository.saveEvents).not.toHaveBeenCalled()
+    expect(eventBus.publish).not.toHaveBeenCalled()
   })
 })

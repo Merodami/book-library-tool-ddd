@@ -1,18 +1,18 @@
+import { schemas } from '@book-library-tool/api'
 import {
-  assertDocument,
-  buildProjection,
+  BaseProjectionRepository,
   buildRangeFilter,
   buildTextFilter,
   convertDateStrings,
 } from '@book-library-tool/database'
 import type {
   Book as BookDTO,
-  CatalogSearchQuery,
   PaginatedBookResponse,
 } from '@book-library-tool/sdk'
-import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
-import { Collection, ObjectId } from 'mongodb'
+import { pick } from 'lodash-es'
+import { Collection, Filter, ObjectId } from 'mongodb'
 
 import type { BookDocument } from './documents/BookDocument.js'
 
@@ -20,12 +20,17 @@ import type { BookDocument } from './documents/BookDocument.js'
  * Repository for performing read operations on Book projections in MongoDB.
  * Implements filtering, pagination, and mapping to/from domain models.
  */
-export class BookProjectionRepository implements IBookProjectionRepository {
+export class BookProjectionRepository
+  extends BaseProjectionRepository<BookDocument, BookDTO>
+  implements IBookProjectionRepository
+{
   /**
    * Constructs a new BookProjectionRepository.
    * @param collection - MongoDB collection storing BookDocument entries
    */
-  constructor(private readonly collection: Collection<BookDocument>) {}
+  constructor(collection: Collection<BookDocument>) {
+    super(collection, mapToDomain)
+  }
 
   /**
    * Retrieves a paginated list of books matching the given query parameters.
@@ -35,17 +40,15 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * @returns Paginated response containing domain Book objects
    */
   async getAllBooks(
-    query: CatalogSearchQuery,
-    fields?: string[],
+    query: schemas.CatalogSearchQuery,
+    fields?: schemas.BookSortField[],
   ): Promise<PaginatedBookResponse> {
-    // Base filter excludes soft-deleted records
-    const dbQuery: Record<string, unknown> = {
-      $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-    }
+    // Build filter from search criteria
+    const filter: Filter<BookDocument> = {}
 
     // Text-based filters on title, author, publisher
     Object.assign(
-      dbQuery,
+      filter,
       buildTextFilter('title', query.title),
       buildTextFilter('author', query.author),
       buildTextFilter('publisher', query.publisher),
@@ -53,12 +56,12 @@ export class BookProjectionRepository implements IBookProjectionRepository {
 
     // Exact ISBN match
     if (query.isbn) {
-      dbQuery.isbn = query.isbn
+      filter.isbn = query.isbn
     }
 
     // Numeric range filters for publicationYear and price
     Object.assign(
-      dbQuery,
+      filter,
       buildRangeFilter('publicationYear', {
         exact: query.publicationYear,
         min: query.publicationYearMin,
@@ -72,43 +75,24 @@ export class BookProjectionRepository implements IBookProjectionRepository {
     )
 
     // Count total before pagination
-    const total = await this.collection.countDocuments(dbQuery)
+    const total = await this.count(filter)
+
+    // Prepare pagination values
     const skip = query.skip || 0
     const limit = query.limit || 10
     const page = Math.floor(skip / limit) + 1
     const pages = Math.ceil(total / limit)
 
-    // Build cursor with projection, skip, limit, and optional sort
-    let cursor = this.collection
-      .find(dbQuery)
-      .project(buildProjection(fields))
-      .skip(skip)
-      .limit(limit)
+    // Use base class to perform the query
+    const data = await this.findMany(filter, {
+      skip,
+      limit,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+      fields,
+    })
 
-    if (query.sortBy && query.sortOrder) {
-      cursor = cursor.sort({
-        [query.sortBy]: query.sortOrder === 'ASC' ? 1 : -1,
-      })
-    }
-
-    // Execute query and map documents to domain models
-    const docs = await cursor.toArray()
-
-    const data = docs.map((d) =>
-      mapToDomain(
-        assertDocument<BookDocument>(d, [
-          'isbn',
-          'title',
-          'author',
-          'publicationYear',
-          'publisher',
-          'price',
-          'createdAt',
-          'updatedAt',
-        ]),
-      ),
-    )
-
+    // Return data with pagination metadata
     return {
       data,
       pagination: {
@@ -129,40 +113,15 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * @returns Domain Book object or null if not found
    * @throws ApplicationError on data mapping errors
    */
-  async getBookById(id: string, fields?: string[]): Promise<BookDTO | null> {
-    const doc = await this.collection.findOne(
-      {
-        id,
-        $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-      },
-      { projection: buildProjection(fields) },
+  async getBookById(
+    id: string,
+    fields?: schemas.BookSortField[],
+  ): Promise<BookDTO | null> {
+    return this.findOne(
+      { id } as Filter<BookDocument>,
+      fields,
+      `book doc for ID ${id}`,
     )
-
-    if (!doc) return null
-
-    try {
-      return mapToDomain(
-        assertDocument<BookDocument>(doc, [
-          'id',
-          'isbn',
-          'title',
-          'author',
-          'publicationYear',
-          'publisher',
-          'price',
-          'createdAt',
-          'updatedAt',
-        ]),
-      )
-    } catch (err) {
-      logger.error(`Invalid book doc for ID ${id}:`, err)
-
-      throw new Errors.ApplicationError(
-        500,
-        ErrorCode.INTERNAL_ERROR,
-        'Invalid book data',
-      )
-    }
   }
 
   /**
@@ -174,41 +133,13 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    */
   async getBookByIsbn(
     isbn: string,
-    fields?: string[],
+    fields?: schemas.BookSortField[],
   ): Promise<BookDTO | null> {
-    const doc = await this.collection.findOne(
-      {
-        isbn,
-        $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-      },
-      { projection: buildProjection(fields) },
+    return this.findOne(
+      { isbn } as Filter<BookDocument>,
+      fields,
+      `book doc for ISBN ${isbn}`,
     )
-
-    if (!doc) return null
-
-    try {
-      return mapToDomain(
-        assertDocument<BookDocument>(doc, [
-          'id',
-          'isbn',
-          'title',
-          'author',
-          'publicationYear',
-          'publisher',
-          'price',
-          'createdAt',
-          'updatedAt',
-        ]),
-      )
-    } catch (err) {
-      logger.error(`Invalid book doc for ISBN ${isbn}:`, err)
-
-      throw new Errors.ApplicationError(
-        500,
-        ErrorCode.INTERNAL_ERROR,
-        'Invalid book data',
-      )
-    }
   }
 
   /**
@@ -225,7 +156,8 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * Updates an existing book projection by document _id.
    * Converts any ISO string dates in updates to Date objects.
    * @param id - Document ObjectId as string
-   * @param updates - Partial Book data with optional dates
+   * @param changes - Partial Book data with optional dates
+   * @param updatedAt - Updated timestamp
    */
   async updateProjection(
     id: string,
@@ -245,29 +177,20 @@ export class BookProjectionRepository implements IBookProjectionRepository {
       'price',
       'isbn',
     ]
-    const setFields: Record<string, unknown> = {}
 
-    // ToDo: Remove this once we have a proper ID generator
-    for (const key of allowed) {
-      /* eslint-disable-next-line security/detect-object-injection */
-      if (changes[key] !== undefined) {
-        /* eslint-disable-next-line security/detect-object-injection */
-        setFields[key] = changes[key]!
-      }
+    const picked = pick(changes, allowed as Array<keyof BookDTO>)
+
+    const setFields = {
+      ...picked,
+      updatedAt: updatedAt instanceof Date ? updatedAt : new Date(updatedAt),
     }
-
-    setFields.updatedAt =
-      updatedAt instanceof Date ? updatedAt : new Date(updatedAt)
 
     if (Object.keys(setFields).length === 0) {
       return
     }
 
     const result = await this.collection.updateOne(
-      {
-        id,
-        $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-      },
+      this.buildCompleteFilter({ id } as Filter<BookDocument>),
       { $set: setFields },
     )
 
@@ -286,14 +209,10 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * @param timestamp - Deletion timestamp
    */
   async markAsDeleted(id: string, timestamp: Date): Promise<void> {
-    const filter = {
-      id,
-      $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-    }
-
-    const result = await this.collection.updateOne(filter, {
-      $set: { deletedAt: timestamp, updatedAt: timestamp },
-    })
+    const result = await this.collection.updateOne(
+      this.buildCompleteFilter({ id } as Filter<BookDocument>),
+      { $set: { deletedAt: timestamp, updatedAt: timestamp } },
+    )
 
     if (result.matchedCount === 0) {
       throw new Errors.ApplicationError(
@@ -310,42 +229,51 @@ export class BookProjectionRepository implements IBookProjectionRepository {
    * @returns Domain Book object or null if not found
    */
   async findBookForReservation(isbn: string): Promise<BookDTO | null> {
-    const doc = await this.collection.findOne({
-      isbn,
-      deletedAt: { $exists: false },
-    })
-
-    if (!doc) return null
-    try {
-      return mapToDomain(assertDocument<BookDocument>(doc, ['isbn']))
-    } catch {
-      return null
-    }
+    return this.findOne({ isbn } as Filter<BookDocument>)
   }
 }
 
 /**
  * Helper: map MongoDB document to domain Book.
  */
-function mapToDomain(doc: BookDocument): BookDTO {
-  return {
-    id: doc.id,
-    isbn: doc.isbn,
-    title: doc.title,
-    author: doc.author,
-    publicationYear: doc.publicationYear,
-    publisher: doc.publisher,
-    price: doc.price,
-    createdAt: doc.createdAt.toISOString(),
-    updatedAt: doc.updatedAt?.toISOString(),
-    deletedAt: doc.deletedAt?.toISOString(),
-  }
+function mapToDomain(doc: Partial<BookDocument>): BookDTO {
+  const result: BookDTO = {}
+
+  // Map fields only if they exist in the document
+  if ('id' in doc) result.id = doc.id
+  if ('isbn' in doc) result.isbn = doc.isbn
+  if ('title' in doc) result.title = doc.title
+  if ('author' in doc) result.author = doc.author
+  if ('publicationYear' in doc) result.publicationYear = doc.publicationYear
+  if ('publisher' in doc) result.publisher = doc.publisher
+  if ('price' in doc) result.price = doc.price
+  if ('createdAt' in doc) result.createdAt = doc.createdAt?.toISOString()
+  if ('updatedAt' in doc) result.updatedAt = doc.updatedAt?.toISOString()
+  if ('deletedAt' in doc) result.deletedAt = doc.deletedAt?.toISOString()
+
+  return result
 }
 
 /**
  * Helper: map domain Book to MongoDB document (no _id).
  */
 function mapToDocument(book: BookDTO): Omit<BookDocument, '_id'> {
+  // Validate required fields
+  if (
+    !book.isbn ||
+    !book.title ||
+    !book.author ||
+    !book.publicationYear ||
+    !book.publisher ||
+    book.price === undefined
+  ) {
+    throw new Errors.ApplicationError(
+      400,
+      ErrorCode.VALIDATION_ERROR,
+      'Missing required book fields: all book properties except dates are required',
+    )
+  }
+
   // Use shared util to convert ISO date strings to Date objects
   const dates = convertDateStrings({
     createdAt: book.createdAt,
@@ -353,9 +281,9 @@ function mapToDocument(book: BookDTO): Omit<BookDocument, '_id'> {
     deletedAt: book.deletedAt,
   } as Record<string, unknown>) as Record<string, Date | undefined>
 
-  return {
-    // ToDo: Remove this once we have a proper ID generator
-    id: book.id || '',
+  // Create document with required fields
+  const result: Omit<BookDocument, '_id'> = {
+    id: book.id || '', // Empty string as placeholder (will be filled by business logic)
     isbn: book.isbn,
     title: book.title,
     author: book.author,
@@ -363,7 +291,16 @@ function mapToDocument(book: BookDTO): Omit<BookDocument, '_id'> {
     publisher: book.publisher,
     price: book.price,
     createdAt: dates.createdAt ?? new Date(),
-    updatedAt: dates.updatedAt ?? new Date(),
-    deletedAt: dates.deletedAt,
   }
+
+  // Add optional date fields
+  if (dates.updatedAt) {
+    result.updatedAt = dates.updatedAt
+  }
+
+  if (dates.deletedAt) {
+    result.deletedAt = dates.deletedAt
+  }
+
+  return result
 }

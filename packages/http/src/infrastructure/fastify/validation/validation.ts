@@ -9,6 +9,7 @@ import {
   FastifyRequest,
   FastifySchema,
 } from 'fastify'
+import { intersection } from 'lodash-es'
 
 import { formatApiErrors } from './formatApiError.js'
 import { formatErrors } from './formatErrors.js'
@@ -203,4 +204,38 @@ export function makeValidator<T extends TSchema>(schema: T) {
 
     return data as T['static']
   }
+}
+
+/**
+ * Validates and processes field selection from query parameters
+ *
+ * @param fieldsParam - The fields parameter from query string (comma-separated)
+ * @param allowedFields - Array of field names that are allowed to be selected
+ * @returns Array of validated field names, or null if no fields were specified at all
+ */
+export function parseAndValidate<T extends string>(
+  fieldsParam: string | undefined,
+  allowedFields: readonly T[],
+): T[] | null {
+  // No param, or only whitespace → no selection at all
+  if (!fieldsParam || typeof fieldsParam !== 'string' || !fieldsParam.trim()) {
+    return null
+  }
+
+  // Split, trim, drop empties
+  const requestedFields = fieldsParam
+    .split(',')
+    .map((f) => f.trim())
+    .filter(Boolean)
+
+  // If they gave nothing after split, treat like “no fields”
+  if (requestedFields.length === 0) {
+    return null
+  }
+
+  // lodash.intersection preserves order and filters out invalid names
+  const validFields = intersection(requestedFields, allowedFields) as T[]
+
+  // If no valid fields were selected, return null
+  return validFields.length > 0 ? validFields : null
 }

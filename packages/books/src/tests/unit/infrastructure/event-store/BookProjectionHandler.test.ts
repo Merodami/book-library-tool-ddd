@@ -12,6 +12,7 @@ const createMockRepository = () => ({
   // Query methods from the base repository interface
   getAllBooks: vi.fn(),
   getBookByISBN: vi.fn(),
+  getBookById: vi.fn(),
 
   // Event-specific methods from the extended interface
   saveProjection: vi.fn().mockResolvedValue(undefined),
@@ -43,6 +44,7 @@ describe('BookProjectionHandler', () => {
         eventType: 'BookCreated',
         aggregateId: 'book-123',
         payload: {
+          id: 'book-123',
           isbn: '978-1234567890',
           title: 'Test Book',
           author: 'Test Author',
@@ -59,6 +61,7 @@ describe('BookProjectionHandler', () => {
 
       expect(mockRepository.saveProjection).toHaveBeenCalledTimes(1)
       expect(mockRepository.saveProjection).toHaveBeenCalledWith({
+        id: 'book-123',
         isbn: '978-1234567890',
         title: 'Test Book',
         author: 'Test Author',
@@ -99,14 +102,18 @@ describe('BookProjectionHandler', () => {
       await handler.handleBookUpdated(event)
 
       expect(mockRepository.updateProjection).toHaveBeenCalledTimes(1)
-      expect(mockRepository.updateProjection).toHaveBeenCalledWith('book-123', {
-        title: 'New Title',
-        author: 'New Author',
-        publicationYear: 2023,
-        publisher: 'New Publisher',
-        price: 29.99,
-        updatedAt: event.timestamp.toISOString(),
-      })
+      expect(mockRepository.updateProjection).toHaveBeenCalledWith(
+        'book-123',
+        {
+          title: 'New Title',
+          author: 'New Author',
+          publicationYear: 2023,
+          publisher: 'New Publisher',
+          price: 29.99,
+          updatedAt: event.timestamp, // Date object, not string
+        },
+        event.timestamp, // Include the third parameter
+      )
     })
 
     it('should only update fields that have changed', async () => {
@@ -135,10 +142,14 @@ describe('BookProjectionHandler', () => {
       await handler.handleBookUpdated(event)
 
       expect(mockRepository.updateProjection).toHaveBeenCalledTimes(1)
-      expect(mockRepository.updateProjection).toHaveBeenCalledWith('book-123', {
-        title: 'New Title',
-        updatedAt: event.timestamp.toISOString(),
-      })
+      expect(mockRepository.updateProjection).toHaveBeenCalledWith(
+        'book-123',
+        {
+          title: 'New Title',
+          updatedAt: event.timestamp, // Date object, not string
+        },
+        event.timestamp, // Include the third parameter
+      )
     })
   })
 

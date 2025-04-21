@@ -1,3 +1,4 @@
+import { schemas } from '@book-library-tool/api'
 import { Book } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import type { GetBookQuery } from '@books/queries/GetBookQuery.js'
@@ -15,7 +16,10 @@ export class GetBookHandler {
    * @param fields - Optional list of fields to include in the result
    * @returns The rehydrated Book aggregate.
    */
-  async execute(command: GetBookQuery, fields?: string[]): Promise<Book> {
+  async execute(
+    command: GetBookQuery,
+    fields?: schemas.BookSortField[],
+  ): Promise<Book> {
     try {
       const book = await this.projectionRepository.getBookById(
         command.id,

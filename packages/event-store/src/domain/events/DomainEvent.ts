@@ -16,5 +16,6 @@ export interface DomainEvent {
   schemaVersion: number
   timestamp: Date
   payload: any
+  globalVersion?: number
   metadata?: EventMetadata // Add the metadata field here
 }

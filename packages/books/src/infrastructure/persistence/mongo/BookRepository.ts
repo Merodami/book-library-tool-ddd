@@ -56,19 +56,30 @@ export class BookRepository
    */
   async findAggregateIdById(id: string): Promise<string | null> {
     try {
-      const events = await this.collection
+      // First find any books with this ID in their payload
+      const createdEvents = await this.collection
         .find({
           'payload.id': id,
-          eventType: { $in: [BOOK_CREATED, BOOK_DELETED] },
+          eventType: BOOK_CREATED,
         })
-        .sort({ version: 1 })
         .toArray()
 
-      if (events.length === 0) return null
+      if (createdEvents.length === 0) return null
+
+      // Now get all events for these aggregates
+      const aggregateIds = createdEvents.map((e) => e.aggregateId)
+
+      const allEvents = await this.collection
+        .find({
+          aggregateId: { $in: aggregateIds },
+          eventType: { $in: [BOOK_CREATED, BOOK_DELETED] },
+        })
+        .sort({ aggregateId: 1, version: 1 })
+        .toArray()
 
       const grouped: Record<string, DomainEvent[]> = {}
 
-      for (const evt of events) {
+      for (const evt of allEvents) {
         ;(grouped[evt.aggregateId] ??= []).push(evt)
       }
 

@@ -21,7 +21,6 @@ export class CreateBookController {
     const { isbn, title, author, publicationYear, publisher, price } =
       request.body
 
-    // Build the command
     const command: CreateBookCommand = {
       isbn,
       title,
@@ -31,7 +30,6 @@ export class CreateBookController {
       price,
     }
 
-    // Call the handler directly to create the book
     const result = await this.createBookHandler.execute(command)
 
     return result

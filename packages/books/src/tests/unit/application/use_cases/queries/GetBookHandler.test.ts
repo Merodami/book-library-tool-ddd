@@ -1,5 +1,6 @@
+import { schemas } from '@book-library-tool/api'
 import { Book } from '@book-library-tool/sdk'
-import { Errors } from '@book-library-tool/shared'
+import { Errors, logger } from '@book-library-tool/shared'
 import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import { GetBookHandler } from '@books/use_cases/queries/GetBookHandler.js'
@@ -18,6 +19,9 @@ describe('GetBookHandler', () => {
   }
 
   beforeEach(() => {
+    vi.spyOn(logger, 'error').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
     mockBook = {
       id: validId,
       isbn: validIsbn,
@@ -86,7 +90,7 @@ describe('GetBookHandler', () => {
   })
 
   it('should pass additional fields parameter when provided', async () => {
-    const fields = ['title', 'author', 'price']
+    const fields = ['title', 'author', 'price'] as schemas.BookSortField[]
 
     await handler.execute(validQuery, fields)
 
