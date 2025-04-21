@@ -47,7 +47,7 @@ export class GetReservationStatusHandler {
       id: query.id,
       status: reservation.status as RESERVATION_STATUS,
       userId: reservation.userId,
-      isbn: reservation.isbn,
+      bookId: reservation.bookId,
       reservedAt: reservation.reservedAt,
       feeCharged: reservation.feeCharged,
       createdAt: reservation.createdAt,

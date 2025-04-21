@@ -19,7 +19,7 @@ function mapToDomain(doc: Partial<ReservationDocument>): ReservationDTO {
   return {
     id: doc.id!,
     userId: doc.userId!,
-    isbn: doc.isbn!,
+    bookId: doc.bookId!,
     status: doc.status as RESERVATION_STATUS,
     createdAt: doc.createdAt!.toISOString(),
     reservedAt: doc.reservedAt!.toISOString(),
@@ -38,11 +38,11 @@ function mapToDomain(doc: Partial<ReservationDocument>): ReservationDTO {
 function mapToDocument(
   res: schemas.ReservationDTO,
 ): Omit<ReservationDocument, '_id'> {
-  if (!res.id || !res.userId || !res.isbn) {
+  if (!res.id || !res.userId || !res.bookId) {
     throw new Errors.ApplicationError(
       400,
       ErrorCode.VALIDATION_ERROR,
-      'Missing required id, userId, or isbn',
+      'Missing required id, userId, or bookId',
     )
   }
 
@@ -57,7 +57,7 @@ function mapToDocument(
   return {
     id: res.id,
     userId: res.userId,
-    isbn: res.isbn,
+    bookId: res.bookId,
     status: res.status,
     createdAt: dates.createdAt ?? new Date(),
     reservedAt: dates.reservedAt!,
@@ -194,16 +194,16 @@ export class ReservationProjectionRepository
 
   /**
    * Get reservations for a book with optional filters, paginated.
-   * @param isbn - Book ISBN
+   * @param bookId - Book ID
    * @param fields - Optional fields to include in results
    * @returns Paginated response containing domain Reservation objects
    */
   async getBookReservations(
-    isbn: string,
+    bookId: string,
     fields?: schemas.ReservationSortField[],
   ): Promise<schemas.PaginatedResult<schemas.ReservationDTO>> {
     // Build filter from search criteria
-    const filter: Filter<ReservationDocument> = { isbn }
+    const filter: Filter<ReservationDocument> = { bookId }
 
     // Set status filter for active reservations
     filter.status = {
@@ -244,17 +244,17 @@ export class ReservationProjectionRepository
 
   /**
    * List all active reservations for a book.
-   * @param isbn - Book ISBN
+   * @param bookId - Book ID
    * @param fields - Optional fields to include in results
    * @returns Array of domain Reservation objects
    */
   async getActiveBookReservations(
-    isbn: string,
+    bookId: string,
     fields?: schemas.ReservationSortField[],
   ): Promise<schemas.ReservationDTO[]> {
     return this.findMany(
       {
-        isbn,
+        bookId,
         status: {
           $in: [RESERVATION_STATUS.RESERVED, RESERVATION_STATUS.BORROWED],
         },
@@ -526,31 +526,31 @@ export class ReservationProjectionRepository
 
   /**
    * Updates all reservations for a book when book details change.
-   * @param isbn - Book ISBN
+   * @param bookId - Book ID
    * @param timestamp - Update timestamp
    */
   async updateReservationsForBookUpdate(
-    isbn: string,
+    bookId: string,
     timestamp: Date,
   ): Promise<void> {
     await this.collection.updateMany(
-      { isbn, deletedAt: { $exists: false } },
+      { bookId, deletedAt: { $exists: false } },
       { $set: { updatedAt: timestamp } },
     )
   }
 
   /**
    * Updates reservations when a book is deleted.
-   * @param isbn - Book ISBN
+   * @param bookId - Book ID
    * @param timestamp - Update timestamp
    */
   async markReservationsForDeletedBook(
-    isbn: string,
+    bookId: string,
     timestamp: Date,
   ): Promise<void> {
     await this.collection.updateMany(
       {
-        isbn,
+        bookId,
         status: {
           $in: [RESERVATION_STATUS.RESERVED, RESERVATION_STATUS.BORROWED],
         },

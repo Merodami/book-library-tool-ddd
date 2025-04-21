@@ -48,31 +48,34 @@ export class ReservationRepository
   async createReservation(
     reservationData: ReservationRequest,
   ): Promise<Reservation> {
-    const { userId, isbn } = reservationData
+    const { userId, bookId } = reservationData
 
-    if (!userId || !isbn) {
+    if (!userId || !bookId) {
       throw new Errors.ApplicationError(
         400,
         ErrorCode.RESERVATION_INVALID_DATA,
-        'User ID and ISBN are required',
+        'User ID and Book ID are required',
       )
     }
 
     // First check if user already has an active reservation for this book
-    const existingReservation = await this.findActiveByUserAndIsbn(userId, isbn)
+    const existingReservation = await this.findActiveByUserAndBookId(
+      userId,
+      bookId,
+    )
 
     if (existingReservation) {
       throw new Errors.ApplicationError(
         400,
         ErrorCode.RESERVATION_DUPLICATE_RESERVATION,
-        `User ${userId} already has an active reservation for book ${isbn}`,
+        `User ${userId} already has an active reservation for book ${bookId}`,
       )
     }
 
     // Create a new reservation entity
     const { reservation, event } = Reservation.create({
       userId,
-      isbn,
+      bookId,
       status: RESERVATION_STATUS.RESERVED,
     })
 
@@ -167,22 +170,22 @@ export class ReservationRepository
   }
 
   /**
-   * Find active reservation by user and ISBN
+   * Find active reservation by user and Book ID
    * This is needed for validation during reservation creation.
    *
    * @param userId User identifier
-   * @param isbn Book ISBN
+   * @param bookId Book ID
    * @returns Active reservation or null
    */
-  async findActiveByUserAndIsbn(
+  async findActiveByUserAndBookId(
     userId: string,
-    isbn: string,
+    bookId: string,
   ): Promise<Reservation | null> {
     try {
       const events = await this.collection
         .find({
           'payload.userId': userId,
-          'payload.isbn': isbn,
+          'payload.bookId': bookId,
           eventType: {
             $in: [RESERVATION_CONFIRMED],
           },
@@ -210,7 +213,7 @@ export class ReservationRepository
       throw new Errors.ApplicationError(
         500,
         ErrorCode.RESERVATION_RETRIEVAL_FAILED,
-        `Failed to retrieve active reservation for user ${userId} and book ${isbn}: ${message}`,
+        `Failed to retrieve active reservation for user ${userId} and book ${bookId}: ${message}`,
       )
     }
   }

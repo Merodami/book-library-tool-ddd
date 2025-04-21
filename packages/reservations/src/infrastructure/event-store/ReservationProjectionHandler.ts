@@ -47,7 +47,7 @@ export class ReservationProjectionHandler {
     await this.projectionRepository.saveReservationProjection({
       id: event.aggregateId,
       userId: event.payload.userId,
-      isbn: event.payload.isbn,
+      bookId: event.payload.bookId,
       status: RESERVATION_CREATED,
       createdAt: createdDate.toISOString(),
       dueDate: dueDate.toISOString(),
@@ -142,7 +142,7 @@ export class ReservationProjectionHandler {
    */
   async handleBookDetailsUpdated(event: DomainEvent): Promise<void> {
     await this.projectionRepository.updateReservationsForBookUpdate(
-      event.payload.isbn,
+      event.payload.bookId,
       new Date(event.timestamp),
     )
   }
@@ -156,7 +156,7 @@ export class ReservationProjectionHandler {
    */
   async handleBookDeleted(event: DomainEvent): Promise<void> {
     await this.projectionRepository.markReservationsForDeletedBook(
-      event.payload.isbn,
+      event.payload.bookId,
       new Date(event.timestamp),
     )
   }

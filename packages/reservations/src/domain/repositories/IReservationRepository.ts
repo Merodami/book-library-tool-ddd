@@ -81,15 +81,15 @@ export interface IReservationRepository {
   findById(id: string): Promise<Reservation | null>
 
   /**
-   * Find active reservation by user and ISBN.
+   * Find active reservation by user and Book ID.
    * This is needed for validation during reservation creation.
    *
    * @param userId User identifier
-   * @param isbn Book ISBN
+   * @param bookId Book ID
    * @returns Active reservation or null
    */
-  findActiveByUserAndIsbn(
+  findActiveByUserAndBookId(
     userId: string,
-    isbn: string,
+    bookId: string,
   ): Promise<Reservation | null>
 }

@@ -18,17 +18,17 @@ describe('IReservationProjectionRepository', () => {
   } as unknown as IReservationProjectionRepository
 
   const mockUserId = 'user-123'
-  const mockIsbn = '978-3-16-148410-0'
+  const mockBookId = '5a123456-7890-1234-5678-901234567890'
   const mockId = '9b9b9b9b-9b9b-9b9b-9b9b-9b9b9b9b9b9b'
   const { reservation: mockReservation } = Reservation.create({
     userId: mockUserId,
-    isbn: mockIsbn,
+    bookId: mockBookId,
   })
 
   const mockSDKReservation: SDKReservation = {
     id: mockReservation.id,
     userId: mockReservation.userId,
-    isbn: mockReservation.isbn,
+    bookId: mockReservation.bookId,
     reservedAt: mockReservation.reservedAt.toISOString(),
     dueDate: mockReservation.dueDate.toISOString(),
     status: 'created',
@@ -96,13 +96,13 @@ describe('IReservationProjectionRepository', () => {
         mockPaginatedResult,
       )
 
-      const result = await mockRepository.getBookReservations(mockIsbn)
+      const result = await mockRepository.getBookReservations(mockBookId)
 
       expect(result.data).toHaveLength(1)
       expect(result.data[0]).toEqual(mockSDKReservation)
-      expect(mockRepository.getBookReservations).toHaveBeenCalledWith({
-        isbn: mockIsbn,
-      })
+      expect(mockRepository.getBookReservations).toHaveBeenCalledWith(
+        mockBookId,
+      )
     })
   })
 
@@ -113,12 +113,12 @@ describe('IReservationProjectionRepository', () => {
       ])
 
       const reservations =
-        await mockRepository.getActiveBookReservations(mockIsbn)
+        await mockRepository.getActiveBookReservations(mockBookId)
 
       expect(reservations).toHaveLength(1)
       expect(reservations[0]).toEqual(mockSDKReservation)
       expect(mockRepository.getActiveBookReservations).toHaveBeenCalledWith(
-        mockIsbn,
+        mockBookId,
       )
     })
   })

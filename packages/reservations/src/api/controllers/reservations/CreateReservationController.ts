@@ -1,4 +1,5 @@
 import { schemas } from '@book-library-tool/api'
+import { EventResponse } from '@book-library-tool/sdk'
 import { CreateReservationHandler } from '@reservations/commands/CreateReservationHandler.js'
 import { CreateReservationCommand } from '@reservations/use_cases/commands/CreateReservationCommand.js'
 import { FastifyRequest } from 'fastify'
@@ -17,7 +18,7 @@ export class CreateReservationController {
    * Expects a JSON body with:
    * {
    *   "userId": string,
-   *   "isbn": string
+   *   "bookId": string
    * }
    * Generates a ReservationCreated event, persists it, and publishes it.
    */
@@ -25,14 +26,16 @@ export class CreateReservationController {
     request: FastifyRequest<{
       Body: schemas.ReservationRequest
     }>,
-  ): Promise<void> {
-    const { userId, isbn } = request.body
+  ): Promise<EventResponse & { id: string }> {
+    const { userId, bookId } = request.body
 
     const command: CreateReservationCommand = {
       userId,
-      isbn,
+      bookId,
     }
 
-    await this.createReservationHandler.execute(command)
+    const result = await this.createReservationHandler.execute(command)
+
+    return result
   }
 }

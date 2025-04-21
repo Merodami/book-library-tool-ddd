@@ -10,8 +10,8 @@ import { Reservation } from '@reservations/entities/Reservation.js'
 import { describe, expect, it, vi } from 'vitest'
 
 describe('Reservation Entity', () => {
-  const mockUserId = 'user-123'
-  const mockIsbn = '978-3-16-148410-0'
+  const mockUserId = 'a5b6c7d8-e9f0-1234-5678-901234567890'
+  const mockBookId = '5a123456-7890-1234-5678-901234567890'
   const mockReservedAt = new Date('2024-04-17').toISOString()
   const mockDueDate = new Date('2024-04-22').toISOString()
   const mockFeeCharged = 10.99
@@ -21,7 +21,7 @@ describe('Reservation Entity', () => {
     it('should create a new reservation with valid data', () => {
       const { reservation, event } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
         reservedAt: mockReservedAt,
         dueDate: mockDueDate,
         feeCharged: mockFeeCharged,
@@ -30,7 +30,7 @@ describe('Reservation Entity', () => {
 
       expect(reservation).toBeInstanceOf(Reservation)
       expect(reservation.userId).toBe(mockUserId)
-      expect(reservation.isbn).toBe(mockIsbn)
+      expect(reservation.bookId).toBe(mockBookId)
       expect(reservation.reservedAt.toISOString()).toBe(mockReservedAt)
       expect(reservation.dueDate.toISOString()).toBe(mockDueDate)
       expect(reservation.status).toBe(RESERVATION_STATUS.CREATED)
@@ -47,7 +47,7 @@ describe('Reservation Entity', () => {
 
       const { reservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
         reservedAt: mockReservedAt,
       } as schemas.ReservationDTO)
 
@@ -65,7 +65,7 @@ describe('Reservation Entity', () => {
     it('should confirm a pending reservation', () => {
       const { reservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       } as schemas.ReservationDTO)
 
       reservation.setPaymentPending()
@@ -83,7 +83,7 @@ describe('Reservation Entity', () => {
     it('should cancel a reservation', () => {
       const { reservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       } as schemas.ReservationDTO)
 
       reservation.setPaymentPending()
@@ -98,7 +98,7 @@ describe('Reservation Entity', () => {
     it('should reject a reservation', () => {
       const { reservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       } as schemas.ReservationDTO)
 
       const { event } = reservation.reject('Book not available')
@@ -112,7 +112,7 @@ describe('Reservation Entity', () => {
     it('should not allow confirming a non-pending payment reservation', () => {
       const { reservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       } as schemas.ReservationDTO)
 
       expect(() =>
@@ -123,7 +123,7 @@ describe('Reservation Entity', () => {
     it('should not allow cancelling a non-reserved reservation', () => {
       const { reservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       } as schemas.ReservationDTO)
 
       expect(() => reservation.cancel('reason')).toThrow()
@@ -132,7 +132,7 @@ describe('Reservation Entity', () => {
     it('should not allow rejecting a non-pending reservation', () => {
       const { reservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       } as schemas.ReservationDTO)
 
       reservation.setPaymentPending()
@@ -146,7 +146,7 @@ describe('Reservation Entity', () => {
     it('should apply ReservationCreated event correctly', () => {
       const { reservation: _reservation, event } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
         reservedAt: mockReservedAt,
         dueDate: mockDueDate,
         feeCharged: mockFeeCharged,
@@ -155,7 +155,7 @@ describe('Reservation Entity', () => {
 
       const { reservation: newReservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
         reservedAt: mockReservedAt,
         dueDate: mockDueDate,
         feeCharged: mockFeeCharged,
@@ -165,7 +165,7 @@ describe('Reservation Entity', () => {
       newReservation.rehydrate([event])
 
       expect(newReservation.userId).toBe(mockUserId)
-      expect(newReservation.isbn).toBe(mockIsbn)
+      expect(newReservation.bookId).toBe(mockBookId)
       expect(newReservation.reservedAt.toISOString()).toBe(mockReservedAt)
       expect(newReservation.dueDate.toISOString()).toBe(mockDueDate)
       expect(newReservation.status).toBe(RESERVATION_STATUS.CREATED)

@@ -14,16 +14,16 @@ describe('IReservationRepository', () => {
     returnReservation: vi.fn(),
     cancelReservation: vi.fn(),
     findById: vi.fn(),
-    findActiveByUserAndIsbn: vi.fn(),
+    findActiveByUserAndBookId: vi.fn(),
   } as unknown as IReservationRepository
 
-  const mockUserId = 'user-123'
-  const mockIsbn = '978-3-16-148410-0'
-  const mockid = 'reservation-123'
+  const mockUserId = 'a5123456-7890-1234-5678-901234567890'
+  const mockBookId = '5a123456-7890-1234-5678-901234567890'
+  const mockId = '8a123456-7890-1234-5678-901234567890'
   const mockEvents: DomainEvent[] = [
     {
       eventType: 'ReservationCreated',
-      aggregateId: mockid,
+      aggregateId: mockId,
       version: 1,
       schemaVersion: 1,
       timestamp: new Date(),
@@ -33,9 +33,9 @@ describe('IReservationRepository', () => {
 
   describe('saveEvents', () => {
     it('should save events for an aggregate', async () => {
-      await mockRepository.saveEvents(mockid, mockEvents, 0)
+      await mockRepository.saveEvents(mockId, mockEvents, 0)
       expect(mockRepository.saveEvents).toHaveBeenCalledWith(
-        mockid,
+        mockId,
         mockEvents,
         0,
       )
@@ -44,9 +44,9 @@ describe('IReservationRepository', () => {
 
   describe('appendBatch', () => {
     it('should append a batch of events', async () => {
-      await mockRepository.appendBatch(mockid, mockEvents, 0)
+      await mockRepository.appendBatch(mockId, mockEvents, 0)
       expect(mockRepository.appendBatch).toHaveBeenCalledWith(
-        mockid,
+        mockId,
         mockEvents,
         0,
       )
@@ -59,10 +59,10 @@ describe('IReservationRepository', () => {
         mockEvents,
       )
 
-      const events = await mockRepository.getEventsForAggregate(mockid)
+      const events = await mockRepository.getEventsForAggregate(mockId)
 
       expect(events).toEqual(mockEvents)
-      expect(mockRepository.getEventsForAggregate).toHaveBeenCalledWith(mockid)
+      expect(mockRepository.getEventsForAggregate).toHaveBeenCalledWith(mockId)
     })
   })
 
@@ -70,7 +70,7 @@ describe('IReservationRepository', () => {
     it('should create a new reservation', async () => {
       const { reservation: mockReservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       })
 
       vi.mocked(mockRepository.createReservation).mockResolvedValue(
@@ -79,13 +79,13 @@ describe('IReservationRepository', () => {
 
       const reservation = await mockRepository.createReservation({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       } as schemas.ReservationRequest)
 
       expect(reservation).toBeInstanceOf(Reservation)
       expect(mockRepository.createReservation).toHaveBeenCalledWith({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       })
     })
   })
@@ -94,7 +94,7 @@ describe('IReservationRepository', () => {
     it('should mark a reservation as returned', async () => {
       const { reservation: mockReservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       })
 
       // Manually set the status to RETURNED for the test
@@ -104,10 +104,10 @@ describe('IReservationRepository', () => {
         mockReservation,
       )
 
-      const reservation = await mockRepository.returnReservation(mockid)
+      const reservation = await mockRepository.returnReservation(mockId)
 
       expect(reservation.status).toBe(RESERVATION_STATUS.RETURNED)
-      expect(mockRepository.returnReservation).toHaveBeenCalledWith(mockid)
+      expect(mockRepository.returnReservation).toHaveBeenCalledWith(mockId)
     })
   })
 
@@ -115,7 +115,7 @@ describe('IReservationRepository', () => {
     it('should cancel a reservation', async () => {
       const { reservation: mockReservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       })
 
       // Manually set the status to CANCELLED for the test
@@ -126,13 +126,13 @@ describe('IReservationRepository', () => {
       )
 
       const reservation = await mockRepository.cancelReservation(
-        mockid,
+        mockId,
         'User requested cancellation',
       )
 
       expect(reservation.status).toBe(RESERVATION_STATUS.CANCELLED)
       expect(mockRepository.cancelReservation).toHaveBeenCalledWith(
-        mockid,
+        mockId,
         'User requested cancellation',
       )
     })
@@ -142,15 +142,15 @@ describe('IReservationRepository', () => {
     it('should find a reservation by ID', async () => {
       const { reservation: mockReservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       })
 
       vi.mocked(mockRepository.findById).mockResolvedValue(mockReservation)
 
-      const reservation = await mockRepository.findById(mockid)
+      const reservation = await mockRepository.findById(mockId)
 
       expect(reservation).toBeInstanceOf(Reservation)
-      expect(mockRepository.findById).toHaveBeenCalledWith(mockid)
+      expect(mockRepository.findById).toHaveBeenCalledWith(mockId)
     })
 
     it('should return null when reservation is not found', async () => {
@@ -162,38 +162,40 @@ describe('IReservationRepository', () => {
     })
   })
 
-  describe('findActiveByUserAndIsbn', () => {
-    it('should find an active reservation by user and ISBN', async () => {
+  describe('findActiveByUserAndBookId', () => {
+    it('should find an active reservation by user and bookId', async () => {
       const { reservation: mockReservation } = Reservation.create({
         userId: mockUserId,
-        isbn: mockIsbn,
+        bookId: mockBookId,
       })
 
       // Manually set the status to RESERVED for the test
       mockReservation.status = RESERVATION_STATUS.RESERVED
 
-      vi.mocked(mockRepository.findActiveByUserAndIsbn).mockResolvedValue(
+      vi.mocked(mockRepository.findActiveByUserAndBookId).mockResolvedValue(
         mockReservation,
       )
 
-      const reservation = await mockRepository.findActiveByUserAndIsbn(
+      const reservation = await mockRepository.findActiveByUserAndBookId(
         mockUserId,
-        mockIsbn,
+        mockBookId,
       )
 
       expect(reservation).toBeInstanceOf(Reservation)
-      expect(mockRepository.findActiveByUserAndIsbn).toHaveBeenCalledWith(
+      expect(mockRepository.findActiveByUserAndBookId).toHaveBeenCalledWith(
         mockUserId,
-        mockIsbn,
+        mockBookId,
       )
     })
 
     it('should return null when no active reservation is found', async () => {
-      vi.mocked(mockRepository.findActiveByUserAndIsbn).mockResolvedValue(null)
+      vi.mocked(mockRepository.findActiveByUserAndBookId).mockResolvedValue(
+        null,
+      )
 
-      const reservation = await mockRepository.findActiveByUserAndIsbn(
+      const reservation = await mockRepository.findActiveByUserAndBookId(
         mockUserId,
-        mockIsbn,
+        mockBookId,
       )
 
       expect(reservation).toBeNull()

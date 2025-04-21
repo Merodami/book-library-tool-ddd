@@ -4,6 +4,6 @@
 export type CreateReservationCommand = {
   /** The ID of the user making the reservation */
   userId: string
-  /** The ISBN of the book to reserve */
-  isbn: string
+  /** The ID of the book to reserve */
+  bookId: string
 }

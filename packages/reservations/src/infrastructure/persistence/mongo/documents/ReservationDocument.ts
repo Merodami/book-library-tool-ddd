@@ -7,7 +7,7 @@ export interface ReservationDocument {
   _id: ObjectId
   id: string
   userId: string
-  isbn: string
+  bookId: string
   reservedAt: Date
   dueDate: Date
   status: string

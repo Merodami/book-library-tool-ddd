@@ -22,7 +22,7 @@ const assertSchema = makeValidator(schemas.ReservationSchema)
 
 export interface ReservationProps {
   userId: string
-  isbn: string
+  bookId: string
   reservedAt: Date
   dueDate: Date
   status: RESERVATION_STATUS
@@ -39,7 +39,7 @@ export interface ReservationProps {
 export class Reservation extends AggregateRoot {
   public readonly id: string // Alias for this.id from AggregateRoot
   public readonly userId: string
-  public readonly isbn: string
+  public readonly bookId: string
   public reservedAt: Date
   public dueDate: Date
   public status: RESERVATION_STATUS
@@ -65,7 +65,7 @@ export class Reservation extends AggregateRoot {
     // Use the AggregateRoot's id as the reservation identifier.
     this.id = id || randomUUID()
     this.userId = props.userId
-    this.isbn = props.isbn
+    this.bookId = props.bookId
     this.reservedAt = props.reservedAt
     this.dueDate = props.dueDate
     this.status = props.status
@@ -84,7 +84,7 @@ export class Reservation extends AggregateRoot {
    */
   public static create(
     props: Partial<schemas.ReservationDTO> &
-      Pick<schemas.ReservationDTO, 'userId' | 'isbn'>,
+      Pick<schemas.ReservationDTO, 'userId' | 'bookId'>,
   ): { reservation: Reservation; event: DomainEvent } {
     const now = new Date()
 
@@ -119,7 +119,7 @@ export class Reservation extends AggregateRoot {
     // Create reservation properties
     const reservationProps: ReservationProps = {
       userId: props.userId.trim(),
-      isbn: props.isbn.trim(),
+      bookId: props.bookId.trim(),
       reservedAt: props.reservedAt ? new Date(props.reservedAt) : now,
       dueDate,
       retailPrice: Number(props.retailPrice),
@@ -282,7 +282,7 @@ export class Reservation extends AggregateRoot {
     // Create updated props
     const updatedProps: ReservationProps = {
       userId: this.userId,
-      isbn: this.isbn,
+      bookId: this.bookId,
       reservedAt: this.reservedAt,
       dueDate: this.dueDate,
       status: newStatus,
@@ -544,7 +544,7 @@ export class Reservation extends AggregateRoot {
     // Create new reservation with updated price - use the actual properties
     const updatedProps: ReservationProps = {
       userId: this.userId,
-      isbn: this.isbn,
+      bookId: this.bookId,
       reservedAt: this.reservedAt,
       dueDate: this.dueDate,
       status: this.status,

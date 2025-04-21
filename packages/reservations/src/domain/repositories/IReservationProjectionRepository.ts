@@ -33,12 +33,12 @@ export interface IReservationProjectionRepository {
   /**
    * Gets all reservations for a specific book with optional filtering.
    *
-   * @param isbn - The ISBN of the book
+   * @param bookId - The ID of the book
    * @param fields - Optional array of fields to return. If not provided, returns all fields.
    * @returns Paginated list of reservations
    */
   getBookReservations(
-    isbn: string,
+    bookId: string,
     fields?: schemas.ReservationSortField[],
   ): Promise<schemas.PaginatedResult<schemas.ReservationDTO>>
 
@@ -46,12 +46,12 @@ export interface IReservationProjectionRepository {
    * Gets active reservations for a specific book.
    * This is useful for checking book availability.
    *
-   * @param isbn - The ISBN of the book
+   * @param bookId - The ID of the book
    * @param fields - Optional array of fields to return. If not provided, returns all fields.
    * @returns List of active reservations
    */
   getActiveBookReservations(
-    isbn: string,
+    bookId: string,
     fields?: schemas.ReservationSortField[],
   ): Promise<schemas.ReservationDTO[]>
 
@@ -142,18 +142,21 @@ export interface IReservationProjectionRepository {
   /**
    * Updates all reservations for a book when book details change.
    *
-   * @param isbn - The ISBN of the book
+   * @param bookId - The ID of the book
    * @param timestamp - Timestamp of the update
    */
-  updateReservationsForBookUpdate(isbn: string, timestamp: Date): Promise<void>
+  updateReservationsForBookUpdate(
+    bookId: string,
+    timestamp: Date,
+  ): Promise<void>
 
   /**
    * Updates reservations when a book is deleted.
    *
-   * @param isbn - The ISBN of the book
+   * @param bookId - The ID of the book
    * @param timestamp - Timestamp of the deletion
    */
-  markReservationsForDeletedBook(isbn: string, timestamp: Date): Promise<void>
+  markReservationsForDeletedBook(bookId: string, timestamp: Date): Promise<void>
 
   /**
    * Updates a reservation based on book validation results.

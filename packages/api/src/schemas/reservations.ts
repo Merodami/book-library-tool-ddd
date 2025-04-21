@@ -13,7 +13,7 @@ import {
 export const ALLOWED_RESERVATION_FIELDS = [
   'id',
   'userId',
-  'isbn',
+  'bookId',
   'reservedAt',
   'dueDate',
   'status',
@@ -25,7 +25,7 @@ export type ReservationField = (typeof ALLOWED_RESERVATION_FIELDS)[number]
 
 export const ALLOWED_RESERVATION_SORT_FIELDS = [
   'userId',
-  'isbn',
+  'bookId',
   'reservedAt',
   'dueDate',
   'status',
@@ -81,7 +81,11 @@ export const ReservationRequestSchema = Type.Object(
       minLength: 1,
       pattern: '^(?!\\s*$).+',
     }),
-    isbn: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    bookId: Type.String({
+      format: 'uuid',
+      minLength: 1,
+      pattern: '^(?!\\s*$).+',
+    }),
   },
   { $id: '#/components/schemas/ReservationRequest' },
 )
@@ -109,7 +113,11 @@ export const ReservationSchema = Type.Object(
       minLength: 1,
       pattern: '^(?!\\s*$).+',
     }),
-    isbn: Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
+    bookId: Type.String({
+      format: 'uuid',
+      minLength: 1,
+      pattern: '^(?!\\s*$).+',
+    }),
     reservedAt: Type.String({ format: 'date-time' }),
     dueDate: Type.String({ format: 'date-time' }),
     status: Type.String({
@@ -152,7 +160,7 @@ export const ReservationReturnResponseSchema = Type.Object(
   {
     reservationId: Type.String({ format: 'uuid' }),
     userId: Type.String({ format: 'uuid' }),
-    isbn: Type.String(),
+    bookId: Type.String({ format: 'uuid' }),
     reservedAt: Type.String({ format: 'date-time' }),
     dueDate: Type.String({ format: 'date-time' }),
     status: Type.Unsafe<string>({
