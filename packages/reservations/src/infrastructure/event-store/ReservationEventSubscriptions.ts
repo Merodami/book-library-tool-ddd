@@ -93,12 +93,12 @@ export function ReservationEventSubscriptions(
   eventBus.subscribe(BOOK_VALIDATION_RESULT, async (event) => {
     try {
       logger.debug(
-        `Processing BookValidationResult event for reservation ${event.payload.reservationId}`,
+        `Processing BookValidationResult event for reservation ${event.payload.id}`,
       )
 
       // Also update the write model (reservation aggregate)
       await validateReservationHandler.execute(event, {
-        reservationId: event.payload.reservationId,
+        id: event.payload.id,
         isValid: event.payload.isValid,
         reason: event.payload.reason,
         retailPrice: event.payload.retailPrice,
@@ -197,7 +197,7 @@ export function ReservationEventSubscriptions(
       if (event.payload.bookBrought) {
         await bookBroughtHandler.execute({
           userId: event.payload.userId,
-          reservationId: event.payload.reservationId,
+          id: event.payload.id,
           lateFees: event.payload.lateFees,
           retailPrice: event.payload.retailPrice,
         })

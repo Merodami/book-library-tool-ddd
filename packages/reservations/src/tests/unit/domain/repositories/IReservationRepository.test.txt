@@ -59,10 +59,13 @@ describe('IReservationRepository', () => {
         mockEvents,
       )
 
-      const events = await mockRepository.getEventsForAggregate(mockid)
+      const events =
+        await mockRepository.getEventsForAggregate(mockid)
 
       expect(events).toEqual(mockEvents)
-      expect(mockRepository.getEventsForAggregate).toHaveBeenCalledWith(mockid)
+      expect(mockRepository.getEventsForAggregate).toHaveBeenCalledWith(
+        mockid,
+      )
     })
   })
 
@@ -104,10 +107,13 @@ describe('IReservationRepository', () => {
         mockReservation,
       )
 
-      const reservation = await mockRepository.returnReservation(mockid)
+      const reservation =
+        await mockRepository.returnReservation(mockid)
 
       expect(reservation.status).toBe(RESERVATION_STATUS.RETURNED)
-      expect(mockRepository.returnReservation).toHaveBeenCalledWith(mockid)
+      expect(mockRepository.returnReservation).toHaveBeenCalledWith(
+        mockid,
+      )
     })
   })
 

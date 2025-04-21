@@ -1,10 +1,6 @@
 import { schemas } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
 import { paginationHook } from '@book-library-tool/http'
-import {
-  ReservationRequest,
-  ReservationsHistoryQuery,
-} from '@book-library-tool/sdk'
 import { BookReturnHandler } from '@reservations/commands/BookReturnHandler.js'
 // Command (write) handlers:
 import { CreateReservationHandler } from '@reservations/commands/CreateReservationHandler.js'
@@ -59,7 +55,7 @@ export function createReservationRouter(
 
     // Routes configuration
     app.post<{
-      Body: ReservationRequest
+      Body: schemas.ReservationRequest
     }>(
       '/',
       {
@@ -68,41 +64,47 @@ export function createReservationRouter(
         },
       },
       async (request, reply) => {
-        await createReservationController.createReservation(request, reply)
+        const result =
+          await createReservationController.createReservation(request)
+
+        reply.code(200).send(result)
       },
     )
 
     app.get<{
-      Params: { userId: string }
-      Querystring: ReservationsHistoryQuery
+      Params: schemas.IdParameter
+      Querystring: schemas.ReservationsHistoryQuery
     }>(
       '/user/:userId',
       {
         onRequest: [paginationHook],
         schema: {
-          params: schemas.UserIdParameterSchema,
+          params: schemas.IdParameterSchema,
           querystring: schemas.ReservationsHistoryQuerySchema,
         },
       },
       async (request, reply) => {
-        await getReservationHistoryController.getReservationHistory(
-          request,
-          reply,
-        )
+        const result =
+          await getReservationHistoryController.getReservationHistory(request)
+
+        reply.code(200).send(result)
       },
     )
 
     app.patch<{
-      Params: { reservationId: string }
+      Params: schemas.IdParameter
     }>(
-      '/:reservationId/return',
+      '/:id/return',
       {
         schema: {
-          params: schemas.ReservationIdParameterSchema,
+          params: schemas.IdParameterSchema,
         },
       },
       async (request, reply) => {
-        await returnReservationController.returnReservation(request, reply)
+        const result =
+          await returnReservationController.returnReservation(request)
+
+        reply.code(200).send(result)
       },
     )
   }

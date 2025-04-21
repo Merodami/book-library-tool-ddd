@@ -57,31 +57,28 @@ export interface IReservationRepository {
   /**
    * Marks a reservation as returned.
    *
-   * @param reservationId - The ID of the reservation to return
+   * @param id - The ID of the reservation to return
    * @returns The updated reservation
    */
-  returnReservation(reservationId: string): Promise<Reservation>
+  returnReservation(id: string): Promise<Reservation>
 
   /**
    * Cancels a reservation.
    *
-   * @param reservationId - The ID of the reservation to cancel
+   * @param id - The ID of the reservation to cancel
    * @param reason - Optional reason for cancellation
    * @returns The updated reservation
    */
-  cancelReservation(
-    reservationId: string,
-    reason?: string,
-  ): Promise<Reservation>
+  cancelReservation(id: string, reason?: string): Promise<Reservation>
 
   /**
    * Gets a reservation by its ID for command operations.
    * This is used for loading the aggregate before modifying it.
    *
-   * @param reservationId - The ID of the reservation to retrieve
+   * @param id - The ID of the reservation to retrieve
    * @returns The reservation if found, null otherwise
    */
-  findById(reservationId: string): Promise<Reservation | null>
+  findById(id: string): Promise<Reservation | null>
 
   /**
    * Find active reservation by user and ISBN.

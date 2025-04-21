@@ -6,7 +6,7 @@ export interface BookBroughtCommand {
   /** The ID of the user making the purchase */
   userId: string
   /** The ID of the reservation being converted to a purchase */
-  reservationId: string
+  id: string
   /** The retail price of the book */
   retailPrice: number
   /** The total late fees accumulated */

@@ -30,6 +30,9 @@ export const ALLOWED_RESERVATION_SORT_FIELDS = [
   'dueDate',
   'status',
   'feeCharged',
+  'retailPrice',
+  'returnedAt',
+  'lateFee',
   'createdAt',
   'updatedAt',
   'deletedAt',
@@ -49,20 +52,7 @@ export type ReservationSortField =
 export const ReservationsHistoryQuerySchema = Type.Object(
   {
     userId: Type.Optional(Type.String({ format: 'uuid' })),
-    status: Type.Optional(
-      Type.Union([
-        Type.Literal(RESERVATION_STATUS.CREATED),
-        Type.Literal(RESERVATION_STATUS.BORROWED),
-        Type.Literal(RESERVATION_STATUS.RETURNED),
-        Type.Literal(RESERVATION_STATUS.LATE),
-        Type.Literal(RESERVATION_STATUS.BROUGHT),
-        Type.Literal(RESERVATION_STATUS.CANCELLED),
-        Type.Literal(RESERVATION_STATUS.PENDING_PAYMENT),
-        Type.Literal(RESERVATION_STATUS.RESERVED),
-        Type.Literal(RESERVATION_STATUS.REJECTED),
-        Type.Literal(RESERVATION_STATUS.RESERVATION_BOOK_LIMIT_REACH),
-      ]),
-    ),
+
     // Pagination and sort
     ...createPaginationAndSortSchema(ALLOWED_RESERVATION_SORT_FIELDS),
     // GraphQL fields selection
@@ -109,7 +99,7 @@ export const ReservationRequestRef = Type.Ref(
  */
 export const ReservationSchema = Type.Object(
   {
-    reservationId: Type.String({
+    id: Type.String({
       format: 'uuid',
       minLength: 1,
       pattern: '^(?!\\s*$).+',
@@ -138,6 +128,14 @@ export const ReservationSchema = Type.Object(
     }),
     feeCharged: Type.Number({ minimum: 0 }),
     retailPrice: Type.Optional(Type.Number({ minimum: 0 })),
+    returnedAt: Type.Optional(Type.String({ format: 'date-time' })),
+    lateFee: Type.Optional(Type.Number({ minimum: 0 })),
+    paymentReceived: Type.Optional(Type.Boolean()),
+    paymentAmount: Type.Optional(Type.Number({ minimum: 0 })),
+    paymentDate: Type.Optional(Type.String({ format: 'date-time' })),
+    paymentMethod: Type.Optional(Type.String()),
+    paymentReference: Type.Optional(Type.String()),
+    paymentFailReason: Type.Optional(Type.String()),
     createdAt: Type.Optional(Type.String({ format: 'date-time' })),
     updatedAt: Type.Optional(Type.String({ format: 'date-time' })),
     deletedAt: Type.Optional(Type.String({ format: 'date-time' })),

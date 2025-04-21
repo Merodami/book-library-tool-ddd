@@ -394,6 +394,7 @@ __metadata:
     fastify: "npm:^5.3.2"
     fastify-plugin: "npm:^5.0.1"
     jsonwebtoken: "npm:^9.0.2"
+    lodash-es: "npm:^4.17.21"
     typescript: "npm:^5.8.3"
   languageName: unknown
   linkType: soft

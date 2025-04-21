@@ -1,6 +1,5 @@
 import { schemas } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
-import { BookCreateRequest } from '@book-library-tool/sdk'
 import { CreateBookHandler } from '@books/commands/CreateBookHandler.js'
 import { DeleteBookHandler } from '@books/commands/DeleteBookHandler.js'
 import { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
@@ -68,14 +67,19 @@ export function createBookRouter(
      * @param {BookCreateRequest} req.body - Book creation data
      * @returns {Book} The created book
      */
-    fastify.post(
+    fastify.post<{
+      Body: schemas.BookCreateRequest
+    }>(
       '/',
       {
         schema: {
           body: schemas.BookCreateRequestSchema,
         },
       },
-      async (request: FastifyRequest<{ Body: BookCreateRequest }>, reply) => {
+      async (
+        request: FastifyRequest<{ Body: schemas.BookCreateRequest }>,
+        reply,
+      ) => {
         const result = await createBookController.createBook(request)
 
         reply.code(200).send(result)
@@ -91,7 +95,10 @@ export function createBookRouter(
      * @param {BookUpdateRequest} req.body - Book update data
      * @returns {Book} The updated book
      */
-    fastify.patch(
+    fastify.patch<{
+      Params: schemas.IdParameter
+      Body: Omit<UpdateBookCommand, 'id'>
+    }>(
       '/:id',
       {
         schema: {
@@ -120,7 +127,9 @@ export function createBookRouter(
      * @param {string} req.params.id - ID of the book to delete
      * @returns {void}
      */
-    fastify.delete(
+    fastify.delete<{
+      Params: schemas.IdParameter
+    }>(
       '/:id',
       {
         schema: {
@@ -145,7 +154,9 @@ export function createBookRouter(
      * @param {string} req.params.id - ID of the book to retrieve
      * @returns {Book} The requested book
      */
-    fastify.get(
+    fastify.get<{
+      Params: schemas.IdParameter
+    }>(
       '/:id',
       {
         schema: {

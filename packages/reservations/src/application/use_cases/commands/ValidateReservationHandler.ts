@@ -38,21 +38,17 @@ export class ValidateReservationHandler {
     command: ValidateReservationCommand,
   ): Promise<void> {
     try {
-      logger.debug(
-        `Processing validation for reservation ${command.reservationId}`,
-      )
+      logger.debug(`Processing validation for reservation ${command.id}`)
 
       // Load the reservation aggregate from event store
       const reservationEvents =
-        await this.reservationRepository.getEventsForAggregate(
-          command.reservationId,
-        )
+        await this.reservationRepository.getEventsForAggregate(command.id)
 
       if (!reservationEvents.length) {
         throw new Errors.ApplicationError(
           404,
           ErrorCode.RESERVATION_NOT_FOUND,
-          `Reservation with ID ${command.reservationId} not found`,
+          `Reservation with ID ${command.id} not found`,
         )
       }
 
@@ -91,11 +87,11 @@ export class ValidateReservationHandler {
       await this.processDomainActions(command, reservation, exceedsLimit)
 
       logger.info(
-        `Completed validation processing for reservation ${command.reservationId}`,
+        `Completed validation processing for reservation ${command.id}`,
       )
     } catch (error) {
       logger.error(
-        `Error processing validation for reservation ${command.reservationId}: ${error.message}`,
+        `Error processing validation for reservation ${command.id}: ${error.message}`,
       )
       throw error
     }
@@ -164,7 +160,7 @@ export class ValidateReservationHandler {
     // Set retail price if provided
     if (command.retailPrice && command.retailPrice > 0) {
       logger.debug(
-        `Setting retail price to ${command.retailPrice} for reservation ${reservation.reservationId}`,
+        `Setting retail price to ${command.retailPrice} for reservation ${reservation.id}`,
       )
 
       const priceResult = currentReservation.setRetailPrice(command.retailPrice)

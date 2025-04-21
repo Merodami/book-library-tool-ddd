@@ -92,18 +92,18 @@ export class ReservationRepository
   /**
    * Process a book return
    *
-   * @param reservationId - The ID of the reservation to return
+   * @param id - The ID of the reservation to return
    * @returns The updated reservation
    */
-  async returnReservation(reservationId: string): Promise<Reservation> {
+  async returnReservation(id: string): Promise<Reservation> {
     // Load the reservation aggregate
-    const reservation = await this.findById(reservationId)
+    const reservation = await this.findById(id)
 
     if (!reservation) {
       throw new Errors.ApplicationError(
         404,
         ErrorCode.RESERVATION_NOT_FOUND,
-        `Reservation with ID ${reservationId} not found`,
+        `Reservation with ID ${id} not found`,
       )
     }
 
@@ -130,22 +130,19 @@ export class ReservationRepository
   /**
    * Cancel a reservation
    *
-   * @param reservationId - The ID of the reservation to cancel
+   * @param id - The ID of the reservation to cancel
    * @param reason - Optional reason for cancellation
    * @returns The updated reservation
    */
-  async cancelReservation(
-    reservationId: string,
-    reason?: string,
-  ): Promise<Reservation> {
+  async cancelReservation(id: string, reason?: string): Promise<Reservation> {
     // Load the reservation aggregate
-    const reservation = await this.findById(reservationId)
+    const reservation = await this.findById(id)
 
     if (!reservation) {
       throw new Errors.ApplicationError(
         404,
         ErrorCode.RESERVATION_NOT_FOUND,
-        `Reservation with ID ${reservationId} not found`,
+        `Reservation with ID ${id} not found`,
       )
     }
 

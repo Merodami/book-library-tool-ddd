@@ -9,9 +9,10 @@ import { PaymentHandler } from '@reservations/commands/PaymentHandler.js'
 import { ValidateReservationHandler } from '@reservations/commands/ValidateReservationHandler.js'
 import { ReservationEventSubscriptions } from '@reservations/event-store/ReservationEventSubscriptions.js'
 import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
+import { ReservationDocument } from '@reservations/persistence/mongo/documents/ReservationDocument.js'
 import { ReservationProjectionRepository } from '@reservations/persistence/mongo/ReservationProjectionRepository.js'
 import { ReservationRepository } from '@reservations/persistence/mongo/ReservationRepository.js'
-import { createReservationRouter } from '@reservations/routes/reservations/createReservationRouter.js'
+import { createReservationRouter } from '@reservations/routes/reservations/ReservationRouter.js'
 
 async function startReservationService() {
   // Initialize the infrastructure service (database connection)
@@ -65,9 +66,11 @@ async function startReservationService() {
   // Instantiate the repository used for command (write) operations
   const reservationRepository = new ReservationRepository(dbService)
 
-  // Instantiate the repository used for query (read) operations: your projections
+  const reservationProjectionCollection =
+    dbService.getCollection<ReservationDocument>('reservation_projection')
+
   const reservationProjectionRepository = new ReservationProjectionRepository(
-    dbService,
+    reservationProjectionCollection,
   )
 
   // Set up event subscriptions to update read models (via the projection handler)

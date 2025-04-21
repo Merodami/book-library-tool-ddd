@@ -35,7 +35,7 @@ export class BookBroughtHandler {
    * 5. Persisting and publishing the event
    *
    * @param userId - The ID of the user making the purchase
-   * @param reservationId - The ID of the reservation being converted to a purchase
+   * @param id - The ID of the reservation being converted to a purchase
    * @returns Promise that resolves when the process is complete
    *
    * @throws {Error} If there are issues with event persistence or publishing
@@ -44,18 +44,16 @@ export class BookBroughtHandler {
   async execute(command: BookBroughtCommand): Promise<void> {
     try {
       logger.info(
-        `Processing book purchase via late fee for reservation ${command.reservationId}`,
+        `Processing book purchase via late fee for reservation ${command.id}`,
       )
 
       // Retrieve events for the reservation
       const reservationEvents =
-        await this.reservationRepository.getEventsForAggregate(
-          command.reservationId,
-        )
+        await this.reservationRepository.getEventsForAggregate(command.id)
 
       if (!reservationEvents.length) {
         logger.error(
-          `Reservation with ID ${command.reservationId} not found for late fee purchase`,
+          `Reservation with ID ${command.id} not found for late fee purchase`,
         )
 
         return
@@ -67,7 +65,7 @@ export class BookBroughtHandler {
       // Verify the user matches (extra security check)
       if (reservation.userId !== command.userId) {
         logger.error(
-          `User mismatch for reservation ${command.reservationId}: expected ${reservation.userId}, got ${command.userId}`,
+          `User mismatch for reservation ${command.id}: expected ${reservation.userId}, got ${command.userId}`,
         )
 
         return
@@ -87,7 +85,7 @@ export class BookBroughtHandler {
       await this.eventBus.publish(result.event)
 
       logger.info(
-        `Book marked as brought via purchase for reservation ${command.reservationId}`,
+        `Book marked as brought via purchase for reservation ${command.id}`,
       )
     } catch (error) {
       logger.error(

@@ -19,7 +19,7 @@ describe('IReservationProjectionRepository', () => {
 
   const mockUserId = 'user-123'
   const mockIsbn = '978-3-16-148410-0'
-  const mockId = '9b9b9b9b-9b9b-9b9b-9b9b-9b9b9b9b9b9b'
+  const mockid = 'reservation-123'
   const { reservation: mockReservation } = Reservation.create({
     userId: mockUserId,
     isbn: mockIsbn,
@@ -56,15 +56,13 @@ describe('IReservationProjectionRepository', () => {
         mockPaginatedResult,
       )
 
-      const result = await mockRepository.getUserReservations({
-        userId: mockUserId,
-      })
+      const result = await mockRepository.getUserReservations(mockUserId)
 
       expect(result.data).toHaveLength(1)
       expect(result.data[0]).toEqual(mockSDKReservation)
-      expect(mockRepository.getUserReservations).toHaveBeenCalledWith({
-        userId: mockUserId,
-      })
+      expect(mockRepository.getUserReservations).toHaveBeenCalledWith(
+        mockUserId,
+      )
     })
   })
 
@@ -74,10 +72,13 @@ describe('IReservationProjectionRepository', () => {
         mockSDKReservation,
       )
 
-      const reservation = await mockRepository.getReservationById(mockId)
+      const reservation =
+        await mockRepository.getReservationById(mockid)
 
       expect(reservation).toEqual(mockSDKReservation)
-      expect(mockRepository.getReservationById).toHaveBeenCalledWith(mockId)
+      expect(mockRepository.getReservationById).toHaveBeenCalledWith(
+        mockid,
+      )
     })
 
     it('should return null when reservation is not found', async () => {
@@ -100,9 +101,7 @@ describe('IReservationProjectionRepository', () => {
 
       expect(result.data).toHaveLength(1)
       expect(result.data[0]).toEqual(mockSDKReservation)
-      expect(mockRepository.getBookReservations).toHaveBeenCalledWith({
-        isbn: mockIsbn,
-      })
+      expect(mockRepository.getBookReservations).toHaveBeenCalledWith(mockIsbn)
     })
   })
 

@@ -1,5 +1,12 @@
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { Collection, Document, Filter } from 'mongodb'
+import { pick } from 'lodash-es'
+import {
+  Collection,
+  Document,
+  Filter,
+  ObjectId,
+  OptionalUnlessRequiredId,
+} from 'mongodb'
 
 import { buildProjection } from './projectionUtils.js'
 
@@ -142,5 +149,64 @@ export abstract class BaseProjectionRepository<
     const completeFilter = this.buildCompleteFilter(filter)
 
     return this.collection.countDocuments(completeFilter)
+  }
+
+  /**
+   * Generic method to save a projection document
+   * @param dtoData - DTO to save
+   * @param mapToDocument - Function to map DTO to document
+   */
+  protected async saveProjection(
+    dtoData: TDto,
+    mapToDocument: (dto: TDto) => Omit<TDocument, '_id'>,
+  ): Promise<void> {
+    const doc = mapToDocument(dtoData)
+
+    await this.collection.insertOne({
+      ...doc,
+      _id: new ObjectId(),
+    } as OptionalUnlessRequiredId<TDocument>)
+  }
+
+  /**
+   * Generic method to update specific fields of a projection
+   * @param id - Document ID
+   * @param changes - Partial changes to apply
+   * @param allowedFields - Array of field names that are allowed to be updated
+   * @param updatedAt - Update timestamp
+   * @param errorCode - Error code to use if document not found
+   * @param errorMessage - Error message to use if document not found
+   */
+  protected async updateProjection<T extends TDto>(
+    id: string,
+    changes: Partial<T>,
+    allowedFields: Array<keyof T>,
+    updatedAt: Date | string,
+    errorCode: string,
+    errorMessage: string,
+  ): Promise<void> {
+    const picked = pick(changes, allowedFields)
+
+    // Create an object that will be compatible with MongoDB's typing
+    const setFields: Partial<Record<string, unknown>> = {
+      ...picked,
+      updatedAt: updatedAt instanceof Date ? updatedAt : new Date(updatedAt),
+    }
+
+    if (Object.keys(setFields).length === 0) {
+      return
+    }
+
+    // Create a filter object and use a type predicate to ensure it's properly typed
+    const idFilter: Record<string, unknown> = { id }
+    const filter = this.buildCompleteFilter(idFilter as Filter<TDocument>)
+
+    const result = await this.collection.updateOne(filter, {
+      $set: setFields as Partial<TDocument>,
+    })
+
+    if (result.matchedCount === 0) {
+      throw new Errors.ApplicationError(404, errorCode, errorMessage)
+    }
   }
 }

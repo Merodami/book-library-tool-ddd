@@ -30,7 +30,9 @@ export function createCatalogRouter(
      * @param {CatalogSearchQuery} req.query - Optional search parameters and fields to return
      * @returns {PaginatedResult<BookDTO>} List of books matching the search criteria
      */
-    fastify.get(
+    fastify.get<{
+      Querystring: schemas.CatalogSearchQuery
+    }>(
       '/',
       {
         onRequest: [paginationHook],
@@ -38,7 +40,10 @@ export function createCatalogRouter(
           querystring: schemas.CatalogSearchQuerySchema,
         },
       },
-      async (request: FastifyRequest, reply) => {
+      async (
+        request: FastifyRequest<{ Querystring: schemas.CatalogSearchQuery }>,
+        reply,
+      ) => {
         const result = await catalogController.getAllBooks(request)
 
         reply.code(200).send(result)

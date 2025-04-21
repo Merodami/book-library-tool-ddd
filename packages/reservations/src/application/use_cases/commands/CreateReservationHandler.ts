@@ -3,12 +3,12 @@ import {
   type EventBus,
   RESERVATION_BOOK_VALIDATION,
 } from '@book-library-tool/event-store'
-import type { ReservationRequest } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Reservation } from '@reservations/entities/Reservation.js'
 import { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
 import { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
+import { CreateReservationCommand } from '@reservations/use_cases/commands/CreateReservationCommand.js'
 
 /**
  * Handles the creation of new reservations.
@@ -27,7 +27,7 @@ export class CreateReservationHandler {
    * @param command - The reservation request data
    * @returns The ID of the newly created reservation
    */
-  async execute(command: ReservationRequest): Promise<void> {
+  async execute(command: CreateReservationCommand): Promise<void> {
     // Validate command data
     if (!command.userId || !command.isbn) {
       throw new Errors.ApplicationError(
@@ -38,13 +38,13 @@ export class CreateReservationHandler {
     }
 
     // Check if user already has an active reservation for this book
-    const existingReservation =
+    const exiting =
       await this.reservationProjectionRepository.getBookReservations(
         command.isbn,
-        command.userId,
+        ['userId'],
       )
 
-    if (existingReservation.data.length > 0) {
+    if (exiting.data.length > 0) {
       throw new Errors.ApplicationError(
         409,
         ErrorCode.RESERVATION_ALREADY_EXISTS,
@@ -69,7 +69,7 @@ export class CreateReservationHandler {
       eventType: RESERVATION_BOOK_VALIDATION,
       aggregateId: reservation.id,
       payload: {
-        reservationId: reservation.id,
+        id: reservation.id,
         isbn: command.isbn,
       },
       timestamp: new Date(),

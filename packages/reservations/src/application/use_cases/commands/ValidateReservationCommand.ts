@@ -3,7 +3,7 @@
  */
 export interface ValidateReservationCommand {
   /** The ID of the reservation to validate */
-  reservationId: string
+  id: string
   /** Whether the reservation is valid */
   isValid: boolean
   /** Optional reason for validation failure */
