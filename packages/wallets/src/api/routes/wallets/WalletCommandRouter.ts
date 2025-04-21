@@ -33,7 +33,7 @@ export function createWalletCommandRouter(
       '/:userId/balance',
       {
         schema: {
-          params: schemas.IdParameterSchema,
+          params: schemas.UserIdParameterSchema,
           body: schemas.WalletBalanceRequestSchema,
         },
       },

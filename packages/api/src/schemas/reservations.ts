@@ -103,38 +103,46 @@ export const ReservationRequestRef = Type.Ref(
  */
 export const ReservationSchema = Type.Object(
   {
-    id: Type.String({
-      format: 'uuid',
-      minLength: 1,
-      pattern: '^(?!\\s*$).+',
-    }),
-    userId: Type.String({
-      format: 'uuid',
-      minLength: 1,
-      pattern: '^(?!\\s*$).+',
-    }),
-    bookId: Type.String({
-      format: 'uuid',
-      minLength: 1,
-      pattern: '^(?!\\s*$).+',
-    }),
-    reservedAt: Type.String({ format: 'date-time' }),
-    dueDate: Type.String({ format: 'date-time' }),
-    status: Type.String({
-      enum: [
-        RESERVATION_STATUS.CREATED,
-        RESERVATION_STATUS.BORROWED,
-        RESERVATION_STATUS.RETURNED,
-        RESERVATION_STATUS.LATE,
-        RESERVATION_STATUS.BROUGHT,
-        RESERVATION_STATUS.CANCELLED,
-        RESERVATION_STATUS.PENDING_PAYMENT,
-        RESERVATION_STATUS.RESERVED,
-        RESERVATION_STATUS.REJECTED,
-        RESERVATION_STATUS.RESERVATION_BOOK_LIMIT_REACH,
-      ],
-    }),
-    feeCharged: Type.Number({ minimum: 0 }),
+    id: Type.Optional(
+      Type.String({
+        format: 'uuid',
+        minLength: 1,
+        pattern: '^(?!\\s*$).+',
+      }),
+    ),
+    userId: Type.Optional(
+      Type.String({
+        format: 'uuid',
+        minLength: 1,
+        pattern: '^(?!\\s*$).+',
+      }),
+    ),
+    bookId: Type.Optional(
+      Type.String({
+        format: 'uuid',
+        minLength: 1,
+        pattern: '^(?!\\s*$).+',
+      }),
+    ),
+    reservedAt: Type.Optional(Type.String({ format: 'date-time' })),
+    dueDate: Type.Optional(Type.String({ format: 'date-time' })),
+    status: Type.Optional(
+      Type.String({
+        enum: [
+          RESERVATION_STATUS.CREATED,
+          RESERVATION_STATUS.BORROWED,
+          RESERVATION_STATUS.RETURNED,
+          RESERVATION_STATUS.LATE,
+          RESERVATION_STATUS.BROUGHT,
+          RESERVATION_STATUS.CANCELLED,
+          RESERVATION_STATUS.PENDING_PAYMENT,
+          RESERVATION_STATUS.RESERVED,
+          RESERVATION_STATUS.REJECTED,
+          RESERVATION_STATUS.RESERVATION_BOOK_LIMIT_REACH,
+        ],
+      }),
+    ),
+    feeCharged: Type.Optional(Type.Number({ minimum: 0 })),
     retailPrice: Type.Optional(Type.Number({ minimum: 0 })),
     returnedAt: Type.Optional(Type.String({ format: 'date-time' })),
     lateFee: Type.Optional(Type.Number({ minimum: 0 })),
@@ -150,7 +158,7 @@ export const ReservationSchema = Type.Object(
   },
   { $id: '#/components/schemas/Reservation' },
 )
-export type ReservationDTO = Static<typeof ReservationSchema>
+export type Reservation = Static<typeof ReservationSchema>
 export const ReservationRef = Type.Ref('#/components/schemas/Reservation')
 
 /**

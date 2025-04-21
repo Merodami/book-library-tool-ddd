@@ -90,7 +90,7 @@ export function BookEventSubscriptions(
       try {
         // Process the validation request and get the result event
         const validationResultEvent =
-          await projectionHandler.handleReservationValidateBook(event)
+          await projectionHandler.handleValidateBook(event)
 
         // Publish the validation result
         await eventBus.publish(validationResultEvent)

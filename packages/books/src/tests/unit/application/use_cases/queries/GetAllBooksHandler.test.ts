@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 describe('GetAllBooksHandler', () => {
   let mockProjectionRepository: IBookProjectionRepository
   let handler: GetAllBooksHandler
-  let mockBooks: schemas.BookDTO[]
-  let mockPaginatedResponse: schemas.PaginatedResult<schemas.BookDTO>
+  let mockBooks: schemas.Book[]
+  let mockPaginatedResponse: schemas.PaginatedResult<schemas.Book>
 
   const validQuery: schemas.CatalogSearchQuery = {
     title: 'Test Book',
@@ -40,7 +40,7 @@ describe('GetAllBooksHandler', () => {
         price: 29.99,
         createdAt: '2023-01-01T00:00:00.000Z',
       },
-    ] as schemas.BookDTO[]
+    ] as schemas.Book[]
 
     mockPaginatedResponse = {
       data: mockBooks,

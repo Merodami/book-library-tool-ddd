@@ -27,7 +27,7 @@ export class GetReservationHistoryController {
       Params: schemas.IdParameter
       Querystring: schemas.ReservationsHistoryQuery
     }>,
-  ): Promise<schemas.PaginatedResult<schemas.ReservationDTO>> {
+  ): Promise<schemas.PaginatedResult<schemas.Reservation>> {
     const query = request.query as schemas.ReservationsHistoryQuery
 
     const validFields = parseAndValidate<schemas.ReservationSortField>(

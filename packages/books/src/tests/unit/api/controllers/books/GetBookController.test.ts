@@ -1,4 +1,4 @@
-import { Book as BookDTO } from '@book-library-tool/sdk'
+import { Book as Book } from '@book-library-tool/sdk'
 import { GetBookController } from '@books/controllers/books/GetBookController.js'
 import { GetBookHandler } from '@books/queries/GetBookHandler.js'
 import { FastifyRequest } from 'fastify'
@@ -27,7 +27,7 @@ describe('GetBookController', () => {
 
   // Sample book ID and mock book data
   const bookId = 'test-id-123'
-  const mockBook: BookDTO = {
+  const mockBook: Book = {
     id: bookId,
     isbn: '978-3-16-148410-0',
     title: 'Test Book',

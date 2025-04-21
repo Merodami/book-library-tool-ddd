@@ -99,25 +99,23 @@ export class BookProjectionHandler {
    * @param event - The domain event containing the reservation validation request
    * @returns A domain event containing the validation result
    */
-  async handleReservationValidateBook(
-    event: DomainEvent,
-  ): Promise<DomainEvent> {
+  async handleValidateBook(event: DomainEvent): Promise<DomainEvent> {
     // Extract information from the event
-    const { reservationId, isbn } = event.payload
+    const { reservationId, bookId } = event.payload
 
     // Check if the book exists in the projection table
-    const book = await this.projectionRepository.findBookForReservation(isbn)
+    const book = await this.projectionRepository.getBookById(bookId)
 
     // Create the validation result event
     const validationResultEvent: DomainEvent = {
       eventType: BOOK_VALIDATION_RESULT,
-      aggregateId: isbn,
+      aggregateId: bookId,
       version: 1,
       schemaVersion: 1,
       timestamp: new Date(),
       payload: {
         reservationId,
-        isbn,
+        bookId,
         isValid: !!book,
         reason: book ? null : ErrorCode.BOOK_NOT_FOUND,
         retailPrice: book ? book.price : null,

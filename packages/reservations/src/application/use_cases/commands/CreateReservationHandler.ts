@@ -42,12 +42,11 @@ export class CreateReservationHandler {
 
     // Check if user already has an active reservation for this book
     const exiting =
-      await this.reservationProjectionRepository.getBookReservations(
+      await this.reservationProjectionRepository.countActiveReservationsByUser(
         command.bookId,
-        ['userId'],
       )
 
-    if (exiting.data.length > 0) {
+    if (exiting > 0) {
       throw new Errors.ApplicationError(
         409,
         ErrorCode.RESERVATION_ALREADY_EXISTS,
@@ -72,7 +71,7 @@ export class CreateReservationHandler {
       eventType: RESERVATION_BOOK_VALIDATION,
       aggregateId: reservation.id,
       payload: {
-        id: reservation.id,
+        reservationId: reservation.id,
         bookId: command.bookId,
       },
       timestamp: new Date(),

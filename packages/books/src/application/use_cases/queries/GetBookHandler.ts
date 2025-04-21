@@ -18,7 +18,7 @@ export class GetBookHandler {
   async execute(
     command: GetBookQuery,
     fields?: schemas.BookSortField[],
-  ): Promise<schemas.BookDTO> {
+  ): Promise<schemas.Book> {
     try {
       const book = await this.projectionRepository.getBookById(
         command.id,

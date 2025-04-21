@@ -6,7 +6,7 @@ import { vi } from 'vitest'
 /**
  * Sample books for testing. You can customize this as needed.
  */
-export const sampleBooks: schemas.BookDTO[] = [
+export const sampleBooks: schemas.Book[] = [
   {
     id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
     isbn: '978-3-16-148410-0',
@@ -50,7 +50,7 @@ export const sampleBooks: schemas.BookDTO[] = [
  * @returns A mock repository that implements IBookProjectionRepository
  */
 export function createMockBookProjectionRepository(
-  customBooks?: schemas.BookDTO[],
+  customBooks?: schemas.Book[],
 ): IBookProjectionRepository {
   const books = customBooks || sampleBooks
 
@@ -134,8 +134,8 @@ export function createMockBookProjectionRepository(
           // Apply sorting if specified
           if (query.sortBy && query.sortOrder) {
             filteredBooks.sort((a, b) => {
-              const fieldA = a[query.sortBy as keyof schemas.BookDTO]
-              const fieldB = b[query.sortBy as keyof schemas.BookDTO]
+              const fieldA = a[query.sortBy as keyof schemas.Book]
+              const fieldB = b[query.sortBy as keyof schemas.Book]
 
               if (fieldA === undefined || fieldB === undefined) {
                 return 0
@@ -181,22 +181,21 @@ export function createMockBookProjectionRepository(
                 ),
               )
 
-              return pick(book, validFields) as schemas.BookDTO
+              return pick(book, validFields) as schemas.Book
             })
           }
 
-          const mockPaginatedResponse: schemas.PaginatedResult<schemas.BookDTO> =
-            {
-              data: resultBooks,
-              pagination: {
-                total: filteredBooks.length,
-                page: page,
-                limit: limit,
-                pages: Math.ceil(filteredBooks.length / limit),
-                hasNext: skip + limit < filteredBooks.length,
-                hasPrev: page > 1,
-              },
-            }
+          const mockPaginatedResponse: schemas.PaginatedResult<schemas.Book> = {
+            data: resultBooks,
+            pagination: {
+              total: filteredBooks.length,
+              page: page,
+              limit: limit,
+              pages: Math.ceil(filteredBooks.length / limit),
+              hasNext: skip + limit < filteredBooks.length,
+              hasPrev: page > 1,
+            },
+          }
 
           return mockPaginatedResponse
         },
@@ -214,7 +213,7 @@ export function createMockBookProjectionRepository(
             schemas.ALLOWED_BOOK_FIELDS.includes(field as schemas.BookField),
           )
 
-          return pick(book, validFields) as schemas.BookDTO
+          return pick(book, validFields) as schemas.Book
         }
 
         return book
@@ -232,7 +231,7 @@ export function createMockBookProjectionRepository(
             schemas.ALLOWED_BOOK_FIELDS.includes(field as schemas.BookField),
           )
 
-          return pick(book, validFields) as schemas.BookDTO
+          return pick(book, validFields) as schemas.Book
         }
 
         return book
@@ -240,7 +239,7 @@ export function createMockBookProjectionRepository(
 
     saveBookProjection: vi
       .fn()
-      .mockImplementation(async (bookProjection: schemas.BookDTO) => {
+      .mockImplementation(async (bookProjection: schemas.Book) => {
         // Mock implementation just records the call
         return Promise.resolve()
       }),
@@ -252,7 +251,7 @@ export function createMockBookProjectionRepository(
           id: string,
           changes: Partial<
             Pick<
-              schemas.BookDTO,
+              schemas.Book,
               | 'title'
               | 'author'
               | 'publicationYear'

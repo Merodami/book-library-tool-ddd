@@ -1,0 +1,49 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      // API
+      "@orchestrator/controllers/*": ["src/api/controllers/*"],
+      "@orchestrator/routes/*": ["src/api/routes/*"],
+
+      // Application
+      "@orchestrator/dto/*": ["src/application/dtos/*"],
+      "@orchestrator/use_cases/*": ["src/application/use_cases/*"],
+      "@orchestrator/commands/*": ["src/application/use_cases/commands/*"],
+      "@orchestrator/queries/*": ["src/application/use_cases/queries/*"],
+
+      // Domain
+      "@orchestrator/entities/*": ["src/domain/entities/*"],
+      "@orchestrator/repositories/*": ["src/domain/repositories/*"],
+      "@orchestrator/value_objects/*": ["src/domain/value_objects/*"],
+
+      // Infrastructure
+      "@orchestrator/database/*": ["src/infrastructure/database/*"],
+      "@orchestrator/persistence/*": ["src/infrastructure/persistence/*"],
+      "@orchestrator/event-store/*": ["src/infrastructure/event-store/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["dist", "../../node_modules", "node_modules"],
+  "references": [
+    {
+      "path": "../api"
+    },
+    {
+      "path": "../database"
+    },
+    {
+      "path": "../auth"
+    },
+    {
+      "path": "../shared"
+    }
+  ]
+}

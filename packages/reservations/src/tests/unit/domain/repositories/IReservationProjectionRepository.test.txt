@@ -11,7 +11,7 @@ describe('IReservationProjectionRepository', () => {
   const mockRepository = {
     getUserReservations: vi.fn(),
     getReservationById: vi.fn(),
-    getBookReservations: vi.fn(),
+    getReservationsByBookId: vi.fn(),
     getActiveBookReservations: vi.fn(),
     getReservationsByStatus: vi.fn(),
     countActiveReservationsByUser: vi.fn(),
@@ -91,17 +91,17 @@ describe('IReservationProjectionRepository', () => {
     })
   })
 
-  describe('getBookReservations', () => {
+  describe('getReservationsByBookId', () => {
     it('should get all reservations for a book', async () => {
-      vi.mocked(mockRepository.getBookReservations).mockResolvedValue(
+      vi.mocked(mockRepository.getReservationsByBookId).mockResolvedValue(
         mockPaginatedResult,
       )
 
-      const result = await mockRepository.getBookReservations(mockIsbn)
+      const result = await mockRepository.getReservationsByBookId(mockIsbn)
 
       expect(result.data).toHaveLength(1)
       expect(result.data[0]).toEqual(mockSDKReservation)
-      expect(mockRepository.getBookReservations).toHaveBeenCalledWith(mockIsbn)
+      expect(mockRepository.getReservationsByBookId).toHaveBeenCalledWith(mockIsbn)
     })
   })
 

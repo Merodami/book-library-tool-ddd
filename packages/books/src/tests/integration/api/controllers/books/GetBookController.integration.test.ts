@@ -15,7 +15,7 @@ beforeAll(() => {
   vi.spyOn(logger, 'warn').mockImplementation(() => {})
 })
 
-// Define a full sample BookDTO
+// Define a full sample Book
 const fullBook: Book = {
   id: 'book-123',
   isbn: '978-3-16-148410-0',

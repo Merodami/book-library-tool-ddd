@@ -3,7 +3,6 @@ import {
   BaseProjectionRepository,
   convertDateStrings,
 } from '@book-library-tool/database'
-import type { Reservation as ReservationDTO } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
@@ -12,70 +11,12 @@ import { Collection, Filter } from 'mongodb'
 import type { ReservationDocument } from './documents/ReservationDocument.js'
 
 /**
- * Transform a MongoDB document into a ReservationDTO.
- * Serializes dates to ISO strings.
- */
-function mapToDomain(doc: Partial<ReservationDocument>): ReservationDTO {
-  return {
-    id: doc.id!,
-    userId: doc.userId!,
-    bookId: doc.bookId!,
-    status: doc.status as RESERVATION_STATUS,
-    createdAt: doc.createdAt!.toISOString(),
-    reservedAt: doc.reservedAt!.toISOString(),
-    dueDate: doc.dueDate!.toISOString(),
-    feeCharged: doc.feeCharged!,
-    retailPrice: doc.retailPrice,
-    updatedAt: doc.updatedAt?.toISOString() ?? undefined,
-    deletedAt: doc.deletedAt?.toISOString() ?? undefined,
-  }
-}
-
-/**
- * Transform a ReservationDTO into a MongoDB document.
- * Converts ISO strings back to Date.
- */
-function mapToDocument(
-  res: schemas.ReservationDTO,
-): Omit<ReservationDocument, '_id'> {
-  if (!res.id || !res.userId || !res.bookId) {
-    throw new Errors.ApplicationError(
-      400,
-      ErrorCode.VALIDATION_ERROR,
-      'Missing required id, userId, or bookId',
-    )
-  }
-
-  const dates = convertDateStrings({
-    createdAt: res.createdAt,
-    reservedAt: res.reservedAt,
-    dueDate: res.dueDate,
-    updatedAt: res.updatedAt,
-    deletedAt: res.deletedAt,
-  } as Record<string, unknown>) as Record<string, Date | undefined>
-
-  return {
-    id: res.id,
-    userId: res.userId,
-    bookId: res.bookId,
-    status: res.status,
-    createdAt: dates.createdAt ?? new Date(),
-    reservedAt: dates.reservedAt!,
-    dueDate: dates.dueDate!,
-    feeCharged: res.feeCharged,
-    retailPrice: res.retailPrice ?? 0,
-    updatedAt: dates.updatedAt,
-    deletedAt: dates.deletedAt,
-  }
-}
-
-/**
  * MongoDB-based Reservation projection repository.
  * Leverages BaseProjectionRepository for standard reads,
  * and provides versioned or generic update methods.
  */
 export class ReservationProjectionRepository
-  extends BaseProjectionRepository<ReservationDocument, schemas.ReservationDTO>
+  extends BaseProjectionRepository<ReservationDocument, schemas.Reservation>
   implements IReservationProjectionRepository
 {
   constructor(collection: Collection<ReservationDocument>) {
@@ -139,7 +80,7 @@ export class ReservationProjectionRepository
   async getUserReservations(
     query: schemas.ReservationsHistoryQuery,
     fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.ReservationDTO>> {
+  ): Promise<schemas.PaginatedResult<schemas.Reservation>> {
     // Build filter from search criteria
     const filter: Filter<ReservationDocument> = { userId: query.userId }
 
@@ -184,62 +125,12 @@ export class ReservationProjectionRepository
   async getReservationById(
     id: string,
     fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.ReservationDTO | null> {
+  ): Promise<schemas.Reservation | null> {
     return this.findOne(
       { id } as Filter<ReservationDocument>,
       fields,
       `Reservation ${id}`,
     )
-  }
-
-  /**
-   * Get reservations for a book with optional filters, paginated.
-   * @param bookId - Book ID
-   * @param fields - Optional fields to include in results
-   * @returns Paginated response containing domain Reservation objects
-   */
-  async getBookReservations(
-    bookId: string,
-    fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.ReservationDTO>> {
-    // Build filter from search criteria
-    const filter: Filter<ReservationDocument> = { bookId }
-
-    // Set status filter for active reservations
-    filter.status = {
-      $in: [RESERVATION_STATUS.RESERVED, RESERVATION_STATUS.BORROWED],
-    }
-
-    // Count total before pagination
-    const total = await this.count(filter)
-
-    // Prepare pagination values
-    const skip = 0
-    const limit = 10
-    const page = 1
-    const pages = Math.ceil(total / limit)
-
-    // Use base class to perform the query
-    const data = await this.findMany(filter, {
-      skip,
-      limit,
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-      fields,
-    })
-
-    // Return data with pagination metadata
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages,
-        hasNext: page < pages,
-        hasPrev: page > 1,
-      },
-    }
   }
 
   /**
@@ -251,7 +142,7 @@ export class ReservationProjectionRepository
   async getActiveBookReservations(
     bookId: string,
     fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.ReservationDTO[]> {
+  ): Promise<schemas.Reservation[]> {
     return this.findMany(
       {
         bookId,
@@ -278,7 +169,7 @@ export class ReservationProjectionRepository
   async getReservationsByStatus(
     status: RESERVATION_STATUS,
     fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.ReservationDTO>> {
+  ): Promise<schemas.PaginatedResult<schemas.Reservation>> {
     // Build filter from status
     const filter: Filter<ReservationDocument> = { status }
 
@@ -328,6 +219,7 @@ export class ReservationProjectionRepository
           RESERVATION_STATUS.RESERVED,
           RESERVATION_STATUS.BORROWED,
           RESERVATION_STATUS.PENDING_PAYMENT,
+          RESERVATION_STATUS.BORROWED,
         ],
       },
     })
@@ -337,7 +229,7 @@ export class ReservationProjectionRepository
    * Insert a new reservation with a generated _id.
    * @param res - Reservation DTO to save
    */
-  async saveReservationProjection(res: schemas.ReservationDTO): Promise<void> {
+  async saveReservationProjection(res: schemas.Reservation): Promise<void> {
     await this.saveProjection(res, mapToDocument)
   }
 
@@ -351,19 +243,19 @@ export class ReservationProjectionRepository
     id: string,
     changes: Partial<
       Pick<
-        schemas.ReservationDTO,
+        schemas.Reservation,
         'status' | 'feeCharged' | 'retailPrice' | 'reservedAt' | 'dueDate'
       >
     >,
     updatedAt: Date | string,
   ): Promise<void> {
     const allowedFields = [...schemas.ALLOWED_RESERVATION_FIELDS] as Array<
-      keyof schemas.ReservationDTO
+      keyof schemas.Reservation
     >
 
     await super.updateProjection(
       id,
-      changes as Partial<schemas.ReservationDTO>,
+      changes as Partial<schemas.Reservation>,
       allowedFields,
       updatedAt,
       ErrorCode.RESERVATION_NOT_FOUND,
@@ -406,7 +298,7 @@ export class ReservationProjectionRepository
    */
   async updateReservationReturned(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
     version: number,
   ): Promise<void> {
     await this.applyVersionedUpdate(id, updates as any, version)
@@ -420,7 +312,7 @@ export class ReservationProjectionRepository
    */
   async updateReservationCancelled(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
     version: number,
   ): Promise<void> {
     await this.applyVersionedUpdate(id, updates as any, version)
@@ -434,7 +326,7 @@ export class ReservationProjectionRepository
    */
   async updateReservationOverdue(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
     version: number,
   ): Promise<void> {
     await this.applyVersionedUpdate(id, updates as any, version)
@@ -448,7 +340,7 @@ export class ReservationProjectionRepository
    */
   async updateReservationPaymentSuccess(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
     version: number,
   ): Promise<void> {
     await this.applyVersionedUpdate(id, updates as any, version)
@@ -481,7 +373,7 @@ export class ReservationProjectionRepository
    */
   async updateReservationPaymentDeclined(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
   ): Promise<{ matchedCount: number }> {
     return {
       matchedCount: await this.applySimpleUpdate(id, updates as any, {
@@ -497,7 +389,7 @@ export class ReservationProjectionRepository
    */
   async updateReservationValidationResult(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
   ): Promise<void> {
     await this.applySimpleUpdate(id, updates as any, {
       warnMessage: `No reservation "${id}" for validation result`,
@@ -558,5 +450,66 @@ export class ReservationProjectionRepository
       },
       { $set: { bookDeleted: true, updatedAt: timestamp } },
     )
+  }
+}
+
+/**
+ * Transform a MongoDB document into a Reservation.
+ * Serializes dates to ISO strings.
+ */
+function mapToDomain(doc: Partial<ReservationDocument>): schemas.Reservation {
+  const result: schemas.Reservation = {}
+
+  // Map fields only if they exist in the document
+  if ('id' in doc) result.id = doc.id
+  if ('userId' in doc) result.userId = doc.userId
+  if ('bookId' in doc) result.bookId = doc.bookId
+  if ('status' in doc) result.status = doc.status as RESERVATION_STATUS
+  if ('createdAt' in doc) result.createdAt = doc.createdAt?.toISOString()
+  if ('reservedAt' in doc) result.reservedAt = doc.reservedAt?.toISOString()
+  if ('dueDate' in doc) result.dueDate = doc.dueDate?.toISOString()
+  if ('feeCharged' in doc) result.feeCharged = doc.feeCharged
+  if ('retailPrice' in doc) result.retailPrice = doc.retailPrice
+  if ('updatedAt' in doc) result.updatedAt = doc.updatedAt?.toISOString()
+  if ('deletedAt' in doc) result.deletedAt = doc.deletedAt?.toISOString()
+
+  return result
+}
+
+/**
+ * Transform a Reservation into a MongoDB document.
+ * Converts ISO strings back to Date.
+ */
+function mapToDocument(
+  res: schemas.Reservation,
+): Omit<ReservationDocument, '_id'> {
+  if (!res.id || !res.userId || !res.bookId || !res.status) {
+    throw new Errors.ApplicationError(
+      400,
+      ErrorCode.VALIDATION_ERROR,
+      'Missing required id, userId, or bookId',
+    )
+  }
+
+  const dates = convertDateStrings({
+    createdAt: res.createdAt,
+    reservedAt: res.reservedAt,
+    dueDate: res.dueDate,
+    updatedAt: res.updatedAt,
+    deletedAt: res.deletedAt,
+  } as Record<string, unknown>) as Record<string, Date | undefined>
+
+  return {
+    id: res.id,
+    userId: res.userId,
+    bookId: res.bookId,
+    status: res.status,
+    createdAt: dates.createdAt ?? new Date(),
+    reservedAt: dates.reservedAt!,
+    dueDate: dates.dueDate!,
+    feeCharged: res.feeCharged ?? 0,
+    retailPrice: res.retailPrice ?? 0,
+    updatedAt: dates.updatedAt,
+    deletedAt: dates.deletedAt,
   }
 }

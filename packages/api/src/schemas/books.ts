@@ -121,5 +121,5 @@ export const BookSchema = Type.Object(
   },
   { $id: '#/components/schemas/Book' },
 )
-export type BookDTO = Static<typeof BookSchema>
+export type Book = Static<typeof BookSchema>
 export const BookRef = Type.Ref('#/components/schemas/Book')

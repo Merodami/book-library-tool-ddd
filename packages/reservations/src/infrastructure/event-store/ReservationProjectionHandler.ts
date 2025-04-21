@@ -170,7 +170,7 @@ export class ReservationProjectionHandler {
    * @param event - The BookValidationResult domain event
    */
   async handleBookValidationResult(event: DomainEvent): Promise<void> {
-    const { id, isValid, reason, retailPrice } = event.payload
+    const { reservationId, isValid, reason, retailPrice } = event.payload
 
     const updateData: any = {
       status: isValid
@@ -183,17 +183,17 @@ export class ReservationProjectionHandler {
     if (retailPrice !== undefined && retailPrice > 0) {
       updateData.retailPrice = Number(retailPrice)
       logger.debug(
-        `Setting retail price for reservation ${id} to ${retailPrice}`,
+        `Setting retail price for reservation ${reservationId} to ${retailPrice}`,
       )
     }
 
     await this.projectionRepository.updateReservationValidationResult(
-      id,
+      reservationId,
       updateData,
     )
 
     logger.info(
-      `Reservation ${id} validation result: ${isValid ? 'confirmed' : 'rejected'}`,
+      `Reservation ${reservationId} validation result: ${isValid ? 'confirmed' : 'rejected'}`,
     )
   }
 

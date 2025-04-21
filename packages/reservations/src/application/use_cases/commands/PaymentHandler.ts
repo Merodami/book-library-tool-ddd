@@ -22,20 +22,22 @@ export class PaymentHandler {
    * @param event - The WalletPaymentSuccess event
    */
   async handlePaymentSuccess(event: DomainEvent): Promise<void> {
-    const id = event.payload.id
+    const reservationId = event.payload.reservationId
 
-    logger.info(`Processing successful payment for reservation ${id}`)
+    logger.info(
+      `Processing successful payment for reservation ${reservationId}`,
+    )
 
     try {
       // Load the reservation aggregate from event store
       const reservationEvents =
-        await this.reservationRepository.getEventsForAggregate(id)
+        await this.reservationRepository.getEventsForAggregate(reservationId)
 
       if (!reservationEvents.length) {
         throw new Errors.ApplicationError(
           404,
           ErrorCode.RESERVATION_NOT_FOUND,
-          `Reservation with ID ${id} not found`,
+          `Reservation with ID ${reservationId} not found`,
         )
       }
 
@@ -62,10 +64,12 @@ export class PaymentHandler {
       // Publish the domain event
       await this.eventBus.publish(newEvent)
 
-      logger.info(`Reservation ${id} confirmed after successful payment`)
+      logger.info(
+        `Reservation ${reservationId} confirmed after successful payment`,
+      )
     } catch (error) {
       logger.error(
-        `Error handling payment success for reservation ${id}:`,
+        `Error handling payment success for reservation ${reservationId}:`,
         error,
       )
       throw error
@@ -78,20 +82,20 @@ export class PaymentHandler {
    * @param event - The WalletPaymentDeclined event
    */
   async handlePaymentDeclined(event: DomainEvent): Promise<void> {
-    const id = event.payload.id
+    const reservationId = event.payload.reservationId
 
-    logger.info(`Processing declined payment for reservation ${id}`)
+    logger.info(`Processing declined payment for reservation ${reservationId}`)
 
     try {
       // Load the reservation aggregate from event store
       const reservationEvents =
-        await this.reservationRepository.getEventsForAggregate(id)
+        await this.reservationRepository.getEventsForAggregate(reservationId)
 
       if (!reservationEvents.length) {
         throw new Errors.ApplicationError(
           404,
           ErrorCode.RESERVATION_NOT_FOUND,
-          `Reservation with ID ${id} not found`,
+          `Reservation with ID ${reservationId} not found`,
         )
       }
 
@@ -116,12 +120,15 @@ export class PaymentHandler {
       // Publish the domain event
       await this.eventBus.publish(newEvent)
 
-      logger.info(`Reservation ${id} rejected after declined payment`)
+      logger.info(
+        `Reservation ${reservationId} rejected after declined payment`,
+      )
     } catch (error) {
       logger.error(
-        `Error handling payment decline for reservation ${id}:`,
+        `Error handling payment decline for reservation ${reservationId}:`,
         error,
       )
+
       throw error
     }
   }

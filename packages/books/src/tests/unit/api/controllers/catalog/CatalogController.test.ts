@@ -23,7 +23,7 @@ describe('CatalogController', () => {
   let controller: CatalogController
 
   // Sample paginated response for tests
-  const mockPaginatedResponse: schemas.PaginatedResult<schemas.BookDTO> = {
+  const mockPaginatedResponse: schemas.PaginatedResult<schemas.Book> = {
     data: [
       {
         id: 'book-1',

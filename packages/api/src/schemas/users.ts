@@ -41,7 +41,7 @@ export const UserSchema = Type.Object(
   },
   { $id: '#/components/schemas/User' },
 )
-export type UserDTO = Static<typeof UserSchema>
+export type User = Static<typeof UserSchema>
 export const UserRef = Type.Ref('#/components/schemas/User')
 
 // --------------------------------

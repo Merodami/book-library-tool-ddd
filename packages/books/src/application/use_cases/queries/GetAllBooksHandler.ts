@@ -18,7 +18,7 @@ export class GetAllBooksHandler {
   async execute(
     query: schemas.CatalogSearchQuery,
     fields?: schemas.BookSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.BookDTO>> {
+  ): Promise<schemas.PaginatedResult<schemas.Book>> {
     try {
       // Retrieve all events for the given aggregate ID.
       const books = await this.projectionRepository.getAllBooks(query, fields)

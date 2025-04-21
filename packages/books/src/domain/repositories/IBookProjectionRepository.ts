@@ -11,7 +11,7 @@ export interface IBookProjectionRepository {
   getAllBooks(
     query: schemas.CatalogSearchQuery,
     fields?: schemas.BookSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.BookDTO>>
+  ): Promise<schemas.PaginatedResult<schemas.Book>>
 
   /**
    * Retrieve a single book projection by its ID with optional field selection.
@@ -23,7 +23,7 @@ export interface IBookProjectionRepository {
   getBookById(
     id: string,
     fields?: schemas.BookSortField[],
-  ): Promise<schemas.BookDTO | null>
+  ): Promise<schemas.Book | null>
 
   /**
    * Retrieve a single book projection by its ISBN with optional field selection.
@@ -35,14 +35,14 @@ export interface IBookProjectionRepository {
   getBookByIsbn(
     isbn: string,
     fields?: schemas.BookSortField[],
-  ): Promise<schemas.BookDTO | null>
+  ): Promise<schemas.Book | null>
 
   /**
    * Save a new book projection.
    *
    * @param bookProjection - The book projection to save
    */
-  saveBookProjection(bookProjection: schemas.BookDTO): Promise<void>
+  saveBookProjection(bookProjection: schemas.Book): Promise<void>
 
   /**
    * Partially update the projection for a given book ID.
@@ -54,7 +54,7 @@ export interface IBookProjectionRepository {
     id: string,
     changes: Partial<
       Pick<
-        schemas.BookDTO,
+        schemas.Book,
         'title' | 'author' | 'publicationYear' | 'publisher' | 'price' | 'isbn'
       >
     >,
@@ -75,5 +75,5 @@ export interface IBookProjectionRepository {
    * @param isbn - The ISBN of the book to find
    * @returns The book data if found, null otherwise
    */
-  findBookForReservation(isbn: string): Promise<schemas.BookDTO | null>
+  findBookForReservation(isbn: string): Promise<schemas.Book | null>
 }

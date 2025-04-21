@@ -20,7 +20,7 @@ const secret = process.env.JWT_SECRET || 'default-secret'
 const now = formatISO(new Date())
 
 // Create a new user object with timestamps
-const newUser: schemas.UserDTO = {
+const newUser: schemas.User = {
   userId: randomUUID(),
   email,
   role: 'user',
@@ -38,7 +38,7 @@ async function createUserAndGenerateToken() {
   await dbService.connect()
 
   // Get the "users" collection in a type‑safe way
-  const usersCollection = dbService.getCollection<schemas.UserDTO>('users')
+  const usersCollection = dbService.getCollection<schemas.User>('users')
 
   // Validate if the email already exists
   const existingUser = await usersCollection.findOne({ email })

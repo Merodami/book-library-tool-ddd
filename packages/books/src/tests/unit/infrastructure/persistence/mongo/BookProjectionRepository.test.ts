@@ -21,7 +21,7 @@ describe('BookProjectionRepository', () => {
     toArray: ReturnType<typeof vi.fn>
   } & Partial<Collection<BookDocument>>
   let repository: BookProjectionRepository
-  let mockBook: schemas.BookDTO
+  let mockBook: schemas.Book
   let mockDocument: BookDocument
   let mockId: string
 
@@ -299,7 +299,7 @@ describe('BookProjectionRepository', () => {
 
     it('should throw an error when required fields are missing', async () => {
       // Missing required fields
-      const incompleteBook: schemas.BookDTO = {
+      const incompleteBook: schemas.Book = {
         id: mockId,
         title: 'Incomplete Book',
         // Missing other required fields

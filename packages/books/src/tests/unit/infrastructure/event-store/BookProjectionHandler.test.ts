@@ -176,7 +176,7 @@ describe('BookProjectionHandler', () => {
     })
   })
 
-  describe('handleReservationValidateBook', () => {
+  describe('handleValidateBook', () => {
     it('should return valid book validation result when book exists', async () => {
       const event: DomainEvent = {
         eventType: 'ReservationBookValidation',
@@ -198,7 +198,7 @@ describe('BookProjectionHandler', () => {
         price: 29.99,
       })
 
-      const result = await handler.handleReservationValidateBook(event)
+      const result = await handler.handleValidateBook(event)
 
       expect(mockRepository.findBookForReservation).toHaveBeenCalledTimes(1)
       expect(mockRepository.findBookForReservation).toHaveBeenCalledWith(
@@ -237,7 +237,7 @@ describe('BookProjectionHandler', () => {
       // Mock the findBookForReservation response to return null (book not found)
       mockRepository.findBookForReservation.mockResolvedValue(null)
 
-      const result = await handler.handleReservationValidateBook(event)
+      const result = await handler.handleValidateBook(event)
 
       expect(mockRepository.findBookForReservation).toHaveBeenCalledTimes(1)
       expect(result).toEqual({

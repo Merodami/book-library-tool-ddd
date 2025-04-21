@@ -23,7 +23,7 @@ vi.mock('@book-library-tool/redis', () => ({
 }))
 
 // Sample in-memory books
-const sampleBooks: schemas.BookDTO[] = [
+const sampleBooks: schemas.Book[] = [
   {
     id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
     isbn: '978-3-16-148410-0',
@@ -56,7 +56,7 @@ const mockRepo: IBookProjectionRepository = {
       async (
         query: schemas.CatalogSearchQuery,
         fields?: (keyof Book)[],
-      ): Promise<schemas.PaginatedResult<schemas.BookDTO>> => {
+      ): Promise<schemas.PaginatedResult<schemas.Book>> => {
         let filtered = [...sampleBooks]
 
         // Text filters
@@ -95,7 +95,7 @@ const mockRepo: IBookProjectionRepository = {
 
         // Field selection using lodash.pick
         if (fields && fields.length) {
-          filtered = filtered.map((b) => pick(b, fields) as schemas.BookDTO)
+          filtered = filtered.map((b) => pick(b, fields) as schemas.Book)
         }
 
         const page = Number(query.page ?? 1)

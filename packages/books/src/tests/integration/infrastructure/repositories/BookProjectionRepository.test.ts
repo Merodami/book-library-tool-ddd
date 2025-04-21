@@ -40,7 +40,7 @@ describe('BookProjectionRepository Integration', () => {
     await collection.deleteMany({})
 
     // Insert baseline book via repository to ensure correct mapping
-    const baseBook: schemas.BookDTO = {
+    const baseBook: schemas.Book = {
       id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
       isbn: '978-3-16-148410-0',
       title: 'Test Book',
@@ -85,7 +85,7 @@ describe('BookProjectionRepository Integration', () => {
 
   describe('getAllBooks', () => {
     it('returns paginated books', async () => {
-      const second: schemas.BookDTO = {
+      const second: schemas.Book = {
         id: '5a1018f2-3526-4275-a84b-784e4f2e5a11',
         isbn: '978-3-16-148410-1',
         title: 'Another',
@@ -100,7 +100,7 @@ describe('BookProjectionRepository Integration', () => {
       await repository.saveBookProjection(second)
 
       const query: schemas.CatalogSearchQuery = { page: 1, limit: 10 }
-      const resp: schemas.PaginatedResult<schemas.BookDTO> =
+      const resp: schemas.PaginatedResult<schemas.Book> =
         await repository.getAllBooks(query)
 
       expect(resp.data).toHaveLength(2)
@@ -121,7 +121,7 @@ describe('BookProjectionRepository Integration', () => {
 
   describe('saveProjection and updateProjection', () => {
     it('saves and updates correctly', async () => {
-      const newBook: schemas.BookDTO = {
+      const newBook: schemas.Book = {
         id: '46decb22-c152-482b-909e-693c20e416a6',
         isbn: '978-3-16-148410-2',
         title: 'New',

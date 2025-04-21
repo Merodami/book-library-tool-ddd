@@ -19,7 +19,7 @@ export class GetReservationStatusHandler {
    * @returns The current status of the reservation
    * @throws {Errors.ApplicationError} If the reservation is not found
    */
-  async execute(query: schemas.IdParameter): Promise<schemas.ReservationDTO> {
+  async execute(query: schemas.IdParameter): Promise<schemas.Reservation> {
     // Validate the query
     if (!query.id) {
       throw new Errors.ApplicationError(

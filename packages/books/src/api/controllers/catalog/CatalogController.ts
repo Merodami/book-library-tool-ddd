@@ -21,7 +21,7 @@ export class CatalogController {
   })
   async getAllBooks(
     request: FastifyRequest,
-  ): Promise<schemas.PaginatedResult<schemas.BookDTO>> {
+  ): Promise<schemas.PaginatedResult<schemas.Book>> {
     const query = request.query as schemas.CatalogSearchQuery
 
     const validFields = parseAndValidate<schemas.BookSortField>(

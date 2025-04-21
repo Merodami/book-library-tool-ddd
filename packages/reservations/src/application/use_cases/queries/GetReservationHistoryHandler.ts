@@ -23,7 +23,7 @@ export class GetReservationHistoryHandler {
   async execute(
     query: schemas.ReservationsHistoryQuery,
     fields?: schemas.ReservationSortField[],
-  ): Promise<PaginatedResult<schemas.ReservationDTO>> {
+  ): Promise<PaginatedResult<schemas.Reservation>> {
     try {
       // Retrieve all events for the given aggregate ID.
       const reservations =

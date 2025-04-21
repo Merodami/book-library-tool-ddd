@@ -16,7 +16,7 @@ export interface IReservationProjectionRepository {
   getUserReservations(
     query: schemas.ReservationsHistoryQuery,
     fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.ReservationDTO>>
+  ): Promise<schemas.PaginatedResult<schemas.Reservation>>
 
   /**
    * Gets a specific reservation by its ID.
@@ -28,19 +28,7 @@ export interface IReservationProjectionRepository {
   getReservationById(
     id: string,
     fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.ReservationDTO | null>
-
-  /**
-   * Gets all reservations for a specific book with optional filtering.
-   *
-   * @param bookId - The ID of the book
-   * @param fields - Optional array of fields to return. If not provided, returns all fields.
-   * @returns Paginated list of reservations
-   */
-  getBookReservations(
-    bookId: string,
-    fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.ReservationDTO>>
+  ): Promise<schemas.Reservation | null>
 
   /**
    * Gets active reservations for a specific book.
@@ -53,7 +41,7 @@ export interface IReservationProjectionRepository {
   getActiveBookReservations(
     bookId: string,
     fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.ReservationDTO[]>
+  ): Promise<schemas.Reservation[]>
 
   /**
    * Gets reservations filtered by status.
@@ -66,7 +54,7 @@ export interface IReservationProjectionRepository {
   getReservationsByStatus(
     status: RESERVATION_STATUS,
     fields?: schemas.ReservationSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.ReservationDTO>>
+  ): Promise<schemas.PaginatedResult<schemas.Reservation>>
 
   /**
    * Counts the number of active reservations for a specific user.
@@ -83,9 +71,7 @@ export interface IReservationProjectionRepository {
    *
    * @param reservationData - Data for the new reservation
    */
-  saveReservationProjection(
-    reservationData: schemas.ReservationDTO,
-  ): Promise<void>
+  saveReservationProjection(reservationData: schemas.Reservation): Promise<void>
 
   /**
    * Updates a reservation when it's returned.
@@ -96,7 +82,7 @@ export interface IReservationProjectionRepository {
    */
   updateReservationReturned(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
     version: number,
   ): Promise<void>
 
@@ -109,7 +95,7 @@ export interface IReservationProjectionRepository {
    */
   updateReservationCancelled(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
     version: number,
   ): Promise<void>
 
@@ -122,7 +108,7 @@ export interface IReservationProjectionRepository {
    */
   updateReservationOverdue(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
     version: number,
   ): Promise<void>
 
@@ -166,7 +152,7 @@ export interface IReservationProjectionRepository {
    */
   updateReservationValidationResult(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
   ): Promise<void>
 
   /**
@@ -178,7 +164,7 @@ export interface IReservationProjectionRepository {
    */
   updateReservationPaymentSuccess(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
     version: number,
   ): Promise<void>
 
@@ -191,7 +177,7 @@ export interface IReservationProjectionRepository {
    */
   updateReservationPaymentDeclined(
     id: string,
-    updates: Partial<schemas.ReservationDTO>,
+    updates: Partial<schemas.Reservation>,
   ): Promise<{ matchedCount: number }>
 
   /**

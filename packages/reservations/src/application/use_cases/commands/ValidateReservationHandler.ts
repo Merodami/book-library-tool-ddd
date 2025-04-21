@@ -38,17 +38,21 @@ export class ValidateReservationHandler {
     command: ValidateReservationCommand,
   ): Promise<void> {
     try {
-      logger.debug(`Processing validation for reservation ${command.id}`)
+      logger.debug(
+        `Processing validation for reservation ${command.reservationId}`,
+      )
 
       // Load the reservation aggregate from event store
       const reservationEvents =
-        await this.reservationRepository.getEventsForAggregate(command.id)
+        await this.reservationRepository.getEventsForAggregate(
+          command.reservationId,
+        )
 
       if (!reservationEvents.length) {
         throw new Errors.ApplicationError(
           404,
           ErrorCode.RESERVATION_NOT_FOUND,
-          `Reservation with ID ${command.id} not found`,
+          `Reservation with ID ${command.reservationId} not found`,
         )
       }
 
@@ -87,11 +91,11 @@ export class ValidateReservationHandler {
       await this.processDomainActions(command, reservation, exceedsLimit)
 
       logger.info(
-        `Completed validation processing for reservation ${command.id}`,
+        `Completed validation processing for reservation ${command.reservationId}`,
       )
     } catch (error) {
       logger.error(
-        `Error processing validation for reservation ${command.id}: ${error.message}`,
+        `Error processing validation for reservation ${command.reservationId}: ${error.message}`,
       )
       throw error
     }
@@ -176,8 +180,19 @@ export class ValidateReservationHandler {
     // Set payment pending status
     const paymentResult = currentReservation.setPaymentPending()
 
+    const paymentResultWithReservationId = {
+      ...paymentResult.event,
+      payload: {
+        ...paymentResult.event.payload,
+        reservationId: currentReservation.id,
+      },
+    }
+
     // Save and publish payment pending event
-    await this.saveAndPublishEvent(paymentResult.event, currentVersion)
+    await this.saveAndPublishEvent(
+      paymentResultWithReservationId,
+      currentVersion,
+    )
   }
 
   /**

@@ -37,7 +37,7 @@ export interface ReservationProps {
  * mutable state from domain events.
  */
 export class Reservation extends AggregateRoot {
-  public readonly id: string // Alias for this.id from AggregateRoot
+  public readonly id: string
   public readonly userId: string
   public readonly bookId: string
   public reservedAt: Date
@@ -83,8 +83,8 @@ export class Reservation extends AggregateRoot {
    * and produces a ReservationCreated event.
    */
   public static create(
-    props: Partial<schemas.ReservationDTO> &
-      Pick<schemas.ReservationDTO, 'userId' | 'bookId'>,
+    props: Partial<schemas.Reservation> &
+      Pick<schemas.Reservation, 'userId' | 'bookId'>,
   ): { reservation: Reservation; event: DomainEvent } {
     const now = new Date()
 
@@ -118,8 +118,8 @@ export class Reservation extends AggregateRoot {
 
     // Create reservation properties
     const reservationProps: ReservationProps = {
-      userId: props.userId.trim(),
-      bookId: props.bookId.trim(),
+      userId: props.userId?.trim() || '',
+      bookId: props.bookId?.trim() || '',
       reservedAt: props.reservedAt ? new Date(props.reservedAt) : now,
       dueDate,
       retailPrice: Number(props.retailPrice),
