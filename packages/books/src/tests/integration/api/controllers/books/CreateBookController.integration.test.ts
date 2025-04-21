@@ -1,15 +1,15 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-
-// Silence Fastify error logs in tests
-beforeAll(() => {
-  vi.spyOn(console, 'error').mockImplementation(() => {})
-})
 import { EventResponse } from '@book-library-tool/sdk'
 import { createTestServer } from '@book-library-tool/tests'
 import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
 import { CreateBookController } from '@books/controllers/books/CreateBookController.js'
 import type { FastifyInstance } from 'fastify'
 import supertest from 'supertest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// Silence Fastify error logs in tests
+beforeAll(() => {
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+})
 
 // Shared mock handler instance
 const handler = {

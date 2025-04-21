@@ -282,7 +282,7 @@ describe('BookProjectionRepository', () => {
   describe('saveProjection', () => {
     it('should save a new book projection', async () => {
       // Book validation should pass with all required fields
-      await repository.saveProjection(mockBook)
+      await repository.saveBookProjection(mockBook)
 
       expect(mockCollection.insertOne).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -305,13 +305,13 @@ describe('BookProjectionRepository', () => {
         // Missing other required fields
       }
 
-      await expect(repository.saveProjection(incompleteBook)).rejects.toThrow(
-        ErrorCode.VALIDATION_ERROR,
-      )
+      await expect(
+        repository.saveBookProjection(incompleteBook),
+      ).rejects.toThrow(ErrorCode.VALIDATION_ERROR)
     })
   })
 
-  describe('updateProjection', () => {
+  describe('updateBookProjection', () => {
     it('should update an existing book projection', async () => {
       const updateData: BookUpdateRequest = {
         title: 'Updated Title',
@@ -323,7 +323,7 @@ describe('BookProjectionRepository', () => {
 
       const updateDate = new Date()
 
-      await repository.updateProjection(mockId, updateData, updateDate)
+      await repository.updateBookProjection(mockId, updateData, updateDate)
 
       // Verify the updated fields in the $set object
       const expectedSetObject = Object.fromEntries([

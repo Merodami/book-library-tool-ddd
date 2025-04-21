@@ -238,14 +238,14 @@ export function createMockBookProjectionRepository(
         return book
       }),
 
-    saveProjection: vi
+    saveBookProjection: vi
       .fn()
       .mockImplementation(async (bookProjection: schemas.BookDTO) => {
         // Mock implementation just records the call
         return Promise.resolve()
       }),
 
-    updateProjection: vi
+    updateBookProjection: vi
       .fn()
       .mockImplementation(
         async (
@@ -341,8 +341,8 @@ export function createErrorMockBookProjectionRepository(
     getAllBooks: vi.fn().mockRejectedValue(error),
     getBookById: vi.fn().mockRejectedValue(error),
     getBookByIsbn: vi.fn().mockRejectedValue(error),
-    saveProjection: vi.fn().mockRejectedValue(error),
-    updateProjection: vi.fn().mockRejectedValue(error),
+    saveBookProjection: vi.fn().mockRejectedValue(error),
+    updateBookProjection: vi.fn().mockRejectedValue(error),
     markAsDeleted: vi.fn().mockRejectedValue(error),
     findBookForReservation: vi.fn().mockRejectedValue(error),
   }

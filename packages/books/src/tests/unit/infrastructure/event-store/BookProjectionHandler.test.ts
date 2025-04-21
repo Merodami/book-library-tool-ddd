@@ -15,8 +15,8 @@ const createMockRepository = () => ({
   getBookById: vi.fn(),
 
   // Event-specific methods from the extended interface
-  saveProjection: vi.fn().mockResolvedValue(undefined),
-  updateProjection: vi.fn().mockResolvedValue(undefined),
+  saveBookProjection: vi.fn().mockResolvedValue(undefined),
+  updateBookProjection: vi.fn().mockResolvedValue(undefined),
   markAsDeleted: vi.fn().mockResolvedValue(undefined),
   findBookForReservation: vi.fn(),
 })
@@ -59,8 +59,8 @@ describe('BookProjectionHandler', () => {
 
       await handler.handleBookCreated(event)
 
-      expect(mockRepository.saveProjection).toHaveBeenCalledTimes(1)
-      expect(mockRepository.saveProjection).toHaveBeenCalledWith({
+      expect(mockRepository.saveBookProjection).toHaveBeenCalledTimes(1)
+      expect(mockRepository.saveBookProjection).toHaveBeenCalledWith({
         id: 'book-123',
         isbn: '978-1234567890',
         title: 'Test Book',
@@ -101,8 +101,8 @@ describe('BookProjectionHandler', () => {
 
       await handler.handleBookUpdated(event)
 
-      expect(mockRepository.updateProjection).toHaveBeenCalledTimes(1)
-      expect(mockRepository.updateProjection).toHaveBeenCalledWith(
+      expect(mockRepository.updateBookProjection).toHaveBeenCalledTimes(1)
+      expect(mockRepository.updateBookProjection).toHaveBeenCalledWith(
         'book-123',
         {
           title: 'New Title',
@@ -141,8 +141,8 @@ describe('BookProjectionHandler', () => {
 
       await handler.handleBookUpdated(event)
 
-      expect(mockRepository.updateProjection).toHaveBeenCalledTimes(1)
-      expect(mockRepository.updateProjection).toHaveBeenCalledWith(
+      expect(mockRepository.updateBookProjection).toHaveBeenCalledTimes(1)
+      expect(mockRepository.updateBookProjection).toHaveBeenCalledWith(
         'book-123',
         {
           title: 'New Title',

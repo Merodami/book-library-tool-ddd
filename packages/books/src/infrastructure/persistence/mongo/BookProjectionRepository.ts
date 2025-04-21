@@ -7,8 +7,7 @@ import {
 } from '@book-library-tool/database'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
-import { pick } from 'lodash-es'
-import { Collection, Filter, ObjectId } from 'mongodb'
+import { Collection, Filter } from 'mongodb'
 
 import type { BookDocument } from './documents/BookDocument.js'
 
@@ -142,10 +141,8 @@ export class BookProjectionRepository
    * Saves a new book projection to MongoDB.
    * @param book - Domain Book object to persist
    */
-  async saveProjection(book: schemas.BookDTO): Promise<void> {
-    const doc = mapToDocument(book)
-
-    await this.collection.insertOne({ ...doc, _id: new ObjectId() })
+  async saveBookProjection(book: schemas.BookDTO): Promise<void> {
+    await this.saveProjection(book, mapToDocument)
   }
 
   /**
@@ -155,7 +152,7 @@ export class BookProjectionRepository
    * @param changes - Partial Book data with optional dates
    * @param updatedAt - Updated timestamp
    */
-  async updateProjection(
+  async updateBookProjection(
     id: string,
     changes: Partial<
       Pick<
@@ -165,38 +162,18 @@ export class BookProjectionRepository
     >,
     updatedAt: Date | string,
   ): Promise<void> {
-    const allowed: Array<keyof typeof changes> = [
-      'title',
-      'author',
-      'publicationYear',
-      'publisher',
-      'price',
-      'isbn',
-    ]
+    const allowedFields = [...schemas.ALLOWED_BOOK_FIELDS] as Array<
+      keyof schemas.BookDTO
+    >
 
-    const picked = pick(changes, allowed as Array<keyof schemas.BookDTO>)
-
-    const setFields = {
-      ...picked,
-      updatedAt: updatedAt instanceof Date ? updatedAt : new Date(updatedAt),
-    }
-
-    if (Object.keys(setFields).length === 0) {
-      return
-    }
-
-    const result = await this.collection.updateOne(
-      this.buildCompleteFilter({ id } as Filter<BookDocument>),
-      { $set: setFields },
+    await super.updateProjection(
+      id,
+      changes as Partial<schemas.BookDTO>,
+      allowedFields,
+      updatedAt,
+      ErrorCode.BOOK_NOT_FOUND,
+      `Book with id "${id}" not found or deleted`,
     )
-
-    if (result.matchedCount === 0) {
-      throw new Errors.ApplicationError(
-        410,
-        ErrorCode.BOOK_NOT_FOUND,
-        `Book projection with id "${id}" not found or already deleted.`,
-      )
-    }
   }
 
   /**

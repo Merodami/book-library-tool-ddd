@@ -22,7 +22,7 @@ export class BookProjectionHandler {
    * @param event - The domain event containing the book creation data
    */
   async handleBookCreated(event: DomainEvent): Promise<void> {
-    await this.projectionRepository.saveProjection({
+    await this.projectionRepository.saveBookProjection({
       id: event.payload.id,
       isbn: event.payload.isbn,
       title: event.payload.title,
@@ -70,7 +70,7 @@ export class BookProjectionHandler {
     // Add updatedAt to the updates
     updates.updatedAt = event.timestamp
 
-    await this.projectionRepository.updateProjection(
+    await this.projectionRepository.updateBookProjection(
       event.aggregateId,
       updates,
       event.timestamp,

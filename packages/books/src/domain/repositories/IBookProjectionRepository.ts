@@ -42,7 +42,7 @@ export interface IBookProjectionRepository {
    *
    * @param bookProjection - The book projection to save
    */
-  saveProjection(bookProjection: schemas.BookDTO): Promise<void>
+  saveBookProjection(bookProjection: schemas.BookDTO): Promise<void>
 
   /**
    * Partially update the projection for a given book ID.
@@ -50,7 +50,7 @@ export interface IBookProjectionRepository {
    * @param changes - only the fields you want to modify
    * @param updatedAt - when this change happened
    */
-  updateProjection(
+  updateBookProjection(
     id: string,
     changes: Partial<
       Pick<

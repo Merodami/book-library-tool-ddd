@@ -119,8 +119,8 @@ const mockRepo: IBookProjectionRepository = {
   // Unused by this controller
   getBookById: vi.fn(),
   getBookByIsbn: vi.fn(),
-  saveProjection: vi.fn(),
-  updateProjection: vi.fn(),
+  saveBookProjection: vi.fn(),
+  updateBookProjection: vi.fn(),
   markAsDeleted: vi.fn(),
   findBookForReservation: vi.fn(),
 }

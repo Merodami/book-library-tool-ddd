@@ -52,7 +52,7 @@ describe('BookProjectionRepository Integration', () => {
       updatedAt: new Date().toISOString(),
     }
 
-    await repository.saveProjection(baseBook)
+    await repository.saveBookProjection(baseBook)
 
     // Save the ID for later use
     const savedBook = await collection.findOne({ isbn: baseBook.isbn })
@@ -97,7 +97,7 @@ describe('BookProjectionRepository Integration', () => {
         updatedAt: new Date().toISOString(),
       }
 
-      await repository.saveProjection(second)
+      await repository.saveBookProjection(second)
 
       const query: schemas.CatalogSearchQuery = { page: 1, limit: 10 }
       const resp: schemas.PaginatedResult<schemas.BookDTO> =
@@ -133,7 +133,7 @@ describe('BookProjectionRepository Integration', () => {
         updatedAt: new Date().toISOString(),
       }
 
-      await repository.saveProjection(newBook)
+      await repository.saveBookProjection(newBook)
 
       // Changed from getBookByISBN to getBookByIsbn
       let fetched = await repository.getBookByIsbn(newBook.isbn || '')
@@ -154,7 +154,7 @@ describe('BookProjectionRepository Integration', () => {
       }
 
       // Include updatedAt timestamp as third parameter
-      await repository.updateProjection(id, updates, new Date())
+      await repository.updateBookProjection(id, updates, new Date())
 
       // Changed from getBookByISBN to getBookByIsbn
       fetched = await repository.getBookByIsbn(newBook.isbn || '')
