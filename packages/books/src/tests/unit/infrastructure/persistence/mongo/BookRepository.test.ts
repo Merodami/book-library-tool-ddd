@@ -1,4 +1,3 @@
-// tests/integration/infrastructure/repositories/BookRepository.test.ts
 import { MongoDatabaseService } from '@book-library-tool/database'
 import {
   BOOK_CREATED,

@@ -1,4 +1,3 @@
-// tests/integration/infrastructure/repositories/BookRepository.test.ts
 import { MongoDatabaseService } from '@book-library-tool/database'
 import {
   BOOK_CREATED,
@@ -193,7 +192,6 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
   describe('getById / rehydration', () => {
     it('rehydrates with create, update, delete events', async () => {
       const { book, event: createEvt } = Book.create({
-        id: 'isbn-4', // Adding id field to match payload expectations
         isbn: 'isbn-4',
         title: 'Orig',
         author: 'Auth',
@@ -201,6 +199,7 @@ describe('BookRepository Integration (Testcontainers v10.24.2)', () => {
         publisher: 'Pub',
         price: 5,
       })
+
       const { event: updateEvt } = book.update({ title: 'Updated' })
       const { event: deleteEvt } = book.delete()
 

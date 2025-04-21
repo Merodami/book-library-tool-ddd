@@ -1,8 +1,6 @@
-import {
-  Book,
-  BookUpdateRequest,
-  CatalogSearchQuery,
-} from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
+import { Book, BookUpdateRequest } from '@book-library-tool/sdk'
+import { ErrorCode } from '@book-library-tool/shared'
 import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
 import { BookDocument } from '@books/persistence/mongo/documents/BookDocument.js'
 import { Collection, ObjectId } from 'mongodb'
@@ -23,7 +21,7 @@ describe('BookProjectionRepository', () => {
     toArray: ReturnType<typeof vi.fn>
   } & Partial<Collection<BookDocument>>
   let repository: BookProjectionRepository
-  let mockBook: Book
+  let mockBook: schemas.BookDTO
   let mockDocument: BookDocument
   let mockId: string
 
@@ -31,6 +29,7 @@ describe('BookProjectionRepository', () => {
     mockId = new ObjectId().toString()
 
     // Create a domain model Book with string dates (ISO format)
+    // Note: All fields are required for creating a new book
     mockBook = {
       id: mockId,
       isbn: '978-3-16-148410-0',
@@ -44,17 +43,18 @@ describe('BookProjectionRepository', () => {
     }
 
     // Create a MongoDB document with native Date objects
+    // All required fields must be present for BookDocument
     mockDocument = {
       _id: new ObjectId(),
       id: mockId,
-      isbn: mockBook.isbn,
-      title: mockBook.title,
-      author: mockBook.author,
-      publicationYear: mockBook.publicationYear,
-      publisher: mockBook.publisher,
-      price: mockBook.price,
-      createdAt: mockBook.createdAt ? new Date(mockBook.createdAt) : new Date(),
-      updatedAt: mockBook.updatedAt ? new Date(mockBook.updatedAt) : new Date(),
+      isbn: mockBook.isbn!,
+      title: mockBook.title!,
+      author: mockBook.author!,
+      publicationYear: mockBook.publicationYear!,
+      publisher: mockBook.publisher!,
+      price: mockBook.price!,
+      createdAt: new Date(mockBook.createdAt!),
+      updatedAt: new Date(mockBook.updatedAt!),
     }
 
     // Mock the MongoDB collection
@@ -74,7 +74,7 @@ describe('BookProjectionRepository', () => {
     }
 
     repository = new BookProjectionRepository(
-      mockCollection as Collection<BookDocument>,
+      mockCollection as unknown as Collection<BookDocument>,
     )
   })
 
@@ -124,7 +124,7 @@ describe('BookProjectionRepository', () => {
 
   describe('getBookByIsbn', () => {
     it('should return a book when it exists', async () => {
-      const result = await repository.getBookByIsbn(mockBook.isbn)
+      const result = await repository.getBookByIsbn(mockBook.isbn!)
 
       expect(result).toEqual(
         expect.objectContaining({
@@ -163,7 +163,7 @@ describe('BookProjectionRepository', () => {
     it('should apply field projection when fields are specified', async () => {
       const fields = ['title', 'author']
 
-      await repository.getBookByIsbn(mockBook.isbn, fields)
+      await repository.getBookByIsbn(mockBook.isbn!, fields)
 
       expect(mockCollection.findOne).toHaveBeenCalledWith(
         {
@@ -177,7 +177,7 @@ describe('BookProjectionRepository', () => {
 
   describe('getAllBooks', () => {
     it('should return paginated books', async () => {
-      const query: CatalogSearchQuery = {
+      const query: schemas.CatalogSearchQuery = {
         page: 1,
         limit: 10,
       }
@@ -207,7 +207,7 @@ describe('BookProjectionRepository', () => {
     })
 
     it('should apply text search filters', async () => {
-      const query: CatalogSearchQuery = {
+      const query: schemas.CatalogSearchQuery = {
         title: 'Test',
         author: 'Author',
         publisher: 'Publisher',
@@ -228,7 +228,7 @@ describe('BookProjectionRepository', () => {
     })
 
     it('should apply ISBN exact match filter', async () => {
-      const query: CatalogSearchQuery = {
+      const query: schemas.CatalogSearchQuery = {
         isbn: '978-3-16-148410-0',
         page: 1,
         limit: 10,
@@ -245,7 +245,7 @@ describe('BookProjectionRepository', () => {
     })
 
     it('should apply numeric range filters', async () => {
-      const query: CatalogSearchQuery = {
+      const query: schemas.CatalogSearchQuery = {
         publicationYearMin: 2000,
         publicationYearMax: 2023,
         priceMin: 10,
@@ -266,11 +266,11 @@ describe('BookProjectionRepository', () => {
     })
 
     it('should apply sorting', async () => {
-      const query: CatalogSearchQuery = {
+      const query: schemas.CatalogSearchQuery = {
         page: 1,
         limit: 10,
         sortBy: 'title',
-        sortOrder: 'ASC',
+        sortOrder: 'asc',
       }
 
       await repository.getAllBooks(query)
@@ -281,6 +281,7 @@ describe('BookProjectionRepository', () => {
 
   describe('saveProjection', () => {
     it('should save a new book projection', async () => {
+      // Book validation should pass with all required fields
       await repository.saveProjection(mockBook)
 
       expect(mockCollection.insertOne).toHaveBeenCalledWith(
@@ -293,6 +294,19 @@ describe('BookProjectionRepository', () => {
           publisher: mockBook.publisher,
           price: mockBook.price,
         }),
+      )
+    })
+
+    it('should throw an error when required fields are missing', async () => {
+      // Missing required fields
+      const incompleteBook: Book = {
+        id: mockId,
+        title: 'Incomplete Book',
+        // Missing other required fields
+      }
+
+      await expect(repository.saveProjection(incompleteBook)).rejects.toThrow(
+        ErrorCode.VALIDATION_ERROR,
       )
     })
   })
@@ -311,16 +325,21 @@ describe('BookProjectionRepository', () => {
 
       await repository.updateProjection(mockId, updateData, updateDate)
 
+      // Verify the updated fields in the $set object
+      const expectedSetObject = Object.fromEntries([
+        ...Object.entries(updateData).filter(
+          ([_, value]) => value !== undefined,
+        ),
+        ['updatedAt', updateDate],
+      ])
+
       expect(mockCollection.updateOne).toHaveBeenCalledWith(
         {
           id: mockId,
           $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
         },
         {
-          $set: {
-            ...updateData,
-            updatedAt: updateDate,
-          },
+          $set: expectedSetObject,
         },
       )
     })
@@ -344,7 +363,7 @@ describe('BookProjectionRepository', () => {
 
   describe('findBookForReservation', () => {
     it('should return a book when it exists and is not deleted', async () => {
-      const result = await repository.findBookForReservation(mockBook.isbn)
+      const result = await repository.findBookForReservation(mockBook.isbn!)
 
       expect(result).toEqual(
         expect.objectContaining({
@@ -353,10 +372,15 @@ describe('BookProjectionRepository', () => {
           price: mockBook.price,
         }),
       )
-      expect(mockCollection.findOne).toHaveBeenCalledWith({
-        isbn: mockBook.isbn,
-        deletedAt: { $exists: false },
-      })
+
+      // Update the expectation to match the new implementation's behavior
+      expect(mockCollection.findOne).toHaveBeenCalledWith(
+        {
+          isbn: mockBook.isbn,
+          $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+        },
+        { projection: { _id: 0 } },
+      )
     })
 
     it('should return null when book does not exist', async () => {
@@ -366,10 +390,15 @@ describe('BookProjectionRepository', () => {
         await repository.findBookForReservation('non-existent-isbn')
 
       expect(result).toBeNull()
-      expect(mockCollection.findOne).toHaveBeenCalledWith({
-        isbn: 'non-existent-isbn',
-        deletedAt: { $exists: false },
-      })
+
+      // Update the expectation to match the new implementation's behavior
+      expect(mockCollection.findOne).toHaveBeenCalledWith(
+        {
+          isbn: 'non-existent-isbn',
+          $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+        },
+        { projection: { _id: 0 } },
+      )
     })
   })
 })

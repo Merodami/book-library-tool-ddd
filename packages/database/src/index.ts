@@ -1,3 +1,4 @@
+export * from '@database/persistence/mongo/BaseProjectionRepository.js'
 export * from '@database/persistence/mongo/getNextGlobalVersion.js'
 export * from '@database/persistence/mongo/MongoDatabaseService.js'
 export * from '@database/persistence/mongo/MongoRepository.js'

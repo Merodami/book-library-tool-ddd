@@ -31,7 +31,6 @@ export class UpdateBookController {
       price,
     }
 
-    // Call the handler directly to update the book
     const result = await this.updateBookHandler.execute(command)
 
     return result

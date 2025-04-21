@@ -1,5 +1,7 @@
+import { schemas } from '@book-library-tool/api'
+import { ALLOWED_BOOK_FIELDS } from '@book-library-tool/api/src/schemas/books.js'
+import { parseAndValidate } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
 import { Cache, httpRequestKeyGenerator } from '@book-library-tool/redis'
-import type { CatalogSearchQuery } from '@book-library-tool/sdk'
 import { GetAllBooksHandler } from '@books/queries/GetAllBooksHandler.js'
 import type { FastifyRequest } from 'fastify'
 
@@ -9,7 +11,7 @@ export class CatalogController {
   }
 
   /**
-   * Handles GET requests for the catalog.
+   * GET /catalog
    * Returns a paginated list of books with optional field selection.
    */
   @Cache({
@@ -19,27 +21,17 @@ export class CatalogController {
     condition: (result) => result && result.data && Array.isArray(result.data),
   })
   async getAllBooks(request: FastifyRequest) {
-    // Convert query params to CatalogSearchQuery directly
-    const query = request.query as CatalogSearchQuery
+    const query = request.query as schemas.CatalogSearchQuery
 
-    // Validate requested fields against allowed set
-    const allowedFields = [
-      'id',
-      'isbn',
-      'title',
-      'author',
-      'publicationYear',
-      'publisher',
-      'price',
-      'createdAt',
-      'updatedAt',
-    ]
-
-    const validFields = query.fields?.filter((field) =>
-      allowedFields.includes(field),
+    const validFields = parseAndValidate<schemas.BookSortField>(
+      query.fields,
+      ALLOWED_BOOK_FIELDS,
     )
 
-    const result = await this.getAllBooksHandler.execute(query, validFields)
+    const result = await this.getAllBooksHandler.execute(
+      query,
+      validFields || undefined,
+    )
 
     return result
   }

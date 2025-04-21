@@ -88,6 +88,7 @@ async function startBookService() {
 
   // Create server with standard configuration
   const SERVER_PORT = parseInt(process.env.BOOKS_SERVER_PORT || '3001', 10)
+
   const app = await createFastifyServer({
     serviceName: process.env.BOOK_SERVICE_NAME || 'book_service',
     port: SERVER_PORT,

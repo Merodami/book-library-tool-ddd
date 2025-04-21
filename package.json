@@ -61,6 +61,7 @@
     "lint-staged": "^15.5.1",
     "nx": "^20.8.0",
     "prettier": "^3.5.3",
+    "supertest": "^7.1.0",
     "testcontainers": "^10.24.2",
     "tsc-alias": "^1.8.15",
     "tsx": "^4.19.3",
