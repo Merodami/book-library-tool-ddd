@@ -1,3 +1,5 @@
+import { schemas } from '@book-library-tool/api'
+import { EventResponse } from '@book-library-tool/sdk'
 import { DeleteBookHandler } from '@books/commands/DeleteBookHandler.js'
 import { FastifyRequest } from 'fastify'
 
@@ -13,9 +15,9 @@ export class DeleteBookController {
    */
   async deleteBook(
     request: FastifyRequest<{
-      Params: { id: string }
+      Params: schemas.IdParameter
     }>,
-  ) {
+  ): Promise<EventResponse & { bookId: string }> {
     const { id } = request.params
 
     const result = await this.deleteBookHandler.execute({ id })

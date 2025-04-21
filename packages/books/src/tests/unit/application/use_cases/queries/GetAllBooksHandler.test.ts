@@ -1,8 +1,5 @@
-import {
-  Book,
-  CatalogSearchQuery,
-  PaginatedBookResponse,
-} from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
+import { Book, CatalogSearchQuery } from '@book-library-tool/sdk'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import { GetAllBooksHandler } from '@books/use_cases/queries/GetAllBooksHandler.js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -11,7 +8,7 @@ describe('GetAllBooksHandler', () => {
   let mockProjectionRepository: IBookProjectionRepository
   let handler: GetAllBooksHandler
   let mockBooks: Book[]
-  let mockPaginatedResponse: PaginatedBookResponse
+  let mockPaginatedResponse: schemas.PaginatedResult<schemas.BookDTO>
 
   const validQuery: CatalogSearchQuery = {
     title: 'Test Book',

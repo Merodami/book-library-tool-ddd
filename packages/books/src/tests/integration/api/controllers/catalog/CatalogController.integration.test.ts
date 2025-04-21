@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import type { Book, PaginatedBookResponse } from '@book-library-tool/sdk'
+import type { Book } from '@book-library-tool/sdk'
 import { logger } from '@book-library-tool/shared'
 import { createTestServer } from '@book-library-tool/tests'
 import { CatalogController } from '@books/controllers/catalog/CatalogController.js'
@@ -56,7 +56,7 @@ const mockRepo: IBookProjectionRepository = {
       async (
         query: schemas.CatalogSearchQuery,
         fields?: (keyof Book)[],
-      ): Promise<PaginatedBookResponse> => {
+      ): Promise<schemas.PaginatedResult<schemas.BookDTO>> => {
         let filtered = [...sampleBooks]
 
         // Text filters

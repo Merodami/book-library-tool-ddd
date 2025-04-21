@@ -57,7 +57,7 @@ export const BooksAPISpec: Partial<OpenAPIV3.Document> = {
               'A paginated list of books matching the search criteria',
             content: {
               'application/json': {
-                schema: registry.ref('PaginatedBookResponse'),
+                schema: registry.ref('PaginatedResult'),
                 examples: {
                   paginatedBooks: {
                     summary:

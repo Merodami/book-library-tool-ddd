@@ -1,5 +1,4 @@
 import { schemas } from '@book-library-tool/api'
-import { PaginatedBookResponse } from '@book-library-tool/sdk'
 import { CatalogController } from '@books/controllers/catalog/CatalogController.js'
 import { GetAllBooksHandler } from '@books/queries/GetAllBooksHandler.js'
 import { FastifyRequest } from 'fastify'
@@ -24,7 +23,7 @@ describe('CatalogController', () => {
   let controller: CatalogController
 
   // Sample paginated response for tests
-  const mockPaginatedResponse: PaginatedBookResponse = {
+  const mockPaginatedResponse: schemas.PaginatedResult<schemas.BookDTO> = {
     data: [
       {
         id: 'book-1',

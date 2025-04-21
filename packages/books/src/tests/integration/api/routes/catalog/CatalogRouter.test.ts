@@ -4,10 +4,18 @@ import { logger } from '@book-library-tool/shared'
 import { resetMocks } from '@book-library-tool/tests'
 import type { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import type { IBookRepository } from '@books/repositories/IBookRepository.js'
-import { createBookRouter } from '@books/routes/books/BookRoute.js'
+import { createBookRouter } from '@books/routes/books/BookRouter.js'
 import Fastify, { FastifyInstance } from 'fastify'
 import supertest from 'supertest'
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 
 // Silence Fastify error logs in tests
 beforeAll(() => {
@@ -21,7 +29,7 @@ vi.mock('@books/commands/CreateBookHandler.js', () => ({
   CreateBookHandler: vi.fn().mockImplementation(() => ({
     execute: vi.fn().mockResolvedValue({
       success: true,
-      bookId: 'test-book-id',
+      bookId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
       version: 1,
     }),
   })),
@@ -30,7 +38,7 @@ vi.mock('@books/commands/UpdateBookHandler.js', () => ({
   UpdateBookHandler: vi.fn().mockImplementation(() => ({
     execute: vi.fn().mockResolvedValue({
       success: true,
-      bookId: 'test-book-id',
+      bookId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
       version: 2,
     }),
   })),
@@ -39,7 +47,7 @@ vi.mock('@books/commands/DeleteBookHandler.js', () => ({
   DeleteBookHandler: vi.fn().mockImplementation(() => ({
     execute: vi.fn().mockResolvedValue({
       success: true,
-      bookId: 'test-book-id',
+      bookId: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
       version: 1,
     }),
   })),
@@ -70,7 +78,7 @@ vi.mock('@book-library-tool/api', () => ({
         price: { type: 'number' },
       },
     },
-    BookIdParameterSchema: {
+    IdParameterSchema: {
       type: 'object',
       properties: { id: { type: 'string' } },
       required: ['id'],
@@ -91,7 +99,7 @@ describe('Book Router Integration Tests', () => {
   let mockEventBus: EventBus
 
   const mockBookData = {
-    id: 'test-book-id',
+    id: '5a0e8b9b-e53a-429c-8022-c888d29b998c',
     isbn: '978-3-16-148410-0',
     title: 'Test Book',
     author: 'Test Author',
@@ -106,7 +114,9 @@ describe('Book Router Integration Tests', () => {
     resetMocks()
 
     mockBookRepository = {
-      findAggregateIdById: vi.fn().mockResolvedValue('test-aggregate-id'),
+      findAggregateIdById: vi
+        .fn()
+        .mockResolvedValue('5a0e8b9b-e53a-429c-8022-c888d29b998c'),
       getEventsForAggregate: vi.fn().mockResolvedValue([{}]),
       saveEvents: vi.fn().mockResolvedValue(undefined),
       appendBatch: vi.fn().mockResolvedValue(undefined),

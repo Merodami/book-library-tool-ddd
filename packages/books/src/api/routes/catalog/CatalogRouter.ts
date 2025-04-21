@@ -28,7 +28,7 @@ export function createCatalogRouter(
      *
      * @route GET /
      * @param {CatalogSearchQuery} req.query - Optional search parameters and fields to return
-     * @returns {PaginatedBookResponse} List of books matching the search criteria
+     * @returns {PaginatedResult<BookDTO>} List of books matching the search criteria
      */
     fastify.get(
       '/',

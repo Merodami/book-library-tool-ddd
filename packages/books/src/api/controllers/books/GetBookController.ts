@@ -24,7 +24,7 @@ export class GetBookController {
   })
   async getBook(
     request: FastifyRequest<{
-      Params: { id: string }
+      Params: schemas.IdParameter
     }>,
   ): Promise<BookDTO> {
     const { id } = request.params

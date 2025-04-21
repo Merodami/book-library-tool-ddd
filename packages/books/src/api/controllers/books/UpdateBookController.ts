@@ -1,3 +1,4 @@
+import { schemas } from '@book-library-tool/api'
 import { EventResponse } from '@book-library-tool/sdk'
 import type { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
 import { UpdateBookHandler } from '@books/commands/UpdateBookHandler.js'
@@ -15,7 +16,7 @@ export class UpdateBookController {
    */
   async updateBook(
     request: FastifyRequest<{
-      Params: { id: string }
+      Params: schemas.IdParameter
       Body: Omit<UpdateBookCommand, 'id'>
     }>,
   ): Promise<EventResponse & { bookId: string }> {

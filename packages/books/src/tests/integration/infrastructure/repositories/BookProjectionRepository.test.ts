@@ -1,9 +1,5 @@
-import type {
-  Book,
-  BookUpdateRequest,
-  CatalogSearchQuery,
-  PaginatedBookResponse,
-} from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
+import type { Book, BookUpdateRequest } from '@book-library-tool/sdk'
 import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
 import type { BookDocument } from '@books/persistence/mongo/documents/BookDocument.js'
 import { Collection, MongoClient } from 'mongodb'
@@ -103,25 +99,30 @@ describe('BookProjectionRepository Integration', () => {
 
       await repository.saveProjection(second)
 
-      const query: CatalogSearchQuery = { page: 1, limit: 10 }
-      const resp: PaginatedBookResponse = await repository.getAllBooks(query)
+      const query: schemas.CatalogSearchQuery = { page: 1, limit: 10 }
+      const resp: schemas.PaginatedResult<schemas.BookDTO> =
+        await repository.getAllBooks(query)
 
       expect(resp.data).toHaveLength(2)
       expect(resp.pagination.total).toBe(2)
     })
 
     it('filters by title', async () => {
-      const query: CatalogSearchQuery = { title: 'Test', page: 1, limit: 10 }
+      const query: schemas.CatalogSearchQuery = {
+        title: 'Test',
+        page: 1,
+        limit: 10,
+      }
       const resp = await repository.getAllBooks(query)
 
-      expect(resp.data.every((b) => b.title.includes('Test'))).toBe(true)
+      expect(resp.data.every((b) => b.title?.includes('Test'))).toBe(true)
     })
   })
 
   describe('saveProjection and updateProjection', () => {
     it('saves and updates correctly', async () => {
       const newBook: Book = {
-        id: 'test-id-789', // Add ID field
+        id: '46decb22-c152-482b-909e-693c20e416a6',
         isbn: '978-3-16-148410-2',
         title: 'New',
         author: 'New',
@@ -135,7 +136,7 @@ describe('BookProjectionRepository Integration', () => {
       await repository.saveProjection(newBook)
 
       // Changed from getBookByISBN to getBookByIsbn
-      let fetched = await repository.getBookByIsbn(newBook.isbn)
+      let fetched = await repository.getBookByIsbn(newBook.isbn || '')
 
       expect(fetched).not.toBeNull()
 
@@ -156,7 +157,7 @@ describe('BookProjectionRepository Integration', () => {
       await repository.updateProjection(id, updates, new Date())
 
       // Changed from getBookByISBN to getBookByIsbn
-      fetched = await repository.getBookByIsbn(newBook.isbn)
+      fetched = await repository.getBookByIsbn(newBook.isbn || '')
       expect(fetched?.title).toBe('Updated')
       expect(fetched?.author).toBe('Edited')
     })

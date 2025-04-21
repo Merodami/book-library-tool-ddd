@@ -5,10 +5,6 @@ import {
   buildTextFilter,
   convertDateStrings,
 } from '@book-library-tool/database'
-import type {
-  Book as BookDTO,
-  PaginatedBookResponse,
-} from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import { pick } from 'lodash-es'
@@ -21,7 +17,7 @@ import type { BookDocument } from './documents/BookDocument.js'
  * Implements filtering, pagination, and mapping to/from domain models.
  */
 export class BookProjectionRepository
-  extends BaseProjectionRepository<BookDocument, BookDTO>
+  extends BaseProjectionRepository<BookDocument, schemas.BookDTO>
   implements IBookProjectionRepository
 {
   /**
@@ -42,7 +38,7 @@ export class BookProjectionRepository
   async getAllBooks(
     query: schemas.CatalogSearchQuery,
     fields?: schemas.BookSortField[],
-  ): Promise<PaginatedBookResponse> {
+  ): Promise<schemas.PaginatedResult<schemas.BookDTO>> {
     // Build filter from search criteria
     const filter: Filter<BookDocument> = {}
 
@@ -116,7 +112,7 @@ export class BookProjectionRepository
   async getBookById(
     id: string,
     fields?: schemas.BookSortField[],
-  ): Promise<BookDTO | null> {
+  ): Promise<schemas.BookDTO | null> {
     return this.findOne(
       { id } as Filter<BookDocument>,
       fields,
@@ -134,7 +130,7 @@ export class BookProjectionRepository
   async getBookByIsbn(
     isbn: string,
     fields?: schemas.BookSortField[],
-  ): Promise<BookDTO | null> {
+  ): Promise<schemas.BookDTO | null> {
     return this.findOne(
       { isbn } as Filter<BookDocument>,
       fields,
@@ -146,7 +142,7 @@ export class BookProjectionRepository
    * Saves a new book projection to MongoDB.
    * @param book - Domain Book object to persist
    */
-  async saveProjection(book: BookDTO): Promise<void> {
+  async saveProjection(book: schemas.BookDTO): Promise<void> {
     const doc = mapToDocument(book)
 
     await this.collection.insertOne({ ...doc, _id: new ObjectId() })
@@ -163,7 +159,7 @@ export class BookProjectionRepository
     id: string,
     changes: Partial<
       Pick<
-        BookDTO,
+        schemas.BookDTO,
         'title' | 'author' | 'publicationYear' | 'publisher' | 'price' | 'isbn'
       >
     >,
@@ -178,7 +174,7 @@ export class BookProjectionRepository
       'isbn',
     ]
 
-    const picked = pick(changes, allowed as Array<keyof BookDTO>)
+    const picked = pick(changes, allowed as Array<keyof schemas.BookDTO>)
 
     const setFields = {
       ...picked,
@@ -228,7 +224,7 @@ export class BookProjectionRepository
    * @param isbn - Unique book identifier
    * @returns Domain Book object or null if not found
    */
-  async findBookForReservation(isbn: string): Promise<BookDTO | null> {
+  async findBookForReservation(isbn: string): Promise<schemas.BookDTO | null> {
     return this.findOne({ isbn } as Filter<BookDocument>)
   }
 }
@@ -236,8 +232,8 @@ export class BookProjectionRepository
 /**
  * Helper: map MongoDB document to domain Book.
  */
-function mapToDomain(doc: Partial<BookDocument>): BookDTO {
-  const result: BookDTO = {}
+function mapToDomain(doc: Partial<BookDocument>): schemas.BookDTO {
+  const result: schemas.BookDTO = {}
 
   // Map fields only if they exist in the document
   if ('id' in doc) result.id = doc.id
@@ -257,7 +253,7 @@ function mapToDomain(doc: Partial<BookDocument>): BookDTO {
 /**
  * Helper: map domain Book to MongoDB document (no _id).
  */
-function mapToDocument(book: BookDTO): Omit<BookDocument, '_id'> {
+function mapToDocument(book: schemas.BookDTO): Omit<BookDocument, '_id'> {
   // Validate required fields
   if (
     !book.isbn ||

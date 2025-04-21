@@ -1,11 +1,36 @@
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Static, Type } from '@sinclair/typebox'
 
-import { PaginationMetadataSchema } from './pagination.js'
+import {
+  createFieldsSelectionSchema,
+  createPaginationAndSortSchema,
+} from './helper/helper.js'
 
 // --------------------------------
 // Common Schema Components
 // --------------------------------
+
+export const ALLOWED_RESERVATION_FIELDS = [
+  'reservationId',
+  'userId',
+  'isbn',
+  'reservedAt',
+  'dueDate',
+  'status',
+  'feeCharged',
+  'retailPrice',
+  'createdAt',
+  'updatedAt',
+  'deletedAt',
+] as const
+
+export const ALLOWED_RESERVATION_SORT_FIELDS = [
+  'reservedAt',
+  'dueDate',
+  'status',
+  'feeCharged',
+  'createdAt',
+] as const
 
 // --------------------------------
 // Query Schemas
@@ -13,21 +38,31 @@ import { PaginationMetadataSchema } from './pagination.js'
 
 /**
  * Reservations History Query Schema (Used for request validation)
- * This schema only validates pagination parameters.
+ * This schema validates pagination, sorting, and field selection parameters.
  */
-export const ReservationsHistoryQuerySchema = Type.Partial(
-  Type.Object({
-    userId: Type.String({ format: 'uuid' }),
-    page: Type.Optional(Type.Number({ minimum: 1, default: 1 })),
-    limit: Type.Optional(
-      Type.Number({
-        minimum: 1,
-        maximum: parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100', 10),
-        default: parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10', 10),
-      }),
+export const ReservationsHistoryQuerySchema = Type.Object(
+  {
+    userId: Type.Optional(Type.String({ format: 'uuid' })),
+    status: Type.Optional(
+      Type.Union([
+        Type.Literal(RESERVATION_STATUS.CREATED),
+        Type.Literal(RESERVATION_STATUS.BORROWED),
+        Type.Literal(RESERVATION_STATUS.RETURNED),
+        Type.Literal(RESERVATION_STATUS.LATE),
+        Type.Literal(RESERVATION_STATUS.BROUGHT),
+        Type.Literal(RESERVATION_STATUS.CANCELLED),
+        Type.Literal(RESERVATION_STATUS.PENDING_PAYMENT),
+        Type.Literal(RESERVATION_STATUS.RESERVED),
+        Type.Literal(RESERVATION_STATUS.REJECTED),
+        Type.Literal(RESERVATION_STATUS.RESERVATION_BOOK_LIMIT_REACH),
+      ]),
     ),
-  }),
-  { $id: '#/components/schemas/ReservationsHistoryQuery' },
+    // Pagination and sort
+    ...createPaginationAndSortSchema(ALLOWED_RESERVATION_SORT_FIELDS),
+    // GraphQL fields selection
+    fields: createFieldsSelectionSchema(ALLOWED_RESERVATION_FIELDS),
+  },
+  { additionalProperties: false },
 )
 export type ReservationsHistoryQuery = Static<
   typeof ReservationsHistoryQuerySchema
@@ -57,20 +92,6 @@ export const ReservationRequestSchema = Type.Object(
 export type ReservationRequest = Static<typeof ReservationRequestSchema>
 export const ReservationRequestRef = Type.Ref(
   '#/components/schemas/ReservationRequest',
-)
-
-/**
- * Reservation Return Params Schema
- */
-export const ReservationIdParameterSchema = Type.Object(
-  {
-    reservationId: Type.String({ format: 'uuid' }),
-  },
-  { $id: '#/components/parameters/ReservationIdParameter' },
-)
-export type ReservationIdParameter = Static<typeof ReservationIdParameterSchema>
-export const ReservationIdParameterRef = Type.Ref(
-  '#/components/schemas/ReservationIdParameter',
 )
 
 // --------------------------------
@@ -149,25 +170,4 @@ export type ReservationReturnResponse = Static<
 >
 export const ReservationReturnResponseRef = Type.Ref(
   '#/components/schemas/ReservationReturnResponse',
-)
-
-// --------------------------------
-// Paginated Response Schemas
-// --------------------------------
-
-/**
- * Paginated Reservation Response Schema
- */
-export const PaginatedReservationResponseSchema = Type.Object(
-  {
-    data: Type.Array(ReservationRef),
-    pagination: PaginationMetadataSchema,
-  },
-  { $id: '#/components/schemas/PaginatedReservationResponse' },
-)
-export type PaginatedReservationResponse = Static<
-  typeof PaginatedReservationResponseSchema
->
-export const PaginatedReservationResponseRef = Type.Ref(
-  '#/components/schemas/PaginatedReservationResponse',
 )

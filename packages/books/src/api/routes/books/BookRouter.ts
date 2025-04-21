@@ -95,7 +95,7 @@ export function createBookRouter(
       '/:id',
       {
         schema: {
-          params: schemas.BookIdParameterSchema,
+          params: schemas.IdParameterSchema,
           body: schemas.BookUpdateRequestSchema,
         },
       },
@@ -124,7 +124,7 @@ export function createBookRouter(
       '/:id',
       {
         schema: {
-          params: schemas.BookIdParameterSchema,
+          params: schemas.IdParameterSchema,
         },
       },
       async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
@@ -146,7 +146,7 @@ export function createBookRouter(
       '/:id',
       {
         schema: {
-          params: schemas.BookIdParameterSchema,
+          params: schemas.IdParameterSchema,
         },
       },
       async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {

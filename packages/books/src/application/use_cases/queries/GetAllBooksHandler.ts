@@ -1,5 +1,4 @@
 import { schemas } from '@book-library-tool/api'
-import type { PaginatedBookResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 
@@ -19,7 +18,7 @@ export class GetAllBooksHandler {
   async execute(
     query: schemas.CatalogSearchQuery,
     fields?: schemas.BookSortField[],
-  ): Promise<PaginatedBookResponse> {
+  ): Promise<schemas.PaginatedResult<schemas.BookDTO>> {
     try {
       // Retrieve all events for the given aggregate ID.
       const books = await this.projectionRepository.getAllBooks(query, fields)

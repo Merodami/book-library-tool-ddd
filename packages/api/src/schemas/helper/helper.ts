@@ -45,7 +45,7 @@ export function createSortSchema<T extends readonly string[]>(
  */
 export function createPaginationSchema(
   maxLimit = parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100', 10),
-  defaultLimit = 10,
+  defaultLimit = parseInt(process.env.PAGINATION_DEFAULT_LIMIT ?? '10', 10),
 ) {
   return {
     page: Type.Optional(Type.Number({ minimum: 1, default: 1 })),

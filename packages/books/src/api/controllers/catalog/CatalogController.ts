@@ -20,7 +20,9 @@ export class CatalogController {
     keyGenerator: httpRequestKeyGenerator,
     condition: (result) => result && result.data && Array.isArray(result.data),
   })
-  async getAllBooks(request: FastifyRequest) {
+  async getAllBooks(
+    request: FastifyRequest,
+  ): Promise<schemas.PaginatedResult<schemas.BookDTO>> {
     const query = request.query as schemas.CatalogSearchQuery
 
     const validFields = parseAndValidate<schemas.BookSortField>(

@@ -8,8 +8,8 @@ import { BookEventSubscriptions } from '@books/event-store/BookEventSubscription
 import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
 import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
 import { BookRepository } from '@books/persistence/mongo/BookRepository.js'
-import { createBookRouter } from '@books/routes/books/BookRoute.js'
-import { createCatalogRouter } from '@books/routes/catalog/CatalogRoute.js'
+import { createBookRouter } from '@books/routes/books/BookRouter.js'
+import { createCatalogRouter } from '@books/routes/catalog/CatalogRouter.js'
 
 import { BookDocument } from '../infrastructure/persistence/mongo/documents/BookDocument.js'
 
