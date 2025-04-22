@@ -1,28 +1,18 @@
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { pick } from 'lodash-es'
-import {
-  Collection,
-  Document,
-  Filter,
-  ObjectId,
-  OptionalUnlessRequiredId,
-} from 'mongodb'
+import { PaginatedResult } from '@book-library-tool/types'
+import { Collection, Document, Filter } from 'mongodb'
 
+import { BaseProjectionRepository, DocumentMapper } from './BaseProjection.js'
 import { buildProjection } from './projectionUtils.js'
-
-/**
- * Generic document mapper function type
- */
-export type DocumentMapper<TDocument, TDto> = (doc: Partial<TDocument>) => TDto
 
 /**
  * Base repository for MongoDB projection operations
  * Provides common CRUD functionality with projections support
  */
-export abstract class BaseProjectionRepository<
+export abstract class BaseReadProjectionRepository<
   TDocument extends Document,
   TDto,
-> {
+> extends BaseProjectionRepository<TDocument, TDto> {
   /**
    * Constructs a new base projection repository
    * @param collection - MongoDB collection
@@ -31,28 +21,8 @@ export abstract class BaseProjectionRepository<
   constructor(
     protected readonly collection: Collection<TDocument>,
     protected readonly mapToDto: DocumentMapper<TDocument, TDto>,
-  ) {}
-
-  /**
-   * Build a soft deletion filter
-   * @returns MongoDB filter to exclude soft-deleted records
-   */
-  protected getNotDeletedFilter(): Filter<TDocument> {
-    return {
-      $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-    } as Filter<TDocument>
-  }
-
-  /**
-   * Combines entity filter with soft deletion filter
-   * @param filter - Entity-specific filter
-   * @returns Combined filter
-   */
-  protected buildCompleteFilter(filter: Filter<TDocument>): Filter<TDocument> {
-    return {
-      ...filter,
-      ...this.getNotDeletedFilter(),
-    }
+  ) {
+    super(collection, mapToDto)
   }
 
   /**
@@ -152,61 +122,62 @@ export abstract class BaseProjectionRepository<
   }
 
   /**
-   * Generic method to save a projection document
-   * @param dtoData - DTO to save
-   * @param mapToDocument - Function to map DTO to document
+   * Executes a paginated query with comprehensive metadata
+   * @param filter - MongoDB filter for the query
+   * @param queryParams - Query parameters including pagination and sorting
+   * @param fields - Optional fields to include in the projection
+   * @returns Paginated result with data and metadata
    */
-  protected async saveProjection(
-    dtoData: TDto,
-    mapToDocument: (dto: TDto) => Omit<TDocument, '_id'>,
-  ): Promise<void> {
-    const doc = mapToDocument(dtoData)
+  protected async executePaginatedQuery<
+    T extends {
+      page?: number
+      limit?: number
+      skip?: number
+      sortBy?: string
+      sortOrder?: 'asc' | 'desc'
+    },
+  >(
+    filter: Filter<TDocument>,
+    queryParams: T,
+    fields?: string[] | unknown,
+  ): Promise<PaginatedResult<TDto>> {
+    // Apply deletion filter
+    const completeFilter = this.buildCompleteFilter(filter)
 
-    await this.collection.insertOne({
-      ...doc,
-      _id: new ObjectId(),
-    } as OptionalUnlessRequiredId<TDocument>)
-  }
+    // Count total before pagination
+    const total = await this.count(completeFilter)
 
-  /**
-   * Generic method to update specific fields of a projection
-   * @param id - Document ID
-   * @param changes - Partial changes to apply
-   * @param allowedFields - Array of field names that are allowed to be updated
-   * @param updatedAt - Update timestamp
-   * @param errorCode - Error code to use if document not found
-   * @param errorMessage - Error message to use if document not found
-   */
-  protected async updateProjection<T extends TDto>(
-    id: string,
-    changes: Partial<T>,
-    allowedFields: Array<keyof T>,
-    updatedAt: Date | string,
-    errorCode: string,
-    errorMessage: string,
-  ): Promise<void> {
-    const picked = pick(changes, allowedFields)
+    // Extract pagination parameters with defaults
+    const limit = queryParams.limit || 10
+    const page = queryParams.page || 1
+    const skip =
+      queryParams.skip !== undefined ? queryParams.skip : (page - 1) * limit
 
-    // Create an object that will be compatible with MongoDB's typing
-    const setFields: Partial<Record<string, unknown>> = {
-      ...picked,
-      updatedAt: updatedAt instanceof Date ? updatedAt : new Date(updatedAt),
-    }
+    // Calculate derived pagination values
+    const pages = Math.ceil(total / limit)
+    const currentPage =
+      queryParams.skip !== undefined ? Math.floor(skip / limit) + 1 : page
 
-    if (Object.keys(setFields).length === 0) {
-      return
-    }
-
-    // Create a filter object and use a type predicate to ensure it's properly typed
-    const idFilter: Record<string, unknown> = { id }
-    const filter = this.buildCompleteFilter(idFilter as Filter<TDocument>)
-
-    const result = await this.collection.updateOne(filter, {
-      $set: setFields as Partial<TDocument>,
+    // Execute query with pagination, sorting and projection
+    const data = await this.findMany(completeFilter, {
+      skip,
+      limit,
+      sortBy: queryParams.sortBy,
+      sortOrder: queryParams.sortOrder,
+      fields,
     })
 
-    if (result.matchedCount === 0) {
-      throw new Errors.ApplicationError(404, errorCode, errorMessage)
+    // Return paginated result
+    return {
+      data,
+      pagination: {
+        total,
+        page: currentPage,
+        limit,
+        pages,
+        hasNext: currentPage < pages,
+        hasPrev: currentPage > 1,
+      },
     }
   }
 }

@@ -2,15 +2,15 @@ import { EventBus } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { Book } from '@books/entities/Book.js'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
-import { IBookRepository } from '@books/repositories/IBookRepository.js'
+import { IBookReadRepository } from '@books/repositories/IBookReadRepository.js'
+import { IBookWriteRepository } from '@books/repositories/IBookWriteRepository.js'
 
 import { DeleteBookCommand } from './DeleteBookCommand.js'
 
 export class DeleteBookHandler {
   constructor(
-    private readonly bookRepository: IBookRepository,
-    private readonly projectionRepository: IBookProjectionRepository,
+    private readonly readRepository: IBookReadRepository,
+    private readonly writeRepository: IBookWriteRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -24,20 +24,20 @@ export class DeleteBookHandler {
   async execute(
     command: DeleteBookCommand,
   ): Promise<EventResponse & { bookId: string }> {
-    const existing = await this.projectionRepository.getBookById(command.id)
+    const aggregateId = await this.readRepository.findAggregateIdById(
+      command.id,
+    )
 
-    if (!existing || !existing.id) {
+    if (!aggregateId) {
       throw new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book with ID ${command.id} not found`,
+        `Book with id ${command.id} not found.`,
       )
     }
 
-    const aggregateId = existing.id
-
     // Load the aggregate's events and rehydrate its current state.
-    const events = await this.bookRepository.getEventsForAggregate(aggregateId)
+    const events = await this.writeRepository.getEventsForAggregate(aggregateId)
 
     if (!events || events.length === 0) {
       throw new Errors.ApplicationError(
@@ -61,7 +61,7 @@ export class DeleteBookHandler {
     const { event } = currentBook.delete()
 
     // Persist the new delete event with optimistic concurrency (expected version is the current one).
-    await this.bookRepository.saveEvents(
+    await this.writeRepository.saveEvents(
       aggregateId,
       [event],
       currentBook.version,

@@ -9,17 +9,20 @@ import { DeleteBookController } from '@books/controllers/books/DeleteBookControl
 import { GetBookController } from '@books/controllers/books/GetBookController.js'
 import { UpdateBookController } from '@books/controllers/books/UpdateBookController.js'
 import { GetBookHandler } from '@books/queries/GetBookHandler.js'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
-import type { IBookRepository } from '@books/repositories/IBookRepository.js'
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
+
+import { IBookReadProjectionRepository } from '../../../domain/repositories/IBookReadProjectionRepository.js'
+import { IBookReadRepository } from '../../../domain/repositories/IBookReadRepository.js'
+import { IBookWriteRepository } from '../../../domain/repositories/IBookWriteRepository.js'
 
 /**
  * Creates and configures a Fastify plugin for book-related endpoints.
  * This plugin handles CRUD operations for books including creation, updates,
  * deletion, and retrieval of book information.
  *
- * @param {IBookRepository} bookRepository - Repository for managing book data
- * @param {IBookProjectionRepository} bookProjectionRepository - Repository for reading book projections
+ * @param {IBookWriteRepository} bookWriteRepository - Repository for managing book data
+ * @param {IBookReadRepository} bookReadRepository - Repository for reading book data
+ * @param {IBookReadProjectionRepository} projectionReadRepository - Repository for reading book projections
  * @param {EventBus} eventBus - Event bus for publishing domain events
  * @returns {FastifyPluginAsync} Configured Fastify plugin with book-related endpoints
  *
@@ -28,28 +31,22 @@ import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
  * app.register(plugin, { prefix: '/books' });
  */
 export function createBookRouter(
-  bookRepository: IBookRepository,
-  bookProjectionRepository: IBookProjectionRepository,
+  bookWriteRepository: IBookWriteRepository,
+  bookReadRepository: IBookReadRepository,
+  projectionReadRepository: IBookReadProjectionRepository,
   eventBus: EventBus,
 ): FastifyPluginAsync {
   return async (fastify: FastifyInstance) => {
     // Instantiate individual handlers
-    const createHandler = new CreateBookHandler(
-      bookRepository,
-      bookProjectionRepository,
-      eventBus,
-    )
-    const updateHandler = new UpdateBookHandler(
-      bookRepository,
-      bookProjectionRepository,
-      eventBus,
-    )
+    const createHandler = new CreateBookHandler(bookWriteRepository, eventBus)
+    const updateHandler = new UpdateBookHandler(bookWriteRepository, eventBus)
     const deleteHandler = new DeleteBookHandler(
-      bookRepository,
-      bookProjectionRepository,
+      bookReadRepository,
+      bookWriteRepository,
       eventBus,
     )
-    const getHandler = new GetBookHandler(bookProjectionRepository)
+
+    const getHandler = new GetBookHandler(projectionReadRepository)
 
     // Create specialized controllers
     const createBookController = new CreateBookController(createHandler)
@@ -156,15 +153,20 @@ export function createBookRouter(
      */
     fastify.get<{
       Params: schemas.IdParameter
+      Querystring: schemas.CatalogSearchQuery
     }>(
       '/:id',
       {
         schema: {
           params: schemas.IdParameterSchema,
+          querystring: schemas.CatalogSearchQuerySchema,
         },
       },
       async (
-        request: FastifyRequest<{ Params: schemas.IdParameter }>,
+        request: FastifyRequest<{
+          Params: schemas.IdParameter
+          Querystring: schemas.CatalogSearchQuery
+        }>,
         reply,
       ) => {
         const result = await getBookController.getBook(request)

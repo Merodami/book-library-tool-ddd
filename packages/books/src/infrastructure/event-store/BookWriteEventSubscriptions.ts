@@ -1,16 +1,15 @@
 import {
   BOOK_CREATED,
+  BOOK_CREATION_FAILED,
   BOOK_DELETED,
   BOOK_UPDATED,
   createErrorEvent,
   DomainEvent,
   EventBus,
-  RESERVATION_BOOK_VALIDATION,
-  RESERVATION_BOOK_VALIDATION_FAILED,
 } from '@book-library-tool/event-store'
 import { httpRequestKeyGenerator, RedisService } from '@book-library-tool/redis'
 import { logger } from '@book-library-tool/shared'
-import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
+import { BookWriteProjectionHandler } from '@books/event-store/BookWriteProjectionHandler.js'
 
 /**
  * Set up event subscriptions for book-related events.
@@ -20,26 +19,22 @@ import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.
  * Using async callbacks with try/catch ensures that errors are caught and logged,
  * preventing unhandled promise rejections.
  */
-export function BookEventSubscriptions(
+export function BookWriteEventSubscriptions(
   eventBus: EventBus,
   cacheService: RedisService,
-  projectionHandler: BookProjectionHandler,
+  projectionWriteHandler: BookWriteProjectionHandler,
 ): void {
   // Subscribe to BOOK_CREATED events and handle them asynchronously.
   eventBus.subscribe(BOOK_CREATED, async (event: DomainEvent) => {
     try {
-      await projectionHandler.handleBookCreated(event)
+      await projectionWriteHandler.handleBookCreated(event)
 
       // Delete the cache for the catalog
       await cacheService.delPattern('catalog:getAllBooks*')
     } catch (error) {
       logger.error(`Error handling BOOK_CREATED event: ${error}`)
 
-      const errorEvent = createErrorEvent(
-        event,
-        error,
-        RESERVATION_BOOK_VALIDATION_FAILED,
-      )
+      const errorEvent = createErrorEvent(event, error, BOOK_CREATION_FAILED)
 
       await eventBus.publish(errorEvent)
     }
@@ -48,7 +43,7 @@ export function BookEventSubscriptions(
   // Subscribe to BOOK_UPDATED events and handle them asynchronously.
   eventBus.subscribe(BOOK_UPDATED, async (event: DomainEvent) => {
     try {
-      await projectionHandler.handleBookUpdated(event)
+      await projectionWriteHandler.handleBookUpdated(event)
 
       // Delete the cache for the book
       const key = httpRequestKeyGenerator('book', 'getBook', [
@@ -72,7 +67,7 @@ export function BookEventSubscriptions(
     ])
 
     try {
-      await projectionHandler.handleBookDeleted(event)
+      await projectionWriteHandler.handleBookDeleted(event)
     } catch (error) {
       logger.error(`Error handling BOOK_DELETED event: ${error}`)
     } finally {
@@ -83,39 +78,6 @@ export function BookEventSubscriptions(
       await cacheService.delPattern('catalog:getAllBooks*')
     }
   })
-
-  eventBus.subscribe(
-    RESERVATION_BOOK_VALIDATION,
-    async (event: DomainEvent) => {
-      try {
-        // Process the validation request and get the result event
-        const validationResultEvent =
-          await projectionHandler.handleValidateBook(event)
-
-        // Publish the validation result
-        await eventBus.publish(validationResultEvent)
-
-        logger.info(
-          `Book validation for reservation ${event.payload.reservationId}: ${validationResultEvent.payload.isValid ? 'Valid' : 'Invalid'}`,
-        )
-      } catch (error) {
-        logger.error(`Error validating book for reservation: ${error}`)
-
-        // Create and publish generic error response
-        const errorEvent = createErrorEvent(
-          event,
-          error,
-          RESERVATION_BOOK_VALIDATION_FAILED,
-        )
-
-        // Optionally add specific fields needed for error recovery
-        errorEvent.payload.reservationId = event.payload.reservationId
-        errorEvent.payload.isbn = event.payload.isbn
-
-        await eventBus.publish(errorEvent)
-      }
-    },
-  )
 
   logger.info('Book event subscriptions configured successfully')
 }

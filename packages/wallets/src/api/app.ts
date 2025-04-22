@@ -1,5 +1,5 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { RabbitMQEventBus } from '@book-library-tool/event-store'
+import { DomainEvent, RabbitMQEventBus } from '@book-library-tool/event-store'
 import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis/src/application/decorators/cache.js'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
@@ -7,11 +7,12 @@ import { logger } from '@book-library-tool/shared'
 import { ProcessWalletPaymentHandler } from '@wallets/commands/ProcessWalletPaymentHandler.js'
 import { WalletEventSubscriptions } from '@wallets/event-store/WalletEventSubscriptions.js'
 import { WalletProjectionHandler } from '@wallets/event-store/WalletProjectionHandler.js'
-import { WalletProjectionRepository } from '@wallets/persistence/mongo/WalletProjectionRepository.js'
-import { WalletRepository } from '@wallets/persistence/mongo/WalletRepository.js'
+import { WalletReadRepository } from '@wallets/persistence/mongo/WalletReadRepository.js'
+import { WalletWriteRepository } from '@wallets/persistence/mongo/WalletWriteRepository.js'
 import { createWalletRouter } from '@wallets/routes/wallets/WalletRouter.js'
 
 import { BookReturnHandler } from '../application/use_cases/commands/BookReturnHandler.js'
+import { WalletReadProjectionRepository } from '../infrastructure/persistence/mongo/WalletReadProjectionRepository.js'
 
 async function startWalletService() {
   // Initialize the infrastructure service (database connection)
@@ -66,22 +67,39 @@ async function startWalletService() {
   }
 
   // Instantiate the repository used for command (write) operations
-  const walletRepository = new WalletRepository(dbService)
+  const walletWriteRepository = new WalletWriteRepository(
+    dbService.getCollection<DomainEvent>('wallet_events'),
+    dbService,
+  )
+  const walletReadRepository = new WalletReadRepository(
+    dbService.getCollection<DomainEvent>('wallet_events'),
+  )
 
   // Instantiate the repository used for query (read) operations: your projections
-  const walletProjectionRepository = new WalletProjectionRepository(dbService)
+  const walletReadProjectionRepository = new WalletReadProjectionRepository(
+    dbService.getCollection('wallets'),
+  )
 
   // Set up event subscriptions to update read models (via the projection handler)
-  const walletProjectionHandler = new WalletProjectionHandler(dbService)
-
-  // Set up the payment handler for processing wallet payments
-  const paymentHandler = new ProcessWalletPaymentHandler(
-    walletRepository,
-    walletProjectionRepository,
+  const walletProjectionHandler = new WalletProjectionHandler(
+    dbService,
+    walletReadProjectionRepository,
     eventBus,
   )
 
-  const bookReturnHandler = new BookReturnHandler(walletRepository, eventBus)
+  // Set up the payment handler for processing wallet payments
+  const paymentHandler = new ProcessWalletPaymentHandler(
+    walletWriteRepository,
+    walletReadRepository,
+    walletReadProjectionRepository,
+    eventBus,
+  )
+
+  const bookReturnHandler = new BookReturnHandler(
+    walletWriteRepository,
+    walletReadRepository,
+    eventBus,
+  )
 
   await WalletEventSubscriptions(
     eventBus,

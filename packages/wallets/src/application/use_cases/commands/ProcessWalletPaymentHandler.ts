@@ -1,11 +1,15 @@
-import { DomainEvent, EventBus } from '@book-library-tool/event-store'
+import {
+  DomainEvent,
+  EventBus,
+  WALLET_PAYMENT_DECLINED,
+  WALLET_PAYMENT_SUCCESS,
+} from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { ProcessWalletPaymentCommand } from '@wallets/commands/ProcessWalletPaymentCommand.js'
-import { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
-import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
+import { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletReadProjectionRepository.js'
+import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
+import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'
 
-const WALLET_PAYMENT_SUCCESS = 'WALLET_PAYMENT_SUCCESS'
-const WALLET_PAYMENT_DECLINED = 'WALLET_PAYMENT_DECLINED'
 const RESERVATION_FEE = parseInt(process.env.BOOK_RESERVATION_FEE ?? '3', 10)
 
 /**
@@ -16,8 +20,9 @@ const RESERVATION_FEE = parseInt(process.env.BOOK_RESERVATION_FEE ?? '3', 10)
  */
 export class ProcessWalletPaymentHandler {
   constructor(
-    private readonly walletRepository: IWalletRepository,
-    private readonly walletProjectionRepository: IWalletProjectionRepository,
+    private readonly walletWriteRepository: IWalletWriteRepository,
+    private readonly walletReadRepository: IWalletReadRepository,
+    private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -46,7 +51,7 @@ export class ProcessWalletPaymentHandler {
 
       // Use projection repository to check if wallet exists and has sufficient funds
       const walletProjection =
-        await this.walletProjectionRepository.getWalletByUserId(userId)
+        await this.walletReadProjectionRepository.getWalletByUserId(userId)
 
       if (!walletProjection) {
         logger.warn(`Payment declined: No wallet found for user ${userId}`)
@@ -61,7 +66,7 @@ export class ProcessWalletPaymentHandler {
       }
 
       // Check if wallet has sufficient balance
-      if (walletProjection.balance < amount) {
+      if (walletProjection.balance && walletProjection.balance < amount) {
         const reason = `Insufficient funds: required ${amount}, available ${walletProjection.balance}`
 
         logger.warn(`Payment declined: ${reason}`)
@@ -72,7 +77,7 @@ export class ProcessWalletPaymentHandler {
       }
 
       // Get the wallet from the write model to process the payment
-      const wallet = await this.walletRepository.findByUserId(userId)
+      const wallet = await this.walletReadRepository.findByUserId(userId)
 
       if (!wallet) {
         logger.error(
@@ -92,7 +97,7 @@ export class ProcessWalletPaymentHandler {
       const updateResult = wallet.updateBalance(-amount)
 
       // Save the event
-      await this.walletRepository.saveEvents(
+      await this.walletWriteRepository.saveEvents(
         wallet.id,
         [updateResult.event],
         wallet.version,

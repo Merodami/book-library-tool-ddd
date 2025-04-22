@@ -1,5 +1,5 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { RabbitMQEventBus } from '@book-library-tool/event-store'
+import { DomainEvent, RabbitMQEventBus } from '@book-library-tool/event-store'
 import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis/src/application/decorators/cache.js'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
@@ -66,8 +66,14 @@ async function startReservationService() {
   }
 
   // Instantiate the repository used for command (write) operations
-  const reservationReadRepository = new ReservationReadRepository(dbService)
-  const reservationWriteRepository = new ReservationWriteRepository(dbService)
+  const reservationReadRepository = new ReservationReadRepository(
+    dbService.getCollection<DomainEvent>('reservation_events'),
+  )
+
+  const reservationWriteRepository = new ReservationWriteRepository(
+    dbService.getCollection<DomainEvent>('reservation_events'),
+    dbService,
+  )
 
   const reservationProjectionCollection =
     dbService.getCollection<ReservationDocument>('reservation_projection')
@@ -103,6 +109,7 @@ async function startReservationService() {
   // Subscribe to internal domain events for reservations
   await ReservationEventSubscriptions(
     eventBus,
+    redisService,
     reservationProjectionHandler,
     validateReservationHandler,
     paymentHandler,

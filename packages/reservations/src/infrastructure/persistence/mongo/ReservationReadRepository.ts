@@ -1,5 +1,5 @@
 import {
-  BaseEventSourcedRepository,
+  BaseReadEventSourcedRepository,
   type DomainEvent,
   RESERVATION_CONFIRMED,
 } from '@book-library-tool/event-store'
@@ -13,7 +13,7 @@ import type { IReservationReadRepository } from '@reservations/repositories/IRes
  * Handles persisting and retrieving domain events for the reservation bounded context.
  */
 export class ReservationReadRepository
-  extends BaseEventSourcedRepository<Reservation>
+  extends BaseReadEventSourcedRepository<Reservation>
   implements IReservationReadRepository
 {
   /**

@@ -1,5 +1,5 @@
 import {
-  BaseEventSourcedRepository,
+  BaseWriteEventSourcedRepository,
   type DomainEvent,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
@@ -11,7 +11,7 @@ import type { IReservationWriteRepository } from '@reservations/repositories/IRe
  * Handles persisting and retrieving domain events for the reservation bounded context.
  */
 export class ReservationWriteRepository
-  extends BaseEventSourcedRepository<Reservation>
+  extends BaseWriteEventSourcedRepository<Reservation>
   implements IReservationWriteRepository
 {
   /**

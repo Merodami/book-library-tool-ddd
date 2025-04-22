@@ -1,8 +1,13 @@
 import { schemas } from '@book-library-tool/api'
-import { BaseProjectionRepository } from '@book-library-tool/database'
+import {
+  BaseReadProjectionRepository,
+  buildRangeFilter,
+  buildTextFilter,
+} from '@book-library-tool/database'
 import { PaginatedResult, RESERVATION_STATUS } from '@book-library-tool/types'
 import { DomainReservation } from '@reservations/entities/DomainReservation.js'
 import type { ReservationDocument } from '@reservations/persistence/mongo/documents/ReservationDocument.js'
+import { mapToDomain } from '@reservations/persistence/mongo/mappers/ReservationDocCodec.js'
 import type { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
 import { Collection, Filter } from 'mongodb'
 
@@ -12,7 +17,7 @@ import { Collection, Filter } from 'mongodb'
  * and provides versioned or generic update methods.
  */
 export class ReservationReadProjectionRepository
-  extends BaseProjectionRepository<ReservationDocument, DomainReservation>
+  extends BaseReadProjectionRepository<ReservationDocument, DomainReservation>
   implements IReservationReadProjectionRepository
 {
   constructor(collection: Collection<ReservationDocument>) {
@@ -30,39 +35,40 @@ export class ReservationReadProjectionRepository
     query: schemas.ReservationsHistoryQuery,
     fields?: schemas.ReservationSortField[],
   ): Promise<PaginatedResult<DomainReservation>> {
-    // Build filter from search criteria
     const filter: Filter<ReservationDocument> = { userId }
 
-    // Count total before pagination
-    const total = await this.count(filter)
+    // Text-based filters on title, author, publisher
+    Object.assign(
+      filter,
+      buildTextFilter('bookId', query.bookId),
+      buildTextFilter('status', query.status),
+      buildTextFilter('statusReason', query.statusReason),
+      buildTextFilter('paymentMethod', query.paymentMethod),
+      buildTextFilter('paymentReference', query.paymentReference),
+      buildTextFilter('paymentFailReason', query.paymentFailReason),
+    )
 
-    // Prepare pagination values
-    const skip = query.skip || 0
-    const limit = query.limit || 10
-    const page = Math.floor(skip / limit) + 1
-    const pages = Math.ceil(total / limit)
+    // Numeric range filters for publicationYear and price
+    Object.assign(
+      filter,
+      buildRangeFilter('feeCharged', {
+        exact: query.feeCharged,
+        min: query.feeChargedMin,
+        max: query.feeChargedMax,
+      }),
+      buildRangeFilter('retailPrice', {
+        exact: query.retailPrice,
+        min: query.retailPriceMin,
+        max: query.retailPriceMax,
+      }),
+      buildRangeFilter('lateFee', {
+        exact: query.lateFee,
+        min: query.lateFeeMin,
+        max: query.lateFeeMax,
+      }),
+    )
 
-    // Use base class to perform the query
-    const data = await this.findMany(filter, {
-      skip,
-      limit,
-      sortBy: query.sortBy || 'createdAt',
-      sortOrder: query.sortOrder || 'desc',
-      fields,
-    })
-
-    // Return data with pagination metadata
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages,
-        hasNext: skip + limit < total,
-        hasPrev: skip > 0,
-      },
-    }
+    return this.executePaginatedQuery(filter, query, fields)
   }
 
   /**
@@ -112,12 +118,17 @@ export class ReservationReadProjectionRepository
   /**
    * Checks if any active reservation exists for a specific book
    * @param bookId - Book ID
+   * @param userId - User identifier
    * @returns Boolean indicating whether any reservation exists
    */
-  async hasActiveReservations(bookId: string): Promise<boolean> {
+  async hasActiveReservations(
+    bookId: string,
+    userId: string,
+  ): Promise<boolean> {
     // Build filter for active reservations
     const filter: Filter<ReservationDocument> = {
       bookId,
+      userId,
       status: {
         $in: [RESERVATION_STATUS.RESERVED, RESERVATION_STATUS.BORROWED],
       },
@@ -146,50 +157,5 @@ export class ReservationReadProjectionRepository
         ],
       },
     })
-  }
-}
-
-/**
- * Transform a MongoDB document into a Reservation.
- * Serializes dates to ISO strings.
- */
-function mapToDomain(doc: Partial<ReservationDocument>): DomainReservation {
-  if (
-    !doc.id ||
-    !doc.userId ||
-    !doc.bookId ||
-    !doc.reservedAt ||
-    !doc.dueDate ||
-    !doc.createdAt ||
-    doc.version === undefined
-  ) {
-    throw new Error('Invalid ReservationDocument for mapping to domain')
-  }
-
-  return {
-    id: doc.id,
-    userId: doc.userId,
-    bookId: doc.bookId,
-    status: doc.status as RESERVATION_STATUS,
-    feeCharged: doc.feeCharged!,
-    retailPrice: doc.retailPrice!,
-    reservedAt: doc.reservedAt,
-    dueDate: doc.dueDate,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt ?? undefined,
-    deletedAt: doc.deletedAt ?? undefined,
-    version: doc.version!,
-    lateFee: doc.lateFee!,
-    statusReason: doc.statusReason,
-    payment: doc.payment
-      ? {
-          date: doc.payment.date,
-          amount: doc.payment.amount,
-          method: doc.payment.method,
-          reference: doc.payment.reference,
-          failReason: doc.payment.failReason,
-          received: doc.payment.received,
-        }
-      : undefined,
   }
 }

@@ -61,10 +61,7 @@ describe('GetBookController', () => {
       const result = await controller.getBook(mockRequest)
 
       // Verify the handler was called with the correct query and no fields
-      expect(getBookHandler.execute).toHaveBeenCalledWith(
-        { id: bookId },
-        undefined,
-      )
+      expect(getBookHandler.execute).toHaveBeenCalledWith(bookId, undefined)
 
       // Verify the controller returns the handler's response
       expect(result).toEqual(mockBook)
@@ -81,7 +78,7 @@ describe('GetBookController', () => {
       await controller.getBook(mockRequest)
 
       // Verify the handler was called with the correct fields
-      expect(getBookHandler.execute).toHaveBeenCalledWith({ id: bookId }, [
+      expect(getBookHandler.execute).toHaveBeenCalledWith(bookId, [
         'id',
         'title',
         'author',
@@ -99,7 +96,7 @@ describe('GetBookController', () => {
       await controller.getBook(mockRequest)
 
       // Verify the handler was called with only valid fields
-      expect(getBookHandler.execute).toHaveBeenCalledWith({ id: bookId }, [
+      expect(getBookHandler.execute).toHaveBeenCalledWith(bookId, [
         'id',
         'title',
       ])

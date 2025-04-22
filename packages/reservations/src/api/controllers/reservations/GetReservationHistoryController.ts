@@ -46,7 +46,7 @@ export class GetReservationHistoryController {
     )
 
     return {
-      data: result.data.map((reservation) => toApiReservation(reservation)),
+      data: result.data.map(toApiReservation),
       pagination: result.pagination,
     }
   }

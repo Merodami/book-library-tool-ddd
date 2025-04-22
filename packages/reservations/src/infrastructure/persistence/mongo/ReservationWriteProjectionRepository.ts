@@ -1,12 +1,13 @@
 import { schemas } from '@book-library-tool/api'
-import {
-  BaseProjectionRepository,
-  convertDateStrings,
-} from '@book-library-tool/database'
+import { BaseWriteProjectionRepository } from '@book-library-tool/database'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { DomainReservation } from '@reservations/entities/DomainReservation.js'
 import type { ReservationDocument } from '@reservations/persistence/mongo/documents/ReservationDocument.js'
+import {
+  mapToDocument,
+  mapToDomain,
+} from '@reservations/persistence/mongo/mappers/ReservationDocCodec.js'
 import type { IReservationWriteProjectionRepository } from '@reservations/repositories/IReservationWriteProjectionRepository.js'
 import { Collection, Filter } from 'mongodb'
 
@@ -16,7 +17,7 @@ import { Collection, Filter } from 'mongodb'
  * and provides versioned or generic update methods.
  */
 export class ReservationWriteProjectionRepository
-  extends BaseProjectionRepository<ReservationDocument, DomainReservation>
+  extends BaseWriteProjectionRepository<ReservationDocument, DomainReservation>
   implements IReservationWriteProjectionRepository
 {
   constructor(collection: Collection<ReservationDocument>) {
@@ -275,88 +276,4 @@ export class ReservationWriteProjectionRepository
       { $set: { bookDeleted: true, updatedAt: timestamp } },
     )
   }
-}
-
-/**
- * Transform a MongoDB document into a Reservation.
- * Serializes dates to ISO strings.
- */
-function mapToDomain(doc: Partial<ReservationDocument>): DomainReservation {
-  if (
-    !doc.id ||
-    !doc.userId ||
-    !doc.bookId ||
-    !doc.reservedAt ||
-    !doc.dueDate ||
-    !doc.createdAt ||
-    doc.version === undefined
-  ) {
-    throw new Error('Invalid ReservationDocument for mapping to domain')
-  }
-
-  return {
-    id: doc.id,
-    userId: doc.userId,
-    bookId: doc.bookId,
-    status: doc.status as RESERVATION_STATUS,
-    feeCharged: doc.feeCharged!,
-    retailPrice: doc.retailPrice!,
-    lateFee: doc.lateFee!,
-    reservedAt: doc.reservedAt,
-    dueDate: doc.dueDate,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt ?? undefined,
-    deletedAt: doc.deletedAt ?? undefined,
-    version: doc.version!,
-    statusReason: doc.statusReason,
-    payment: doc.payment
-      ? {
-          date: doc.payment.date,
-          amount: doc.payment.amount,
-          method: doc.payment.method,
-          reference: doc.payment.reference,
-          failReason: doc.payment.failReason,
-          received: doc.payment.received,
-        }
-      : undefined,
-  }
-}
-/**
- * Transform a Reservation into a MongoDB document.
- * Converts ISO strings back to Date.
- */
-function mapToDocument(
-  res: DomainReservation,
-): Omit<ReservationDocument, '_id'> {
-  if (!res.id || !res.userId || !res.bookId || !res.status) {
-    throw new Errors.ApplicationError(
-      400,
-      ErrorCode.VALIDATION_ERROR,
-      'Missing required id, userId, or bookId',
-    )
-  }
-
-  const dates = convertDateStrings({
-    createdAt: res.createdAt,
-    reservedAt: res.reservedAt,
-    dueDate: res.dueDate,
-    updatedAt: res.updatedAt,
-    deletedAt: res.deletedAt,
-  } as Record<string, unknown>) as Record<string, Date | undefined>
-
-  return {
-    id: res.id,
-    userId: res.userId,
-    bookId: res.bookId,
-    status: res.status,
-    version: res.version,
-    feeCharged: res.feeCharged,
-    retailPrice: res.retailPrice,
-    lateFee: res.lateFee,
-    createdAt: dates.createdAt ?? new Date(),
-    reservedAt: dates.reservedAt!,
-    dueDate: dates.dueDate!,
-    updatedAt: dates.updatedAt,
-    deletedAt: dates.deletedAt,
-  } as ReservationDocument & { version: number }
 }

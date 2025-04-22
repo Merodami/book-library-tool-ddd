@@ -6,7 +6,8 @@ import {
 } from '@book-library-tool/shared/src/errorCodes.js'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
 import { BookReturnCommand } from '@wallets/commands/BookReturnCommand.js'
-import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
+import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
+import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'
 
 /**
  * Command handler for applying late fees to a wallet.
@@ -16,7 +17,8 @@ import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
  */
 export class BookReturnHandler {
   constructor(
-    private readonly walletRepository: IWalletRepository,
+    private readonly walletWriteRepository: IWalletWriteRepository,
+    private readonly walletReadRepository: IWalletReadRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -43,7 +45,7 @@ export class BookReturnHandler {
         `Processing book return for user ${command.userId} with days late: ${command.daysLate}`,
       )
 
-      const existingWallet = await this.walletRepository.findByUserId(
+      const existingWallet = await this.walletReadRepository.findByUserId(
         command.userId,
       )
 
@@ -84,7 +86,7 @@ export class BookReturnHandler {
 
       // Save event using the current version from the original wallet
       // NOT the newly created wallet instance's version
-      await this.walletRepository.saveEvents(
+      await this.walletWriteRepository.saveEvents(
         wallet.id,
         [event],
         existingWallet.version,

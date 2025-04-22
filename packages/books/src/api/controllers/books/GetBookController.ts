@@ -3,7 +3,6 @@ import { parseAndValidate } from '@book-library-tool/http'
 import { Cache, httpRequestKeyGenerator } from '@book-library-tool/redis'
 import { Book as Book } from '@book-library-tool/sdk'
 import { GetBookHandler } from '@books/queries/GetBookHandler.js'
-import type { GetBookQuery } from '@books/queries/GetBookQuery.js'
 import type { FastifyRequest } from 'fastify'
 
 export class GetBookController {
@@ -24,6 +23,7 @@ export class GetBookController {
   async getBook(
     request: FastifyRequest<{
       Params: schemas.IdParameter
+      Querystring: schemas.CatalogSearchQuery
     }>,
   ): Promise<Book> {
     const { id } = request.params
@@ -35,12 +35,8 @@ export class GetBookController {
       schemas.ALLOWED_BOOK_FIELDS,
     )
 
-    const bookQuery: GetBookQuery = {
-      id,
-    }
-
     const result = await this.getBookHandler.execute(
-      bookQuery,
+      id,
       validFields || undefined,
     )
 

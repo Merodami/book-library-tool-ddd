@@ -1,10 +1,10 @@
 import type { DomainEvent } from '@book-library-tool/event-store'
 
 /**
- * IBookRepository abstracts the persistence and retrieval of domain events
+ * IBookWriteRepository abstracts the persistence and retrieval of domain events
  * for Book aggregates. It ensures optimistic concurrency via version checking.
  */
-export interface IBookRepository {
+export interface IBookWriteRepository {
   /**
    * Save a list of domain events for a given aggregate using a single operation.
    * An optimistic concurrency check on the expected version ensures that no
@@ -42,9 +42,4 @@ export interface IBookRepository {
    * @returns A promise that resolves to an array of DomainEvent objects.
    */
   getEventsForAggregate(aggregateId: string): Promise<DomainEvent[]>
-
-  /**
-   * Finds the aggregate ID associated with an ID
-   */
-  findAggregateIdById(id: string): Promise<string | null>
 }

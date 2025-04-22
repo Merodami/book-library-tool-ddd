@@ -1,23 +1,21 @@
 import { schemas } from '@book-library-tool/api'
 import {
-  BaseProjectionRepository,
-  buildRangeFilter,
-  buildTextFilter,
+  BaseWriteProjectionRepository,
   convertDateStrings,
 } from '@book-library-tool/database'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { IBookWriteProjectionRepository } from '@books/repositories/IBookWriteProjectionRepository.js'
 import { Collection, Filter } from 'mongodb'
 
 import type { BookDocument } from './documents/BookDocument.js'
 
 /**
- * Repository for performing read operations on Book projections in MongoDB.
- * Implements filtering, pagination, and mapping to/from domain models.
+ * Repository for performing write operations on Book projections in MongoDB.
+ * Implements saving and updating book projections.
  */
-export class BookProjectionRepository
-  extends BaseProjectionRepository<BookDocument, schemas.Book>
-  implements IBookProjectionRepository
+export class BookWriteProjectionRepository
+  extends BaseWriteProjectionRepository<BookDocument, schemas.Book>
+  implements IBookWriteProjectionRepository
 {
   /**
    * Constructs a new BookProjectionRepository.
@@ -25,116 +23,6 @@ export class BookProjectionRepository
    */
   constructor(collection: Collection<BookDocument>) {
     super(collection, mapToDomain)
-  }
-
-  /**
-   * Retrieves a paginated list of books matching the given query parameters.
-   * Supports text search, numeric range filters, sorting, and field projection.
-   * @param query - Search and pagination parameters
-   * @param fields - Optional list of fields to include in results
-   * @returns Paginated response containing domain Book objects
-   */
-  async getAllBooks(
-    query: schemas.CatalogSearchQuery,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.Book>> {
-    // Build filter from search criteria
-    const filter: Filter<BookDocument> = {}
-
-    // Text-based filters on title, author, publisher
-    Object.assign(
-      filter,
-      buildTextFilter('title', query.title),
-      buildTextFilter('author', query.author),
-      buildTextFilter('publisher', query.publisher),
-    )
-
-    // Exact ISBN match
-    if (query.isbn) {
-      filter.isbn = query.isbn
-    }
-
-    // Numeric range filters for publicationYear and price
-    Object.assign(
-      filter,
-      buildRangeFilter('publicationYear', {
-        exact: query.publicationYear,
-        min: query.publicationYearMin,
-        max: query.publicationYearMax,
-      }),
-      buildRangeFilter('price', {
-        exact: query.price,
-        min: query.priceMin,
-        max: query.priceMax,
-      }),
-    )
-
-    // Count total before pagination
-    const total = await this.count(filter)
-
-    // Prepare pagination values
-    const skip = query.skip || 0
-    const limit = query.limit || 10
-    const page = Math.floor(skip / limit) + 1
-    const pages = Math.ceil(total / limit)
-
-    // Use base class to perform the query
-    const data = await this.findMany(filter, {
-      skip,
-      limit,
-      sortBy: query.sortBy,
-      sortOrder: query.sortOrder,
-      fields,
-    })
-
-    // Return data with pagination metadata
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages,
-        hasNext: skip + limit < total,
-        hasPrev: skip > 0,
-      },
-    }
-  }
-
-  /**
-   * Retrieves a single book by its ID, excluding soft-deleted records.
-   * @param id - Unique book identifier
-   * @param fields - Optional list of fields to include
-   * @returns Domain Book object or null if not found
-   * @throws ApplicationError on data mapping errors
-   */
-  async getBookById(
-    id: string,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.Book | null> {
-    return this.findOne(
-      { id } as Filter<BookDocument>,
-      fields,
-      `book doc for ID ${id}`,
-    )
-  }
-
-  /**
-   * Retrieves a single book by its ISBN, excluding soft-deleted records.
-   * @param isbn - Unique book identifier
-   * @param fields - Optional list of fields to include
-   * @returns Domain Book object or null if not found
-   * @throws ApplicationError on data mapping errors
-   */
-  async getBookByIsbn(
-    isbn: string,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.Book | null> {
-    return this.findOne(
-      { isbn } as Filter<BookDocument>,
-      fields,
-      `book doc for ISBN ${isbn}`,
-    )
   }
 
   /**

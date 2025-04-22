@@ -1,10 +1,10 @@
 import { schemas } from '@book-library-tool/api'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { IBookReadProjectionRepository } from '@books/repositories/IBookReadProjectionRepository.js'
 
 export class GetAllBooksHandler {
   constructor(
-    private readonly projectionRepository: IBookProjectionRepository,
+    private readonly projectionReadRepository: IBookReadProjectionRepository,
   ) {}
 
   /**
@@ -21,7 +21,10 @@ export class GetAllBooksHandler {
   ): Promise<schemas.PaginatedResult<schemas.Book>> {
     try {
       // Retrieve all events for the given aggregate ID.
-      const books = await this.projectionRepository.getAllBooks(query, fields)
+      const books = await this.projectionReadRepository.getAllBooks(
+        query,
+        fields,
+      )
 
       if (!books) {
         return {

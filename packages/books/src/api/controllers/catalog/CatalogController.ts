@@ -20,7 +20,9 @@ export class CatalogController {
     condition: (result) => result && result.data && Array.isArray(result.data),
   })
   async getAllBooks(
-    request: FastifyRequest,
+    request: FastifyRequest<{
+      Querystring: schemas.CatalogSearchQuery
+    }>,
   ): Promise<schemas.PaginatedResult<schemas.Book>> {
     const query = request.query as schemas.CatalogSearchQuery
 

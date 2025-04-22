@@ -10,7 +10,7 @@ import { GetReservationHistoryHandler } from '@reservations/queries/GetReservati
 import type { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
 import type { IReservationReadRepository } from '@reservations/repositories/IReservationReadRepository.js'
 import type { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
-import { FastifyInstance } from 'fastify'
+import { FastifyInstance, FastifyRequest } from 'fastify'
 
 /**
  * Creates and configures routes for reservation-related operations.
@@ -65,7 +65,12 @@ export function createReservationRouter(
           body: schemas.ReservationRequestSchema,
         },
       },
-      async (request, reply) => {
+      async (
+        request: FastifyRequest<{
+          Body: schemas.ReservationRequest
+        }>,
+        reply,
+      ) => {
         const result =
           await createReservationController.createReservation(request)
 
@@ -85,7 +90,13 @@ export function createReservationRouter(
           querystring: schemas.ReservationsHistoryQuerySchema,
         },
       },
-      async (request, reply) => {
+      async (
+        request: FastifyRequest<{
+          Params: schemas.UserIdParameter
+          Querystring: schemas.ReservationsHistoryQuery
+        }>,
+        reply,
+      ) => {
         const result =
           await getReservationHistoryController.getReservationHistory(request)
 
@@ -102,7 +113,12 @@ export function createReservationRouter(
           params: schemas.IdParameterSchema,
         },
       },
-      async (request, reply) => {
+      async (
+        request: FastifyRequest<{
+          Params: schemas.IdParameter
+        }>,
+        reply,
+      ) => {
         const result =
           await returnReservationController.returnReservation(request)
 

@@ -4,7 +4,6 @@ import { Errors, logger } from '@book-library-tool/shared'
 import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import { GetBookHandler } from '@books/use_cases/queries/GetBookHandler.js'
-import { GetBookQuery } from '@books/use_cases/queries/GetBookQuery.js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('GetBookHandler', () => {
@@ -12,11 +11,8 @@ describe('GetBookHandler', () => {
   let handler: GetBookHandler
   let mockBook: Book
 
-  const validId = 'test-id'
+  const validId = '123e4567-e89b-12d3-a456-426614174000'
   const validIsbn = '978-3-16-148410-0'
-  const validQuery: GetBookQuery = {
-    id: validId,
-  }
 
   beforeEach(() => {
     vi.spyOn(logger, 'error').mockImplementation(() => {})
@@ -62,11 +58,11 @@ describe('GetBookHandler', () => {
   })
 
   it('should return a book when it exists', async () => {
-    const result = await handler.execute(validQuery)
+    const result = await handler.execute(validId)
 
     expect(result).toEqual(mockBook) // Changed toBe to toEqual for object comparison
     expect(mockBookProjectionRepository.getBookById).toHaveBeenCalledWith(
-      validQuery.id,
+      validId,
       undefined,
     )
   })
@@ -74,16 +70,16 @@ describe('GetBookHandler', () => {
   it('should throw an error when the book does not exist', async () => {
     mockBookProjectionRepository.getBookById = vi.fn().mockResolvedValue(null)
 
-    await expect(handler.execute(validQuery)).rejects.toEqual(
+    await expect(handler.execute(validId)).rejects.toEqual(
       new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book with ID ${validQuery.id} not found`,
+        `Book with ID ${validId} not found`,
       ),
     )
 
     expect(mockBookProjectionRepository.getBookById).toHaveBeenCalledWith(
-      validQuery.id,
+      validId,
       undefined,
     )
   })
@@ -91,23 +87,21 @@ describe('GetBookHandler', () => {
   it('should pass additional fields parameter when provided', async () => {
     const fields = ['title', 'author', 'price'] as schemas.BookSortField[]
 
-    await handler.execute(validQuery, fields)
+    await handler.execute(validId, fields)
 
     expect(mockBookProjectionRepository.getBookById).toHaveBeenCalledWith(
-      validQuery.id,
+      validId,
       fields,
     )
   })
 
   it('should work with numeric ID', async () => {
-    const numericIdQuery: GetBookQuery = {
-      id: '123', // Numeric ID as string
-    }
+    const numericIdQuery = '123'
 
     await handler.execute(numericIdQuery)
 
     expect(mockBookProjectionRepository.getBookById).toHaveBeenCalledWith(
-      numericIdQuery.id,
+      numericIdQuery,
       undefined,
     )
   })
@@ -115,11 +109,9 @@ describe('GetBookHandler', () => {
   it('should throw error with proper ID in message', async () => {
     mockBookProjectionRepository.getBookById = vi.fn().mockResolvedValue(null)
 
-    const specialQuery: GetBookQuery = {
-      id: 'special-123',
-    }
+    const specialQuery = 'special-123'
 
-    await expect(handler.execute(specialQuery)).rejects.toEqual(
+    await expect(handler.execute(specialQuery, undefined)).rejects.toEqual(
       new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
@@ -135,6 +127,6 @@ describe('GetBookHandler', () => {
       .fn()
       .mockRejectedValue(testError)
 
-    await expect(handler.execute(validQuery)).rejects.toThrow(testError)
+    await expect(handler.execute(validId)).rejects.toThrow(testError)
   })
 })

@@ -44,9 +44,10 @@ export interface IReservationReadProjectionRepository {
   /**
    * Checks if any active reservation exists for a specific book
    * @param bookId - Book ID
+   * @param userId - User identifier
    * @returns Boolean indicating whether any reservation exists
    */
-  hasActiveReservations(bookId: string): Promise<boolean>
+  hasActiveReservations(bookId: string, userId: string): Promise<boolean>
 
   /**
    * Count active (non-deleted) reservations for a user.

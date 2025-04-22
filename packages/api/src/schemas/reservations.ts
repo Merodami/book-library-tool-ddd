@@ -24,15 +24,13 @@ export const ALLOWED_RESERVATION_FIELDS = [
 export type ReservationField = (typeof ALLOWED_RESERVATION_FIELDS)[number]
 
 export const ALLOWED_RESERVATION_SORT_FIELDS = [
-  'userId',
-  'bookId',
-  'reservedAt',
-  'dueDate',
   'status',
   'feeCharged',
   'retailPrice',
-  'returnedAt',
   'lateFee',
+  'reservedAt',
+  'dueDate',
+  'returnedAt',
   'createdAt',
   'updatedAt',
   'deletedAt',
@@ -51,6 +49,31 @@ export type ReservationSortField =
  */
 export const ReservationsHistoryQuerySchema = Type.Object(
   {
+    bookId: Type.Optional(Type.String({ minLength: 1 })),
+    status: Type.Optional(Type.String({ minLength: 1 })),
+    statusReason: Type.Optional(Type.String({ minLength: 1 })),
+    paymentMethod: Type.Optional(Type.String({ minLength: 1 })),
+    paymentReference: Type.Optional(Type.String({ minLength: 1 })),
+    paymentFailReason: Type.Optional(Type.String({ minLength: 1 })),
+    feeCharged: Type.Optional(Type.Number({ minimum: 0 })),
+    feeChargedMin: Type.Optional(Type.Number({ minimum: 0 })),
+    feeChargedMax: Type.Optional(Type.Number({ minimum: 0 })),
+    retailPrice: Type.Optional(Type.Number({ minimum: 0 })),
+    retailPriceMin: Type.Optional(Type.Number({ minimum: 0 })),
+    retailPriceMax: Type.Optional(Type.Number({ minimum: 0 })),
+    lateFee: Type.Optional(Type.Number({ minimum: 0 })),
+    lateFeeMin: Type.Optional(Type.Number({ minimum: 0 })),
+    lateFeeMax: Type.Optional(Type.Number({ minimum: 0 })),
+    dueDate: Type.Optional(Type.String({ format: 'date-time' })),
+    dueDateMin: Type.Optional(Type.String({ format: 'date-time' })),
+    dueDateMax: Type.Optional(Type.String({ format: 'date-time' })),
+    reservedAt: Type.Optional(Type.String({ format: 'date-time' })),
+    reservedAtMin: Type.Optional(Type.String({ format: 'date-time' })),
+    reservedAtMax: Type.Optional(Type.String({ format: 'date-time' })),
+    returnedAt: Type.Optional(Type.String({ format: 'date-time' })),
+    returnedAtMin: Type.Optional(Type.String({ format: 'date-time' })),
+    returnedAtMax: Type.Optional(Type.String({ format: 'date-time' })),
+
     // Pagination and sort
     ...createPaginationAndSortSchema(ALLOWED_RESERVATION_SORT_FIELDS),
     // GraphQL fields selection

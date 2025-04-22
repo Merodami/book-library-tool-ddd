@@ -12,9 +12,12 @@
     "@book-library-tool/sdk": "workspace:^",
     "@book-library-tool/shared": "workspace:^",
     "@book-library-tool/types": "workspace:^",
+    "fp-ts": "^2.16.10",
+    "io-ts": "^2.2.22",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "io-ts-types": "^0.5.19",
     "typescript": "^5.8.3"
   },
   "depcheck": {

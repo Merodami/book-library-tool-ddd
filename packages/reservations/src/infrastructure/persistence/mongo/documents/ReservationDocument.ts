@@ -1,30 +1,30 @@
-import { ObjectId } from 'mongodb'
+import { RESERVATION_STATUS } from '@book-library-tool/types'
 
 /**
  * Database document representation of a reservation with MongoDB native types
  */
 export interface ReservationDocument {
-  _id: ObjectId
-  id: string
-  userId: string
-  bookId: string
-  reservedAt: Date
-  dueDate: Date
-  status: string
-  feeCharged: number
-  retailPrice: number
-  lateFee: number
-  version: number
-  createdAt: Date
+  id?: string
+  userId?: string
+  bookId?: string
+  status?: RESERVATION_STATUS
+  feeCharged?: number
+  retailPrice?: number
+  version?: number
+  lateFee?: number
+  dueDate?: Date
+  reservedAt?: Date
+  createdAt?: Date
+  returnedAt?: Date
+  updatedAt?: Date
+  deletedAt?: Date
   statusReason?: string
   payment?: {
-    received: boolean
-    amount: number
-    method: string
-    reference: string
-    failReason: string
-    date: Date
+    date?: Date
+    amount?: number
+    method?: string
+    reference?: string
+    failReason?: string
+    received?: boolean
   }
-  updatedAt?: Date | null
-  deletedAt?: Date | null
 }

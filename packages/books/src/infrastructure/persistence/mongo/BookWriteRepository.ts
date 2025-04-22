@@ -1,12 +1,12 @@
 import {
-  BaseEventSourcedRepository,
+  BaseWriteEventSourcedRepository,
   BOOK_CREATED,
   BOOK_DELETED,
   type DomainEvent,
 } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Book } from '@books/entities/Book.js'
-import { IBookRepository } from '@books/repositories/IBookRepository.js'
+import { IBookWriteRepository } from '@books/repositories/IBookWriteRepository.js'
 
 /**
  * Event-sourced repository implementation for the Book aggregate.
@@ -18,9 +18,9 @@ import { IBookRepository } from '@books/repositories/IBookRepository.js'
  * is part of the write model in the CQRS pattern and manages the event stream
  * for Book aggregates.
  */
-export class BookRepository
-  extends BaseEventSourcedRepository<Book>
-  implements IBookRepository
+export class BookWriteRepository
+  extends BaseWriteEventSourcedRepository<Book>
+  implements IBookWriteRepository
 {
   /**
    * Rehydrates a Book aggregate from its event stream.

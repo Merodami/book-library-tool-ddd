@@ -129,13 +129,21 @@ const handler = new GetAllBooksHandler(mockRepo)
 const { getApp } = createTestServer(async (app) => {
   const ctrl = new CatalogController(handler)
 
-  app.get('/catalog', async (req: FastifyRequest, reply: FastifyReply) => {
-    try {
-      return await ctrl.getAllBooks(req)
-    } catch {
-      reply.status(500).send({ error: 'Internal Server Error' })
-    }
-  })
+  app.get(
+    '/catalog',
+    async (
+      req: FastifyRequest<{
+        Querystring: schemas.CatalogSearchQuery
+      }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        return await ctrl.getAllBooks(req)
+      } catch {
+        reply.status(500).send({ error: 'Internal Server Error' })
+      }
+    },
+  )
 })
 
 describe('CatalogController Integration Tests', () => {

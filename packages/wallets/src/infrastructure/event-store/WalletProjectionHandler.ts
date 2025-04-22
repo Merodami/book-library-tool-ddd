@@ -1,6 +1,8 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { DomainEvent } from '@book-library-tool/event-store'
+import { DomainEvent, EventBus } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
+
+import { IWalletReadProjectionRepository } from '../../domain/repositories/IWalletReadProjectionRepository.js'
 
 const WALLET_PROJECTION_TABLE = 'wallet_projection'
 
@@ -16,7 +18,11 @@ const WALLET_PROJECTION_TABLE = 'wallet_projection'
  * the system.
  */
 export class WalletProjectionHandler {
-  constructor(private readonly db: MongoDatabaseService) {}
+  constructor(
+    private readonly db: MongoDatabaseService,
+    private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
+    private readonly eventBus: EventBus,
+  ) {}
 
   /**
    * Handles the WalletCreated event by creating a new wallet projection.

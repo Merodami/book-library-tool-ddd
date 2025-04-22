@@ -1,6 +1,11 @@
 import { schemas } from '@book-library-tool/api'
+import { GetBookQuery } from '@books/use_cases/queries/GetBookQuery.js'
 
-export interface IBookProjectionRepository {
+/**
+ * IBookReadProjectionRepository abstracts the persistence and retrieval of book projections
+ * for Book aggregates. It ensures optimistic concurrency via version checking.
+ */
+export interface IBookReadProjectionRepository {
   /**
    * Retrieve all book projections with optional field selection.
    *
@@ -16,12 +21,12 @@ export interface IBookProjectionRepository {
   /**
    * Retrieve a single book projection by its ID with optional field selection.
    *
-   * @param id - The ID of the book
+   * @param query - The query parameters
    * @param fields - Optional array of fields to return. If not provided, returns all fields.
    * @returns A promise that resolves to a Book object if found, or null otherwise
    */
   getBookById(
-    id: string,
+    query: GetBookQuery,
     fields?: schemas.BookSortField[],
   ): Promise<schemas.Book | null>
 
@@ -36,36 +41,4 @@ export interface IBookProjectionRepository {
     isbn: string,
     fields?: schemas.BookSortField[],
   ): Promise<schemas.Book | null>
-
-  /**
-   * Save a new book projection.
-   *
-   * @param bookProjection - The book projection to save
-   */
-  saveBookProjection(bookProjection: schemas.Book): Promise<void>
-
-  /**
-   * Partially update the projection for a given book ID.
-   * @param id - aggregate/book ID
-   * @param changes - only the fields you want to modify
-   * @param updatedAt - when this change happened
-   */
-  updateBookProjection(
-    id: string,
-    changes: Partial<
-      Pick<
-        schemas.Book,
-        'title' | 'author' | 'publicationYear' | 'publisher' | 'price' | 'isbn'
-      >
-    >,
-    updatedAt: Date | string,
-  ): Promise<void>
-
-  /**
-   * Mark a book as deleted.
-   *
-   * @param id - The ID of the book to mark as deleted
-   * @param timestamp - The timestamp of the deletion
-   */
-  markAsDeleted(id: string, timestamp: Date): Promise<void>
 }

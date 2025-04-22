@@ -1,20 +1,15 @@
-import { WalletDTO } from '@book-library-tool/api'
+import { DomainWallet } from '@wallets/entities/DomainWallet.js'
 
 /**
- * Repository interface for wallet read operations
+ * Repository interface for wallet write operations
  */
-export interface IWalletProjectionRepository {
-  /**
-   * Gets a wallet by user ID
-   */
-  getWalletByUserId(userId: string): Promise<WalletDTO | null>
-
+export interface IWalletWriteProjectionRepository {
   /**
    * Saves a new wallet projection from a WalletCreated event.
    *
    * @param walletData - Data for the new wallet projection
    */
-  saveWallet(walletData: WalletDTO): Promise<void>
+  saveWallet(walletData: DomainWallet): Promise<void>
 
   /**
    * Updates a wallet's balance.
