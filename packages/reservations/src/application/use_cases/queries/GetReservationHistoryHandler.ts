@@ -3,7 +3,8 @@ import { ErrorCode } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
 import { Errors } from '@book-library-tool/shared'
 import { PaginatedResult } from '@book-library-tool/types'
-import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
+import { DomainReservation } from '@reservations/entities/DomainReservation.js'
+import type { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
 
 /**
  * Handles queries for a user's reservation history.
@@ -11,7 +12,7 @@ import type { IReservationProjectionRepository } from '@reservations/repositorie
  */
 export class GetReservationHistoryHandler {
   constructor(
-    private readonly reservationProjectionRepository: IReservationProjectionRepository,
+    private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
   ) {}
 
   /**
@@ -21,13 +22,15 @@ export class GetReservationHistoryHandler {
    * @returns Paginated list of the user's reservations
    */
   async execute(
+    userId: string,
     query: schemas.ReservationsHistoryQuery,
     fields?: schemas.ReservationSortField[],
-  ): Promise<PaginatedResult<schemas.Reservation>> {
+  ): Promise<PaginatedResult<DomainReservation>> {
     try {
       // Retrieve all events for the given aggregate ID.
       const reservations =
-        await this.reservationProjectionRepository.getUserReservations(
+        await this.reservationReadProjectionRepository.getUserReservations(
+          userId,
           query,
           fields,
         )

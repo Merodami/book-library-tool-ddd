@@ -21,7 +21,7 @@ export function createWalletQueryRouter(
 
     // Define query routes
     fastify.get<{
-      Params: Pick<schemas.User, 'userId'>
+      Params: { userId: string }
     }>(
       '/:userId',
       {

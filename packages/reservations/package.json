@@ -11,7 +11,8 @@
     "@book-library-tool/http": "workspace:^",
     "@book-library-tool/sdk": "workspace:^",
     "@book-library-tool/shared": "workspace:^",
-    "@book-library-tool/types": "workspace:^"
+    "@book-library-tool/types": "workspace:^",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

@@ -51,8 +51,6 @@ export type ReservationSortField =
  */
 export const ReservationsHistoryQuerySchema = Type.Object(
   {
-    userId: Type.Optional(Type.String({ format: 'uuid' })),
-
     // Pagination and sort
     ...createPaginationAndSortSchema(ALLOWED_RESERVATION_SORT_FIELDS),
     // GraphQL fields selection
@@ -148,12 +146,12 @@ export const ReservationSchema = Type.Object(
     lateFee: Type.Optional(Type.Number({ minimum: 0 })),
     payment: Type.Optional(
       Type.Object({
-        paymentReceived: Type.Optional(Type.Boolean()),
-        paymentAmount: Type.Optional(Type.Number({ minimum: 0 })),
-        paymentDate: Type.Optional(Type.String({ format: 'date-time' })),
-        paymentMethod: Type.Optional(Type.String()),
-        paymentReference: Type.Optional(Type.String()),
-        paymentFailReason: Type.Optional(Type.String()),
+        received: Type.Boolean(),
+        amount: Type.Number({ minimum: 0 }),
+        date: Type.String({ format: 'date-time' }),
+        method: Type.String(),
+        reference: Type.String(),
+        failReason: Type.String(),
       }),
     ),
     version: Type.Optional(Type.Number({ minimum: 0 })),

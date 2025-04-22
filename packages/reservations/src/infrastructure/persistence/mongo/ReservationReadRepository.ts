@@ -3,19 +3,18 @@ import {
   type DomainEvent,
   RESERVATION_CONFIRMED,
 } from '@book-library-tool/event-store'
-import type { ReservationRequest } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Reservation } from '@reservations/entities/Reservation.js'
-import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
+import type { IReservationReadRepository } from '@reservations/repositories/IReservationReadRepository.js'
 
 /**
  * Event-sourced repository implementation for Reservation aggregates.
  * Handles persisting and retrieving domain events for the reservation bounded context.
  */
-export class ReservationRepository
+export class ReservationReadRepository
   extends BaseEventSourcedRepository<Reservation>
-  implements IReservationRepository
+  implements IReservationReadRepository
 {
   /**
    * Create reservation-specific indexes
@@ -37,136 +36,6 @@ export class ReservationRepository
 
       return null
     }
-  }
-
-  /**
-   * Create a new reservation
-   *
-   * @param reservationData - The data for the new reservation
-   * @returns The created reservation
-   */
-  async createReservation(
-    reservationData: ReservationRequest,
-  ): Promise<Reservation> {
-    const { userId, bookId } = reservationData
-
-    if (!userId || !bookId) {
-      throw new Errors.ApplicationError(
-        400,
-        ErrorCode.RESERVATION_INVALID_DATA,
-        'User ID and Book ID are required',
-      )
-    }
-
-    // First check if user already has an active reservation for this book
-    const existingReservation = await this.findActiveByUserAndBookId(
-      userId,
-      bookId,
-    )
-
-    if (existingReservation) {
-      throw new Errors.ApplicationError(
-        400,
-        ErrorCode.RESERVATION_DUPLICATE_RESERVATION,
-        `User ${userId} already has an active reservation for book ${bookId}`,
-      )
-    }
-
-    // Create a new reservation entity
-    const { reservation, event } = Reservation.create({
-      userId,
-      bookId,
-      status: RESERVATION_STATUS.RESERVED,
-    })
-
-    // Save the reservation event
-    await this.saveEvents(
-      reservation.id,
-      [event],
-      0, // Expected version is 0 for a new aggregate
-    )
-
-    // Clear domain events after persisting
-    reservation.clearDomainEvents()
-
-    return reservation
-  }
-
-  /**
-   * Process a book return
-   *
-   * @param id - The ID of the reservation to return
-   * @returns The updated reservation
-   */
-  async returnReservation(id: string): Promise<Reservation> {
-    // Load the reservation aggregate
-    const reservation = await this.findById(id)
-
-    if (!reservation) {
-      throw new Errors.ApplicationError(
-        404,
-        ErrorCode.RESERVATION_NOT_FOUND,
-        `Reservation with ID ${id} not found`,
-      )
-    }
-
-    if (!this.isReservationActive(reservation)) {
-      throw new Errors.ApplicationError(
-        400,
-        ErrorCode.RESERVATION_INVALID_STATUS,
-        `Reservation is not active. Current status: ${reservation.status}`,
-      )
-    }
-
-    // Process the return in the domain entity
-    const { event } = reservation.markAsReturned()
-
-    // Save the generated events
-    await this.saveEvents(reservation.id, [event], reservation.version)
-
-    // Clear domain events after persisting
-    reservation.clearDomainEvents()
-
-    return reservation
-  }
-
-  /**
-   * Cancel a reservation
-   *
-   * @param id - The ID of the reservation to cancel
-   * @param reason - Optional reason for cancellation
-   * @returns The updated reservation
-   */
-  async cancelReservation(id: string, reason?: string): Promise<Reservation> {
-    // Load the reservation aggregate
-    const reservation = await this.findById(id)
-
-    if (!reservation) {
-      throw new Errors.ApplicationError(
-        404,
-        ErrorCode.RESERVATION_NOT_FOUND,
-        `Reservation with ID ${id} not found`,
-      )
-    }
-
-    if (!this.isReservationActive(reservation)) {
-      throw new Errors.ApplicationError(
-        400,
-        ErrorCode.RESERVATION_INVALID_STATUS,
-        `Reservation is not active. Current status: ${reservation.status}`,
-      )
-    }
-
-    // Process the cancellation in the domain entity
-    const { event } = reservation.cancel(reason)
-
-    // Save the generated events
-    await this.saveEvents(reservation.id, [event], reservation.version)
-
-    // Clear domain events after persisting
-    reservation.clearDomainEvents()
-
-    return reservation
   }
 
   /**

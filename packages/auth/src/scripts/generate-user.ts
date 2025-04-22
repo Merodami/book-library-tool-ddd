@@ -21,7 +21,7 @@ const now = formatISO(new Date())
 
 // Create a new user object with timestamps
 const newUser: schemas.User = {
-  userId: randomUUID(),
+  id: randomUUID(),
   email,
   role: 'user',
   createdAt: now,
@@ -51,12 +51,12 @@ async function createUserAndGenerateToken() {
   // Insert the new user document into the collection
   await usersCollection.insertOne(newUser)
 
-  logger.info(`\nUser created successfully with userId:\n\n${newUser.userId}`)
+  logger.info(`\nUser created successfully with userId:\n\n${newUser.id}`)
 
   // Generate the JWT token using the user's information
   const token = Jwt.sign(
     {
-      userId: newUser.userId,
+      id: newUser.id,
       email: newUser.email,
       role: newUser.role,
     },

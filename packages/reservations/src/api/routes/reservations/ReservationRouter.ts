@@ -2,17 +2,14 @@ import { schemas } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
 import { paginationHook } from '@book-library-tool/http'
 import { BookReturnHandler } from '@reservations/commands/BookReturnHandler.js'
-// Command (write) handlers:
 import { CreateReservationHandler } from '@reservations/commands/CreateReservationHandler.js'
-// Controllers for different operations:
 import { CreateReservationController } from '@reservations/controllers/reservations/CreateReservationController.js'
 import { GetReservationHistoryController } from '@reservations/controllers/reservations/GetReservationHistoryController.js'
 import { ReturnReservationController } from '@reservations/controllers/reservations/ReturnReservationController.js'
-// Query (read) handlers:
 import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
-import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
-import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
-// Import type definitions that match your schemas
+import type { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
+import type { IReservationReadRepository } from '@reservations/repositories/IReservationReadRepository.js'
+import type { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
 import { FastifyInstance } from 'fastify'
 
 /**
@@ -24,22 +21,27 @@ import { FastifyInstance } from 'fastify'
  * @returns Fastify plugin function
  */
 export function createReservationRouter(
-  reservationRepository: IReservationRepository,
-  reservationProjectionRepository: IReservationProjectionRepository,
+  reservationReadRepository: IReservationReadRepository,
+  reservationWriteRepository: IReservationWriteRepository,
+  reservationReadProjectionRepository: IReservationReadProjectionRepository,
   eventBus: EventBus,
 ) {
   return async function (app: FastifyInstance) {
     // Instantiate individual command handlers:
     const createHandler = new CreateReservationHandler(
-      reservationRepository,
-      reservationProjectionRepository,
+      reservationWriteRepository,
+      reservationReadProjectionRepository,
       eventBus,
     )
-    const returnHandler = new BookReturnHandler(reservationRepository, eventBus)
+    const returnHandler = new BookReturnHandler(
+      reservationReadRepository,
+      reservationWriteRepository,
+      eventBus,
+    )
 
     // The query (read) handler uses the projection repository.
     const getHistoryHandler = new GetReservationHistoryHandler(
-      reservationProjectionRepository,
+      reservationReadProjectionRepository,
     )
 
     // Create specialized controllers for each operation:
@@ -72,14 +74,14 @@ export function createReservationRouter(
     )
 
     app.get<{
-      Params: schemas.IdParameter
+      Params: schemas.UserIdParameter
       Querystring: schemas.ReservationsHistoryQuery
     }>(
       '/user/:userId',
       {
         onRequest: [paginationHook],
         schema: {
-          params: schemas.IdParameterSchema,
+          params: schemas.UserIdParameterSchema,
           querystring: schemas.ReservationsHistoryQuerySchema,
         },
       },

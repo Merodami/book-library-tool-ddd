@@ -7,8 +7,8 @@ import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Reservation } from '@reservations/entities/Reservation.js'
-import { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
-import { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
+import { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
+import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
 import { CreateReservationCommand } from '@reservations/use_cases/commands/CreateReservationCommand.js'
 
 /**
@@ -17,8 +17,8 @@ import { CreateReservationCommand } from '@reservations/use_cases/commands/Creat
  */
 export class CreateReservationHandler {
   constructor(
-    private readonly reservationRepository: IReservationRepository,
-    private readonly reservationProjectionRepository: IReservationProjectionRepository,
+    private readonly reservationWriteRepository: IReservationWriteRepository,
+    private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -42,8 +42,8 @@ export class CreateReservationHandler {
 
     // Check if user already has an active reservation for this book
     const exiting =
-      await this.reservationProjectionRepository.countActiveReservationsByUser(
-        command.bookId,
+      await this.reservationReadProjectionRepository.countActiveReservationsByUser(
+        command.userId,
       )
 
     if (exiting > 0) {
@@ -64,7 +64,7 @@ export class CreateReservationHandler {
     })
 
     // Persist the new event with the expected aggregate version (0 for new aggregates)
-    await this.reservationRepository.saveEvents(reservation.id, [event], 0)
+    await this.reservationWriteRepository.saveEvents(reservation.id, [event], 0)
 
     // Publish a separate event to request book validation
     const validationEvent: DomainEvent = {

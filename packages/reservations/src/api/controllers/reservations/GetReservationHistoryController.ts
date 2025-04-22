@@ -1,6 +1,8 @@
 import { schemas } from '@book-library-tool/api'
 import { parseAndValidate } from '@book-library-tool/http'
 import { Cache } from '@book-library-tool/redis'
+import { httpRequestKeyGenerator } from '@book-library-tool/redis'
+import { toApiReservation } from '@reservations/mappers/reservationMapper.js'
 import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
 import type { FastifyRequest } from 'fastify'
 
@@ -21,14 +23,16 @@ export class GetReservationHistoryController {
     ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
     prefix: 'reservation',
     condition: (result) => result && result.data && Array.isArray(result.data),
+    keyGenerator: httpRequestKeyGenerator,
   })
   async getReservationHistory(
     request: FastifyRequest<{
-      Params: schemas.IdParameter
+      Params: schemas.UserIdParameter
       Querystring: schemas.ReservationsHistoryQuery
     }>,
   ): Promise<schemas.PaginatedResult<schemas.Reservation>> {
     const query = request.query as schemas.ReservationsHistoryQuery
+    const { userId } = request.params
 
     const validFields = parseAndValidate<schemas.ReservationSortField>(
       query.fields,
@@ -36,10 +40,14 @@ export class GetReservationHistoryController {
     )
 
     const result = await this.getReservationHistoryHandler.execute(
+      userId,
       query,
       validFields || undefined,
     )
 
-    return result
+    return {
+      data: result.data.map((reservation) => toApiReservation(reservation)),
+      pagination: result.pagination,
+    }
   }
 }

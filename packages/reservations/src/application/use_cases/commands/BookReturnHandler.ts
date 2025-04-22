@@ -1,7 +1,9 @@
 import type { EventBus } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
+import { IReservationReadRepository } from '@reservations/repositories/IReservationReadRepository.js'
+import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
+import { BookReturnCommand } from '@reservations/use_cases/commands/BookReturnCommand.js'
 
 /**
  * Handles the return of reserved books.
@@ -9,7 +11,8 @@ import type { IReservationRepository } from '@reservations/repositories/IReserva
  */
 export class BookReturnHandler {
   constructor(
-    private readonly reservationRepository: IReservationRepository,
+    private readonly reservationReadRepository: IReservationReadRepository,
+    private readonly reservationWriteRepository: IReservationWriteRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -19,9 +22,9 @@ export class BookReturnHandler {
    * @param command - Contains the id to return
    * @returns The ID of the updated reservation
    */
-  async execute(command: {
-    id: string
-  }): Promise<EventResponse & { id: string }> {
+  async execute(
+    command: BookReturnCommand,
+  ): Promise<EventResponse & { id: string }> {
     // Validate command data
     if (!command.id) {
       throw new Errors.ApplicationError(
@@ -32,7 +35,9 @@ export class BookReturnHandler {
     }
 
     // Retrieve the reservation
-    const reservation = await this.reservationRepository.findById(command.id)
+    const reservation = await this.reservationReadRepository.findById(
+      command.id,
+    )
 
     if (!reservation) {
       throw new Errors.ApplicationError(
@@ -47,7 +52,7 @@ export class BookReturnHandler {
       reservation.markAsReturned()
 
     // Persist the return event with the current version
-    await this.reservationRepository.saveEvents(
+    await this.reservationWriteRepository.saveEvents(
       updatedReservation.id,
       [event],
       reservation.version,

@@ -7,6 +7,7 @@ export const BOOK_DELETED = 'BOOK_DELETED'
 
 export const BOOK_VALIDATION_RESULT = 'BOOK_VALIDATION_RESULT'
 export const BOOK_VALIDATION_FAILED = 'BOOK_VALIDATION_FAILED'
+export const BOOK_RETAIL_PRICE_UPDATED = 'BOOK_RETAIL_PRICE_UPDATED'
 
 /**
  * TypeScript type for the Book event types.
@@ -17,3 +18,4 @@ export type BookEventType =
   | typeof BOOK_DELETED
   | typeof BOOK_VALIDATION_RESULT
   | typeof BOOK_VALIDATION_FAILED
+  | typeof BOOK_RETAIL_PRICE_UPDATED
