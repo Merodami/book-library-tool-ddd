@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 /**
  * RabbitMQEventBus implements the EventBus interface using RabbitMQ.
  * Provides reliable message publishing, consumption, error handling,
- * and support for unroutable message processing.
+ * and support for un-routable message processing.
  */
 export class RabbitMQEventBus implements EventBus {
   private connection!: any

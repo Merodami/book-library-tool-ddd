@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import type { Book, PaginatedBookResponse } from '@book-library-tool/sdk'
+import type { Book } from '@book-library-tool/sdk'
 import { logger } from '@book-library-tool/shared'
 import { createTestServer } from '@book-library-tool/tests'
 import { CatalogController } from '@books/controllers/catalog/CatalogController.js'
@@ -23,9 +23,9 @@ vi.mock('@book-library-tool/redis', () => ({
 }))
 
 // Sample in-memory books
-const sampleBooks: Book[] = [
+const sampleBooks: schemas.Book[] = [
   {
-    id: 'book-1',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
     isbn: '978-3-16-148410-0',
     title: 'Book One',
     author: 'Author One',
@@ -36,7 +36,7 @@ const sampleBooks: Book[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'book-2',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a11',
     isbn: '978-3-16-148410-1',
     title: 'Second Book',
     author: 'Author Two',
@@ -56,7 +56,7 @@ const mockRepo: IBookProjectionRepository = {
       async (
         query: schemas.CatalogSearchQuery,
         fields?: (keyof Book)[],
-      ): Promise<PaginatedBookResponse> => {
+      ): Promise<schemas.PaginatedResult<schemas.Book>> => {
         let filtered = [...sampleBooks]
 
         // Text filters
@@ -95,7 +95,7 @@ const mockRepo: IBookProjectionRepository = {
 
         // Field selection using lodash.pick
         if (fields && fields.length) {
-          filtered = filtered.map((b) => pick(b, fields) as Book)
+          filtered = filtered.map((b) => pick(b, fields) as schemas.Book)
         }
 
         const page = Number(query.page ?? 1)
@@ -119,10 +119,9 @@ const mockRepo: IBookProjectionRepository = {
   // Unused by this controller
   getBookById: vi.fn(),
   getBookByIsbn: vi.fn(),
-  saveProjection: vi.fn(),
-  updateProjection: vi.fn(),
+  saveBookProjection: vi.fn(),
+  updateBookProjection: vi.fn(),
   markAsDeleted: vi.fn(),
-  findBookForReservation: vi.fn(),
 }
 
 // Wire up test server at module scope
@@ -130,13 +129,21 @@ const handler = new GetAllBooksHandler(mockRepo)
 const { getApp } = createTestServer(async (app) => {
   const ctrl = new CatalogController(handler)
 
-  app.get('/catalog', async (req: FastifyRequest, reply: FastifyReply) => {
-    try {
-      return await ctrl.getAllBooks(req)
-    } catch {
-      reply.status(500).send({ error: 'Internal Server Error' })
-    }
-  })
+  app.get(
+    '/catalog',
+    async (
+      req: FastifyRequest<{
+        Querystring: schemas.CatalogSearchQuery
+      }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        return await ctrl.getAllBooks(req)
+      } catch {
+        reply.status(500).send({ error: 'Internal Server Error' })
+      }
+    },
+  )
 })
 
 describe('CatalogController Integration Tests', () => {

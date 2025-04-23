@@ -1,8 +1,10 @@
 import { schemas } from '@book-library-tool/api'
+import { parseAndValidate } from '@book-library-tool/http'
 import { Cache } from '@book-library-tool/redis'
-import type { ReservationsHistoryQuery } from '@book-library-tool/sdk'
+import { httpRequestKeyGenerator } from '@book-library-tool/redis'
+import { toApiReservation } from '@reservations/mappers/reservationMapper.js'
 import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyRequest } from 'fastify'
 
 export class GetReservationHistoryController {
   constructor(
@@ -19,26 +21,33 @@ export class GetReservationHistoryController {
    */
   @Cache({
     ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
-    prefix: 'reservation:history',
+    prefix: 'reservation',
     condition: (result) => result && result.data && Array.isArray(result.data),
+    keyGenerator: httpRequestKeyGenerator,
   })
   async getReservationHistory(
     request: FastifyRequest<{
-      Params: Pick<schemas.UserDTO, 'userId'>
-      Querystring: ReservationsHistoryQuery
+      Params: schemas.UserIdParameter
+      Querystring: schemas.ReservationsHistoryQuery
     }>,
-    reply: FastifyReply,
-  ): Promise<void> {
+  ): Promise<schemas.PaginatedResult<schemas.Reservation>> {
+    const query = request.query as schemas.ReservationsHistoryQuery
     const { userId } = request.params
-    const { page, limit } = request.query
 
-    // Call the handler directly to retrieve data from the projection repository
-    const history = await this.getReservationHistoryHandler.execute({
+    const validFields = parseAndValidate<schemas.ReservationSortField>(
+      query.fields,
+      schemas.ALLOWED_RESERVATION_SORT_FIELDS,
+    )
+
+    const result = await this.getReservationHistoryHandler.execute(
       userId,
-      page: page ? Math.floor(Number(page)) : 1,
-      limit: limit ? Math.floor(Number(limit)) : 10,
-    })
+      query,
+      validFields || undefined,
+    )
 
-    await reply.status(200).send(history)
+    return {
+      data: result.data.map(toApiReservation),
+      pagination: result.pagination,
+    }
   }
 }

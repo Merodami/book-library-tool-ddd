@@ -9,8 +9,9 @@ import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { ValidateReservationCommand } from '@reservations/commands/ValidateReservationCommand.js'
 import { Reservation } from '@reservations/entities/Reservation.js'
 import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
-import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
-import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
+
+import { IReservationReadProjectionRepository } from '../../../domain/repositories/IReservationReadProjectionRepository.js'
+import { IReservationWriteRepository } from '../../../domain/repositories/IReservationWriteRepository.js'
 
 /**
  * Handler responsible for validating reservations based on book availability
@@ -19,8 +20,8 @@ import type { IReservationRepository } from '@reservations/repositories/IReserva
  */
 export class ValidateReservationHandler {
   constructor(
-    private readonly reservationRepository: IReservationRepository,
-    private readonly reservationProjectionRepository: IReservationProjectionRepository,
+    private readonly reservationWriteRepository: IReservationWriteRepository,
+    private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
     private readonly projectionHandler: ReservationProjectionHandler,
     private readonly eventBus: EventBus,
   ) {}
@@ -44,7 +45,7 @@ export class ValidateReservationHandler {
 
       // Load the reservation aggregate from event store
       const reservationEvents =
-        await this.reservationRepository.getEventsForAggregate(
+        await this.reservationWriteRepository.getEventsForAggregate(
           command.reservationId,
         )
 
@@ -70,7 +71,7 @@ export class ValidateReservationHandler {
       // Only check reservation limits if the initial validation passed
       if (command.isValid) {
         const activeReservationsCount =
-          await this.reservationProjectionRepository.countActiveReservationsByUser(
+          await this.reservationReadProjectionRepository.countActiveReservationsByUser(
             reservation.userId,
           )
 
@@ -164,7 +165,7 @@ export class ValidateReservationHandler {
     // Set retail price if provided
     if (command.retailPrice && command.retailPrice > 0) {
       logger.debug(
-        `Setting retail price to ${command.retailPrice} for reservation ${reservation.reservationId}`,
+        `Setting retail price to ${command.retailPrice} for reservation ${reservation.id}`,
       )
 
       const priceResult = currentReservation.setRetailPrice(command.retailPrice)
@@ -180,8 +181,19 @@ export class ValidateReservationHandler {
     // Set payment pending status
     const paymentResult = currentReservation.setPaymentPending()
 
+    const paymentResultWithReservationId = {
+      ...paymentResult.event,
+      payload: {
+        ...paymentResult.event.payload,
+        reservationId: currentReservation.id,
+      },
+    }
+
     // Save and publish payment pending event
-    await this.saveAndPublishEvent(paymentResult.event, currentVersion)
+    await this.saveAndPublishEvent(
+      paymentResultWithReservationId,
+      currentVersion,
+    )
   }
 
   /**
@@ -192,7 +204,7 @@ export class ValidateReservationHandler {
     expectedVersion: number,
   ): Promise<void> {
     // Save the event to the event store
-    await this.reservationRepository.saveEvents(
+    await this.reservationWriteRepository.saveEvents(
       event.aggregateId,
       [event],
       expectedVersion,

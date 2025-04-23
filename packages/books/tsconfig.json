@@ -18,7 +18,7 @@
       "@books/use_cases/*": ["src/application/use_cases/*"],
       "@books/commands/*": ["src/application/use_cases/commands/*"],
       "@books/queries/*": ["src/application/use_cases/queries/*"],
-
+      "@books/mappers/*": ["src/application/mappers/*"],
       // Domain
       "@books/entities/*": ["src/domain/entities/*"],
       "@books/repositories/*": ["src/domain/repositories/*"],

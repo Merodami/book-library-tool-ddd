@@ -1,11 +1,7 @@
 import { Static, TSchema, Type } from '@sinclair/typebox'
 
-// --------------------------------
-// Common Schema Components
-// --------------------------------
-
 /**
- * Pagination Metadata Schema
+ * Metadata describing pagination state.
  */
 export const PaginationMetadataSchema = Type.Object(
   {
@@ -18,48 +14,13 @@ export const PaginationMetadataSchema = Type.Object(
   },
   { $id: '#/components/schemas/PaginationMetadata' },
 )
-
 export type PaginationMetadata = Static<typeof PaginationMetadataSchema>
-export const PaginationMetadataRef = Type.Ref(
-  '#/components/schemas/PaginationMetadata',
-)
+export const PaginationMetadataRef = Type.Ref(PaginationMetadataSchema)
 
 /**
- * Pagination Query Parameters Schema
- */
-export const PaginationQuerySchema = Type.Object(
-  {
-    page: Type.Optional(Type.Number({ minimum: 1, default: 1 })),
-    limit: Type.Optional(
-      Type.Number({ minimum: 1, maximum: 100, default: 20 }),
-    ),
-  },
-  { $id: '#/components/schemas/PaginationQuery' },
-)
-
-export type PaginationQuery = Static<typeof PaginationQuerySchema>
-export const PaginationQueryRef = Type.Ref(
-  '#/components/schemas/PaginationQuery',
-)
-
-/**
- * Generic Paginated Result Schema
- */
-export const PaginatedResultSchema = Type.Object(
-  {
-    data: Type.Array(Type.Any()),
-    pagination: PaginationMetadataSchema,
-  },
-  { $id: '#/components/schemas/PaginatedResult' },
-)
-
-export const PaginatedResultRef = Type.Ref(
-  '#/components/schemas/PaginatedResult',
-)
-
-/**
- * Generic Paginated Response Schema
- * This can be used to create paginated response schemas for any entity type
+ * Creates a TypeBox schema for a paginated response of any item type.
+ * @param itemSchema - TypeBox schema for the array items
+ * @param schemaId   - JSON Schema $id for the paginated response
  */
 export function createPaginatedResponseSchema<T extends TSchema>(
   itemSchema: T,
@@ -75,14 +36,36 @@ export function createPaginatedResponseSchema<T extends TSchema>(
 }
 
 /**
- * Helper function to create paginated response instances
+ * Generic interface for paginated results that can work with any type T
  */
-export const createPaginatedResponse = <T>(
+export interface PaginatedResult<T> {
+  data: T[]
+  pagination: PaginationMetadata
+}
+
+// Pre-built generic result schema for validation
+export const PaginatedResultSchema = createPaginatedResponseSchema(
+  Type.Any(),
+  '#/components/schemas/PaginatedResult',
+)
+export type PaginatedResultSchemaType = Static<typeof PaginatedResultSchema>
+export const PaginatedResultRef = Type.Ref(PaginatedResultSchema)
+
+// ─── Runtime Helper ─────────────────────────────────────────────────────────
+
+/**
+ * Build a paginated response object at runtime.
+ * @param items - The data array
+ * @param page  - Current page number
+ * @param limit - Items per page
+ * @param total - Total number of items
+ */
+export function createPaginatedResponse<T>(
   items: T[],
   page: number,
   limit: number,
   total: number,
-) => {
+): PaginatedResult<T> {
   const pages = Math.ceil(total / limit)
 
   return {

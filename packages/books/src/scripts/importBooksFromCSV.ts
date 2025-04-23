@@ -3,12 +3,12 @@ import {
   BOOK_CREATED,
   BOOK_DELETED,
   BOOK_UPDATED,
+  DomainEvent,
   RabbitMQEventBus,
 } from '@book-library-tool/event-store'
 import { Book } from '@book-library-tool/sdk'
 import { logger } from '@book-library-tool/shared'
-import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
-import { BookRepository } from '@books/persistence/mongo/BookRepository.js'
+import { BookWriteRepository } from '@books/persistence/mongo/BookWriteRepository.js'
 import { CreateBookHandler } from '@books/use_cases/commands/CreateBookHandler.js'
 import fastcsv from 'fast-csv'
 import fs from 'fs'
@@ -151,10 +151,9 @@ async function getBookService(
   // Connect to the database.
   await dbService.connect()
 
-  const bookRepository = new BookRepository(dbService)
-
-  const bookProjectionRepository = new BookProjectionRepository(
-    dbService.getCollection('books'),
+  const bookRepository = new BookWriteRepository(
+    dbService.getCollection<DomainEvent>('event_store'),
+    dbService,
   )
 
   const eventBus = new RabbitMQEventBus(
@@ -171,11 +170,7 @@ async function getBookService(
   await eventBus.bindEventTypes([BOOK_CREATED, BOOK_UPDATED, BOOK_DELETED])
 
   // Create and return the BookService instance.
-  return new CreateBookHandler(
-    bookRepository,
-    bookProjectionRepository,
-    eventBus,
-  )
+  return new CreateBookHandler(bookRepository, eventBus)
 }
 
 seedBooks().catch(logger.error)

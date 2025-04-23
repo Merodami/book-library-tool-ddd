@@ -1,8 +1,4 @@
-import {
-  Book,
-  CatalogSearchQuery,
-  PaginatedBookResponse,
-} from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
 import { GetAllBooksHandler } from '@books/use_cases/queries/GetAllBooksHandler.js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -10,10 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 describe('GetAllBooksHandler', () => {
   let mockProjectionRepository: IBookProjectionRepository
   let handler: GetAllBooksHandler
-  let mockBooks: Book[]
-  let mockPaginatedResponse: PaginatedBookResponse
+  let mockBooks: schemas.Book[]
+  let mockPaginatedResponse: schemas.PaginatedResult<schemas.Book>
 
-  const validQuery: CatalogSearchQuery = {
+  const validQuery: schemas.CatalogSearchQuery = {
     title: 'Test Book',
     author: 'Test Author',
     page: 1,
@@ -33,8 +29,6 @@ describe('GetAllBooksHandler', () => {
         publisher: 'Test Publisher',
         price: 19.99,
         createdAt: '2023-01-01T00:00:00.000Z',
-        updatedAt: null,
-        deletedAt: null,
       },
       {
         id: '123e4567-e89b-12d3-a456-426614174001',
@@ -45,10 +39,8 @@ describe('GetAllBooksHandler', () => {
         publisher: 'Test Publisher',
         price: 29.99,
         createdAt: '2023-01-01T00:00:00.000Z',
-        updatedAt: null,
-        deletedAt: null,
       },
-    ] as Book[]
+    ] as schemas.Book[]
 
     mockPaginatedResponse = {
       data: mockBooks,
@@ -69,7 +61,6 @@ describe('GetAllBooksHandler', () => {
       saveProjection: vi.fn().mockResolvedValue(undefined),
       updateProjection: vi.fn().mockResolvedValue(undefined),
       markAsDeleted: vi.fn().mockResolvedValue(undefined),
-      findBookForReservation: vi.fn().mockResolvedValue(null),
     } as unknown as IBookProjectionRepository
 
     handler = new GetAllBooksHandler(mockProjectionRepository)
@@ -90,11 +81,13 @@ describe('GetAllBooksHandler', () => {
   })
 
   it('should use default values when parameters are missing', async () => {
-    const partialQuery: Partial<CatalogSearchQuery> = {
+    const partialQuery: Partial<schemas.CatalogSearchQuery> = {
       title: 'Test Book',
     }
 
-    const result = await handler.execute(partialQuery as CatalogSearchQuery)
+    const result = await handler.execute(
+      partialQuery as schemas.CatalogSearchQuery,
+    )
 
     expect(result).toEqual(mockPaginatedResponse) // Changed toBe to toEqual
     expect(mockProjectionRepository.getAllBooks).toHaveBeenCalledWith(
@@ -104,12 +97,14 @@ describe('GetAllBooksHandler', () => {
   })
 
   it('should handle request with only pagination parameters', async () => {
-    const paginationQuery: Partial<CatalogSearchQuery> = {
+    const paginationQuery: Partial<schemas.CatalogSearchQuery> = {
       page: 2,
       limit: 20,
     }
 
-    const result = await handler.execute(paginationQuery as CatalogSearchQuery)
+    const result = await handler.execute(
+      paginationQuery as schemas.CatalogSearchQuery,
+    )
 
     expect(result).toEqual(mockPaginatedResponse) // Changed toBe to toEqual
     expect(mockProjectionRepository.getAllBooks).toHaveBeenCalledWith(
@@ -119,7 +114,7 @@ describe('GetAllBooksHandler', () => {
   })
 
   it('should pass fields parameter to repository when provided', async () => {
-    const fields = ['title', 'author', 'price']
+    const fields = ['title', 'author', 'price'] as schemas.BookField[]
 
     const result = await handler.execute(validQuery, fields)
 

@@ -1,12 +1,11 @@
 import { schemas } from '@book-library-tool/api'
-import { Book } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import type { GetBookQuery } from '@books/queries/GetBookQuery.js'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { IBookReadProjectionRepository } from '@books/repositories/IBookReadProjectionRepository.js'
+import { GetBookQuery } from '@books/use_cases/queries/GetBookQuery.js'
 
 export class GetBookHandler {
   constructor(
-    private readonly projectionRepository: IBookProjectionRepository,
+    private readonly projectionReadRepository: IBookReadProjectionRepository,
   ) {}
 
   /**
@@ -17,12 +16,12 @@ export class GetBookHandler {
    * @returns The rehydrated Book aggregate.
    */
   async execute(
-    command: GetBookQuery,
+    query: GetBookQuery,
     fields?: schemas.BookSortField[],
-  ): Promise<Book> {
+  ): Promise<schemas.Book> {
     try {
-      const book = await this.projectionRepository.getBookById(
-        command.id,
+      const book = await this.projectionReadRepository.getBookById(
+        query,
         fields,
       )
 
@@ -30,14 +29,19 @@ export class GetBookHandler {
         throw new Errors.ApplicationError(
           404,
           ErrorCode.BOOK_NOT_FOUND,
-          `Book with ID ${command.id} not found`,
+          `Book with ID ${query.id} not found`,
         )
       }
 
       return book
     } catch (err) {
-      logger.error(`Error retrieving book with ID ${command.id}:`, err)
-      throw err
+      logger.error(`Error retrieving book with ID ${query.id}:`, err)
+
+      throw new Errors.ApplicationError(
+        500,
+        ErrorCode.INTERNAL_ERROR,
+        'Error retrieving books catalog',
+      )
     }
   }
 }

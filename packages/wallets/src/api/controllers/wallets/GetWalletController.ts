@@ -26,16 +26,16 @@ export class GetWalletController {
    */
   @Cache({
     ttl: parseInt(process.env.REDIS_DEFAULT_TTL || '3600', 10),
-    prefix: 'wallet:details',
+    prefix: 'wallet',
     condition: (result) => result !== null,
   })
   async getWallet(
-    request: FastifyRequest<{ Params: { userId: string } }>,
+    request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
   ): Promise<void> {
-    const { userId } = request.params
+    const { id } = request.params
 
-    const wallet = await this.getWalletHandler.execute({ userId })
+    const wallet = await this.getWalletHandler.execute({ id })
 
     if (!wallet) {
       await reply.status(404).send({ message: 'Wallet not found' })

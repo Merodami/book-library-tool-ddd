@@ -69,6 +69,7 @@ export function WalletEventSubscriptions(
       )
 
       await paymentHandler.execute({
+        id: event.payload.id,
         userId: event.payload.userId,
         reservationId: event.payload.reservationId,
         amount: event.payload.amount,

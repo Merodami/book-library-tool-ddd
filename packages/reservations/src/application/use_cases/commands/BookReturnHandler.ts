@@ -1,7 +1,9 @@
-import { schemas } from '@book-library-tool/api'
 import type { EventBus } from '@book-library-tool/event-store'
+import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
+import { IReservationReadRepository } from '@reservations/repositories/IReservationReadRepository.js'
+import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
+import { BookReturnCommand } from '@reservations/use_cases/commands/BookReturnCommand.js'
 
 /**
  * Handles the return of reserved books.
@@ -9,19 +11,22 @@ import type { IReservationRepository } from '@reservations/repositories/IReserva
  */
 export class BookReturnHandler {
   constructor(
-    private readonly reservationRepository: IReservationRepository,
+    private readonly reservationReadRepository: IReservationReadRepository,
+    private readonly reservationWriteRepository: IReservationWriteRepository,
     private readonly eventBus: EventBus,
   ) {}
 
   /**
    * Processes a book return based on the provided command.
    *
-   * @param command - Contains the reservationId to return
+   * @param command - Contains the id to return
    * @returns The ID of the updated reservation
    */
-  async execute(command: schemas.ReservationIdParameter): Promise<void> {
+  async execute(
+    command: BookReturnCommand,
+  ): Promise<EventResponse & { id: string }> {
     // Validate command data
-    if (!command.reservationId) {
+    if (!command.id) {
       throw new Errors.ApplicationError(
         400,
         ErrorCode.RESERVATION_INVALID_DATA,
@@ -30,15 +35,15 @@ export class BookReturnHandler {
     }
 
     // Retrieve the reservation
-    const reservation = await this.reservationRepository.findById(
-      command.reservationId,
+    const reservation = await this.reservationReadRepository.findById(
+      command.id,
     )
 
     if (!reservation) {
       throw new Errors.ApplicationError(
         404,
         ErrorCode.RESERVATION_NOT_FOUND,
-        `Reservation with ID ${command.reservationId} not found`,
+        `Reservation with ID ${command.id} not found`,
       )
     }
 
@@ -47,7 +52,7 @@ export class BookReturnHandler {
       reservation.markAsReturned()
 
     // Persist the return event with the current version
-    await this.reservationRepository.saveEvents(
+    await this.reservationWriteRepository.saveEvents(
       updatedReservation.id,
       [event],
       reservation.version,
@@ -58,5 +63,11 @@ export class BookReturnHandler {
 
     // Clear domain events after they've been persisted and published
     updatedReservation.clearDomainEvents()
+
+    return {
+      success: true,
+      id: updatedReservation.id,
+      version: updatedReservation.version,
+    }
   }
 }

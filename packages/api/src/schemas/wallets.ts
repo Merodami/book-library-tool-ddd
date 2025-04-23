@@ -46,9 +46,21 @@ export const LateReturnRequestRef = Type.Ref(
  */
 export const WalletSchema = Type.Object(
   {
-    id: Type.String({ format: 'uuid' }),
-    userId: Type.String({ format: 'uuid' }),
-    balance: Type.Number(),
+    id: Type.Optional(
+      Type.String({
+        format: 'uuid',
+        minLength: 1,
+        pattern: '^(?!\\s*$).+',
+      }),
+    ),
+    userId: Type.Optional(
+      Type.String({
+        format: 'uuid',
+        minLength: 1,
+        pattern: '^(?!\\s*$).+',
+      }),
+    ),
+    balance: Type.Number({ minimum: 0 }),
     createdAt: Type.Optional(Type.String({ format: 'date-time' })),
     updatedAt: Type.Optional(Type.String({ format: 'date-time' })),
     deletedAt: Type.Optional(Type.String({ format: 'date-time' })),

@@ -20,8 +20,8 @@ const secret = process.env.JWT_SECRET || 'default-secret'
 const now = formatISO(new Date())
 
 // Create a new user object with timestamps
-const newUser: schemas.UserDTO = {
-  userId: randomUUID(),
+const newUser: schemas.User = {
+  id: randomUUID(),
   email,
   role: 'user',
   createdAt: now,
@@ -38,7 +38,7 @@ async function createUserAndGenerateToken() {
   await dbService.connect()
 
   // Get the "users" collection in a type‑safe way
-  const usersCollection = dbService.getCollection<schemas.UserDTO>('users')
+  const usersCollection = dbService.getCollection<schemas.User>('users')
 
   // Validate if the email already exists
   const existingUser = await usersCollection.findOne({ email })
@@ -51,12 +51,12 @@ async function createUserAndGenerateToken() {
   // Insert the new user document into the collection
   await usersCollection.insertOne(newUser)
 
-  logger.info(`\nUser created successfully with userId:\n\n${newUser.userId}`)
+  logger.info(`\nUser created successfully with userId:\n\n${newUser.id}`)
 
   // Generate the JWT token using the user's information
   const token = Jwt.sign(
     {
-      userId: newUser.userId,
+      id: newUser.id,
       email: newUser.email,
       role: newUser.role,
     },

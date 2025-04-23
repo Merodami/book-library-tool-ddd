@@ -1,6 +1,6 @@
-import { Wallet } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
+import { DomainWallet } from '@wallets/entities/DomainWallet.js'
+import { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletReadProjectionRepository.js'
 
 /**
  * Query handler for retrieving wallet information.
@@ -15,7 +15,7 @@ import { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjec
  */
 export class GetWalletHandler {
   constructor(
-    private readonly walletProjectionRepository: IWalletProjectionRepository,
+    private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
   ) {}
 
   /**
@@ -31,16 +31,16 @@ export class GetWalletHandler {
    *   - The wallet is not found (404)
    *   - The repository operation fails
    */
-  async execute(query: { userId: string }): Promise<Wallet | null> {
-    const wallet = await this.walletProjectionRepository.getWalletByUserId(
-      query.userId,
-    )
+  async execute(query: { id: string }): Promise<DomainWallet | null> {
+    const wallet = await this.walletReadProjectionRepository.getWallet({
+      id: query.id,
+    })
 
     if (!wallet) {
       throw new Errors.ApplicationError(
         404,
         ErrorCode.WALLET_NOT_FOUND,
-        `Wallet not found for user ${query.userId}`,
+        `Wallet not found for id ${query.id}`,
       )
     }
 

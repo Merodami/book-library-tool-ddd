@@ -79,7 +79,7 @@ export const ReservationsAPISpec: Partial<OpenAPIV3.Document> = {
             description: 'Paginated reservation history for the user',
             content: {
               'application/json': {
-                schema: registry.ref('PaginatedReservationResponse'),
+                schema: registry.ref('PaginatedResult'),
                 examples: {
                   userReservations: {
                     summary: 'User reservation history',

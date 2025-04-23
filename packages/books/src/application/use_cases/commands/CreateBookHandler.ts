@@ -4,8 +4,7 @@ import { Errors } from '@book-library-tool/shared'
 import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
 import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
 import { Book } from '@books/entities/Book.js'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
-import type { IBookRepository } from '@books/repositories/IBookRepository.js'
+import type { IBookWriteRepository } from '@books/repositories/IBookWriteRepository.js'
 
 /**
  * CreateBookHandler is responsible for processing a CreateBookCommand.
@@ -14,8 +13,7 @@ import type { IBookRepository } from '@books/repositories/IBookRepository.js'
  */
 export class CreateBookHandler {
   constructor(
-    private readonly repository: IBookRepository,
-    private readonly projectionRepository: IBookProjectionRepository,
+    private readonly writeRepository: IBookWriteRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -23,7 +21,9 @@ export class CreateBookHandler {
     command: CreateBookCommand,
   ): Promise<EventResponse & { bookId: string }> {
     // Check if the book already exists in the projection.
-    const existing = await this.projectionRepository.getBookByIsbn(command.isbn)
+    const existing = await this.writeRepository.getEventsForAggregate(
+      command.isbn,
+    )
 
     if (existing) {
       throw new Errors.ApplicationError(
@@ -37,7 +37,7 @@ export class CreateBookHandler {
     const { book, event } = Book.create(command)
 
     // Persist the new event with the expected aggregate version (0 for new aggregates).
-    await this.repository.saveEvents(book.id, [event], 0)
+    await this.writeRepository.saveEvents(book.id, [event], 0)
 
     // Publish the event so that any subscribers (e.g. projectors, integration handlers) are notified.
     await this.eventBus.publish(event)

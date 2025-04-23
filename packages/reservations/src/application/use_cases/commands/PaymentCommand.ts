@@ -3,7 +3,7 @@
  */
 export interface PaymentCommand {
   /** The ID of the reservation being paid for */
-  reservationId: string
+  id: string
   /** The ID of the user making the payment */
   userId: string
   /** The amount being paid */

@@ -1,4 +1,3 @@
-import { User } from '@book-library-tool/sdk'
 import { UpdateWalletBalanceHandler } from '@wallets/commands/UpdateWalletBalanceHandler.js'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
@@ -16,17 +15,17 @@ export class UpdateWalletBalanceController {
    */
   async updateWalletBalance(
     request: FastifyRequest<{
-      Params: Pick<User, 'userId'>
+      Params: { id: string }
       Body: { amount: number }
     }>,
     reply: FastifyReply,
   ): Promise<void> {
-    const { userId } = request.params
+    const { id } = request.params
     const { amount } = request.body
 
     // Execute the command
     const wallet = await this.updateWalletBalanceHandler.execute({
-      userId,
+      id,
       amount,
     })
 

@@ -22,7 +22,7 @@ const assertSchema = makeValidator(schemas.ReservationSchema)
 
 export interface ReservationProps {
   userId: string
-  isbn: string
+  bookId: string
   reservedAt: Date
   dueDate: Date
   status: RESERVATION_STATUS
@@ -37,9 +37,9 @@ export interface ReservationProps {
  * mutable state from domain events.
  */
 export class Reservation extends AggregateRoot {
-  public readonly reservationId: string // Alias for this.id from AggregateRoot
+  public readonly id: string
   public readonly userId: string
-  public readonly isbn: string
+  public readonly bookId: string
   public reservedAt: Date
   public dueDate: Date
   public status: RESERVATION_STATUS
@@ -63,9 +63,9 @@ export class Reservation extends AggregateRoot {
     super(id)
 
     // Use the AggregateRoot's id as the reservation identifier.
-    this.reservationId = id || randomUUID()
+    this.id = id || randomUUID()
     this.userId = props.userId
-    this.isbn = props.isbn
+    this.bookId = props.bookId
     this.reservedAt = props.reservedAt
     this.dueDate = props.dueDate
     this.status = props.status
@@ -83,8 +83,8 @@ export class Reservation extends AggregateRoot {
    * and produces a ReservationCreated event.
    */
   public static create(
-    props: Partial<schemas.ReservationDTO> &
-      Pick<schemas.ReservationDTO, 'userId' | 'isbn'>,
+    props: Partial<schemas.Reservation> &
+      Pick<schemas.Reservation, 'userId' | 'bookId'>,
   ): { reservation: Reservation; event: DomainEvent } {
     const now = new Date()
 
@@ -105,24 +105,24 @@ export class Reservation extends AggregateRoot {
       ? Number(props.feeCharged)
       : parseInt(process.env.BOOK_RESERVATION_FEE ?? '3', 10)
 
-    // Generate a temporary reservationId for validation
-    const reservationId = props.reservationId || randomUUID()
+    // Generate a temporary id for validation
+    const id = props.id || randomUUID()
 
     // Validate the reservation data
     assertSchema({
       ...props,
-      reservationId,
+      id,
       dueDate: dueDate.toISOString(),
       feeCharged,
     })
 
     // Create reservation properties
     const reservationProps: ReservationProps = {
-      userId: props.userId.trim(),
-      isbn: props.isbn.trim(),
+      userId: props.userId?.trim() || '',
+      bookId: props.bookId?.trim() || '',
       reservedAt: props.reservedAt ? new Date(props.reservedAt) : now,
       dueDate,
-      retailPrice: Number(props.retailPrice),
+      retailPrice: Number(props.retailPrice || 0),
       status:
         (props.status as RESERVATION_STATUS) || RESERVATION_STATUS.RESERVED,
       feeCharged,
@@ -138,7 +138,7 @@ export class Reservation extends AggregateRoot {
       eventType: RESERVATION_CREATED,
       payload: {
         ...reservationProps,
-        reservationId: reservation.id,
+        id: reservation.id,
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         dueDate: dueDate.toISOString(),
@@ -282,7 +282,7 @@ export class Reservation extends AggregateRoot {
     // Create updated props
     const updatedProps: ReservationProps = {
       userId: this.userId,
-      isbn: this.isbn,
+      bookId: this.bookId,
       reservedAt: this.reservedAt,
       dueDate: this.dueDate,
       status: newStatus,
@@ -303,7 +303,7 @@ export class Reservation extends AggregateRoot {
     // Generate standard payload fields
     const actionName = eventType.replace('Reservation', '').toLowerCase()
     const basePayload = {
-      reservationId: this.reservationId,
+      id: this.id,
       userId: this.userId,
       previousStatus: this.status,
       updatedStatus: newStatus,
@@ -338,7 +338,7 @@ export class Reservation extends AggregateRoot {
   ): void {
     if (!allowedStates.includes(this.status)) {
       const errorCode = `RESERVATION_CANNOT_BE_${actionName.toUpperCase()}`
-      const errorMessage = `Reservation with id ${this.reservationId} cannot be ${actionName.toLowerCase()} in its current status.`
+      const errorMessage = `Reservation with id ${this.id} cannot be ${actionName.toLowerCase()} in its current status.`
 
       throw new Errors.ApplicationError(
         400,
@@ -445,7 +445,7 @@ export class Reservation extends AggregateRoot {
    * This reduces complexity in handlers that need to perform both operations.
    */
   public setPaymentPending(): { reservation: Reservation; event: DomainEvent } {
-    logger.debug(`Setting reservation ${this.reservationId} to pending payment`)
+    logger.debug(`Setting reservation ${this.id} to pending payment`)
 
     this.validateStateTransition(
       [RESERVATION_STATUS.CREATED],
@@ -465,7 +465,7 @@ export class Reservation extends AggregateRoot {
     paymentMethod: string,
     amount: number,
   ): { reservation: Reservation; event: DomainEvent } {
-    logger.debug(`Confirming reservation ${this.reservationId} after payment`)
+    logger.debug(`Confirming reservation ${this.id} after payment`)
 
     this.validateStateTransition(
       [RESERVATION_STATUS.PENDING_PAYMENT],
@@ -491,9 +491,7 @@ export class Reservation extends AggregateRoot {
     reservation: Reservation
     event: DomainEvent
   } {
-    logger.debug(
-      `Rejecting reservation ${this.reservationId} with reason: ${reason}`,
-    )
+    logger.debug(`Rejecting reservation ${this.id} with reason: ${reason}`)
 
     this.validateStateTransition(
       [
@@ -532,9 +530,8 @@ export class Reservation extends AggregateRoot {
       aggregateId: this.id,
       eventType: RESERVATION_RETAIL_PRICE_UPDATED,
       payload: {
-        reservationId: this.reservationId,
+        id: this.id,
         userId: this.userId,
-        previousRetailPrice: this.retailPrice,
         newRetailPrice: retailPrice,
         updatedAt: now.toISOString(),
       },
@@ -546,7 +543,7 @@ export class Reservation extends AggregateRoot {
     // Create new reservation with updated price - use the actual properties
     const updatedProps: ReservationProps = {
       userId: this.userId,
-      isbn: this.isbn,
+      bookId: this.bookId,
       reservedAt: this.reservedAt,
       dueDate: this.dueDate,
       status: this.status,
@@ -576,7 +573,7 @@ export class Reservation extends AggregateRoot {
     event: DomainEvent
   } {
     logger.debug(
-      `Marking reservation ${this.reservationId} as brought via purchase due to late fees`,
+      `Marking reservation ${this.id} as brought via purchase due to late fees`,
     )
 
     // We allow transitions from various states in this case

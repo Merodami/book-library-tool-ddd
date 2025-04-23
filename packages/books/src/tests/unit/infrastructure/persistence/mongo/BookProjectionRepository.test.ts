@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import { Book, BookUpdateRequest } from '@book-library-tool/sdk'
+import { BookUpdateRequest } from '@book-library-tool/sdk'
 import { ErrorCode } from '@book-library-tool/shared'
 import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
 import { BookDocument } from '@books/persistence/mongo/documents/BookDocument.js'
@@ -21,7 +21,7 @@ describe('BookProjectionRepository', () => {
     toArray: ReturnType<typeof vi.fn>
   } & Partial<Collection<BookDocument>>
   let repository: BookProjectionRepository
-  let mockBook: schemas.BookDTO
+  let mockBook: schemas.Book
   let mockDocument: BookDocument
   let mockId: string
 
@@ -53,6 +53,7 @@ describe('BookProjectionRepository', () => {
       publicationYear: mockBook.publicationYear!,
       publisher: mockBook.publisher!,
       price: mockBook.price!,
+      version: 0,
       createdAt: new Date(mockBook.createdAt!),
       updatedAt: new Date(mockBook.updatedAt!),
     }
@@ -161,7 +162,7 @@ describe('BookProjectionRepository', () => {
     })
 
     it('should apply field projection when fields are specified', async () => {
-      const fields = ['title', 'author']
+      const fields = ['title', 'author'] as schemas.BookField[]
 
       await repository.getBookByIsbn(mockBook.isbn!, fields)
 
@@ -282,7 +283,7 @@ describe('BookProjectionRepository', () => {
   describe('saveProjection', () => {
     it('should save a new book projection', async () => {
       // Book validation should pass with all required fields
-      await repository.saveProjection(mockBook)
+      await repository.saveBookProjection(mockBook)
 
       expect(mockCollection.insertOne).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -299,19 +300,19 @@ describe('BookProjectionRepository', () => {
 
     it('should throw an error when required fields are missing', async () => {
       // Missing required fields
-      const incompleteBook: Book = {
+      const incompleteBook: schemas.Book = {
         id: mockId,
         title: 'Incomplete Book',
         // Missing other required fields
       }
 
-      await expect(repository.saveProjection(incompleteBook)).rejects.toThrow(
-        ErrorCode.VALIDATION_ERROR,
-      )
+      await expect(
+        repository.saveBookProjection(incompleteBook),
+      ).rejects.toThrow(ErrorCode.VALIDATION_ERROR)
     })
   })
 
-  describe('updateProjection', () => {
+  describe('updateBookProjection', () => {
     it('should update an existing book projection', async () => {
       const updateData: BookUpdateRequest = {
         title: 'Updated Title',
@@ -323,7 +324,7 @@ describe('BookProjectionRepository', () => {
 
       const updateDate = new Date()
 
-      await repository.updateProjection(mockId, updateData, updateDate)
+      await repository.updateBookProjection(mockId, updateData, updateDate)
 
       // Verify the updated fields in the $set object
       const expectedSetObject = Object.fromEntries([
@@ -357,47 +358,6 @@ describe('BookProjectionRepository', () => {
           $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
         },
         { $set: { deletedAt, updatedAt: deletedAt } },
-      )
-    })
-  })
-
-  describe('findBookForReservation', () => {
-    it('should return a book when it exists and is not deleted', async () => {
-      const result = await repository.findBookForReservation(mockBook.isbn!)
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          isbn: mockBook.isbn,
-          title: mockBook.title,
-          price: mockBook.price,
-        }),
-      )
-
-      // Update the expectation to match the new implementation's behavior
-      expect(mockCollection.findOne).toHaveBeenCalledWith(
-        {
-          isbn: mockBook.isbn,
-          $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-        },
-        { projection: { _id: 0 } },
-      )
-    })
-
-    it('should return null when book does not exist', async () => {
-      mockCollection.findOne = vi.fn().mockResolvedValue(null)
-
-      const result =
-        await repository.findBookForReservation('non-existent-isbn')
-
-      expect(result).toBeNull()
-
-      // Update the expectation to match the new implementation's behavior
-      expect(mockCollection.findOne).toHaveBeenCalledWith(
-        {
-          isbn: 'non-existent-isbn',
-          $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
-        },
-        { projection: { _id: 0 } },
       )
     })
   })

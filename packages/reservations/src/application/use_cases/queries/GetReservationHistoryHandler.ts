@@ -1,6 +1,10 @@
-import { PaginationQuery, Reservation } from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
+import { ErrorCode } from '@book-library-tool/shared'
+import { logger } from '@book-library-tool/shared'
+import { Errors } from '@book-library-tool/shared'
 import { PaginatedResult } from '@book-library-tool/types'
-import type { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
+import { DomainReservation } from '@reservations/entities/DomainReservation.js'
+import type { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
 
 /**
  * Handles queries for a user's reservation history.
@@ -8,7 +12,7 @@ import type { IReservationProjectionRepository } from '@reservations/repositorie
  */
 export class GetReservationHistoryHandler {
   constructor(
-    private readonly reservationProjectionRepository: IReservationProjectionRepository,
+    private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
   ) {}
 
   /**
@@ -18,19 +22,42 @@ export class GetReservationHistoryHandler {
    * @returns Paginated list of the user's reservations
    */
   async execute(
-    query: Pick<Reservation, 'userId'> & PaginationQuery,
-  ): Promise<PaginatedResult<Reservation>> {
-    // Extract the query parameters
-    const { userId, page = 1, limit = 10 } = query
+    userId: string,
+    query: schemas.ReservationsHistoryQuery,
+    fields?: schemas.ReservationSortField[],
+  ): Promise<PaginatedResult<DomainReservation>> {
+    try {
+      // Retrieve all events for the given aggregate ID.
+      const reservations =
+        await this.reservationReadProjectionRepository.getUserReservations(
+          userId,
+          query,
+          fields,
+        )
 
-    // Query the projection repository to get the user's reservation history
-    // The repository handles pagination and filtering
-    const reservations =
-      await this.reservationProjectionRepository.getUserReservations(userId, {
-        page,
-        limit,
-      })
+      if (!reservations) {
+        return {
+          data: [],
+          pagination: {
+            total: 0,
+            page: query.page || 1,
+            limit: query.limit || 10,
+            pages: 0,
+            hasNext: false,
+            hasPrev: false,
+          },
+        }
+      }
 
-    return reservations
+      return reservations
+    } catch (err) {
+      logger.error('Error retrieving reservations history:', err)
+
+      throw new Errors.ApplicationError(
+        500,
+        ErrorCode.INTERNAL_ERROR,
+        'Error retrieving reservations history',
+      )
+    }
   }
 }

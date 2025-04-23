@@ -1,17 +1,18 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { RabbitMQEventBus } from '@book-library-tool/event-store'
+import { DomainEvent, RabbitMQEventBus } from '@book-library-tool/event-store'
 import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
 import { logger } from '@book-library-tool/shared'
-import { BookEventSubscriptions } from '@books/event-store/BookEventSubscriptions.js'
-import { BookProjectionHandler } from '@books/event-store/BookProjectionHandler.js'
-import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
-import { BookRepository } from '@books/persistence/mongo/BookRepository.js'
-import { createBookRouter } from '@books/routes/books/BookRoute.js'
-import { createCatalogRouter } from '@books/routes/catalog/CatalogRoute.js'
 
+import { BookReadEventSubscriptions } from '../infrastructure/event-store/BookReadEventSubscriptions.js'
+import { BookReadProjectionHandler } from '../infrastructure/event-store/BookReadProjectionHandler.js'
+import { BookReadProjectionRepository } from '../infrastructure/persistence/mongo/BookReadProjectionRepository.js'
+import { BookReadRepository } from '../infrastructure/persistence/mongo/BookReadRepository.js'
+import { BookWriteRepository } from '../infrastructure/persistence/mongo/BookWriteRepository.js'
 import { BookDocument } from '../infrastructure/persistence/mongo/documents/BookDocument.js'
+import { createBookRouter } from './routes/books/BookRouter.js'
+import { createCatalogRouter } from './routes/catalog/CatalogRouter.js'
 
 async function startBookService() {
   // Create and connect the database service (write and projection share the same DB context)
@@ -66,22 +67,30 @@ async function startBookService() {
   }
 
   // Instantiate the repository used for command (write) operations
-  const bookRepository = new BookRepository(dbService)
+  const bookWriteRepository = new BookWriteRepository(
+    dbService.getCollection<DomainEvent>('event_store'),
+    dbService,
+  )
+
+  const bookReadRepository = new BookReadRepository(
+    dbService.getCollection<DomainEvent>('event_store'),
+  )
 
   const bookProjectionCollection =
     dbService.getCollection<BookDocument>('book_projection')
 
   // Instantiate the repository used for query (read) operations: your projections
-  const bookProjectionRepository = new BookProjectionRepository(
+  const bookProjectionRepository = new BookReadProjectionRepository(
     bookProjectionCollection,
   )
 
   // Set up event subscriptions to update read models (via the projection handler)
-  const bookProjectionHandler = new BookProjectionHandler(
+  const bookReadProjectionHandler = new BookReadProjectionHandler(
     bookProjectionRepository,
   )
 
-  await BookEventSubscriptions(eventBus, redisService, bookProjectionHandler)
+  await BookReadEventSubscriptions(eventBus, bookReadProjectionHandler)
+
   await eventBus.startConsuming()
 
   logger.info('Event subscriptions registered successfully')
@@ -135,7 +144,12 @@ async function startBookService() {
   app.register(
     async (instance) => {
       return instance.register(
-        createBookRouter(bookRepository, bookProjectionRepository, eventBus),
+        createBookRouter(
+          bookWriteRepository,
+          bookReadRepository,
+          bookProjectionRepository,
+          eventBus,
+        ),
       )
     },
     { prefix: '/books' },
@@ -157,21 +171,15 @@ async function startBookService() {
   await startServer(app, SERVER_PORT, {
     onShutdown: async () => {
       logger.info('Closing DB connection...')
-
       await dbService.disconnect()
-
       logger.info('DB connection closed.')
 
       logger.info('Closing EventBus connection...')
-
       await eventBus.shutdown()
-
       logger.info('EventBus connection closed.')
 
       logger.info('Closing Redis connection...')
-
       await redisService.disconnect()
-
       logger.info('Redis connection closed.')
     },
   })

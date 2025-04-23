@@ -2,7 +2,7 @@ import { DomainEvent, type EventBus } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Reservation } from '@reservations/entities/Reservation.js'
 import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
-import type { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
+import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
 
 /**
  * Handler responsible for processing payment events from the Wallet service.
@@ -11,7 +11,7 @@ import type { IReservationRepository } from '@reservations/repositories/IReserva
  */
 export class PaymentHandler {
   constructor(
-    private readonly reservationRepository: IReservationRepository,
+    private readonly reservationWriteRepository: IReservationWriteRepository,
     private readonly projectionHandler: ReservationProjectionHandler,
     private readonly eventBus: EventBus,
   ) {}
@@ -31,7 +31,9 @@ export class PaymentHandler {
     try {
       // Load the reservation aggregate from event store
       const reservationEvents =
-        await this.reservationRepository.getEventsForAggregate(reservationId)
+        await this.reservationWriteRepository.getEventsForAggregate(
+          reservationId,
+        )
 
       if (!reservationEvents.length) {
         throw new Errors.ApplicationError(
@@ -52,7 +54,7 @@ export class PaymentHandler {
       )
 
       // Save the domain event to the event store
-      await this.reservationRepository.saveEvents(
+      await this.reservationWriteRepository.saveEvents(
         reservation.id,
         [newEvent],
         reservation.version,
@@ -89,7 +91,9 @@ export class PaymentHandler {
     try {
       // Load the reservation aggregate from event store
       const reservationEvents =
-        await this.reservationRepository.getEventsForAggregate(reservationId)
+        await this.reservationWriteRepository.getEventsForAggregate(
+          reservationId,
+        )
 
       if (!reservationEvents.length) {
         throw new Errors.ApplicationError(
@@ -108,7 +112,7 @@ export class PaymentHandler {
       )
 
       // Save the domain event to the event store
-      await this.reservationRepository.saveEvents(
+      await this.reservationWriteRepository.saveEvents(
         reservation.id,
         [newEvent],
         reservation.version,
@@ -128,6 +132,7 @@ export class PaymentHandler {
         `Error handling payment decline for reservation ${reservationId}:`,
         error,
       )
+
       throw error
     }
   }

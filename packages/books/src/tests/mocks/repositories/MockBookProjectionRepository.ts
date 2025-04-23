@@ -1,17 +1,14 @@
-import type {
-  Book as BookDTO,
-  CatalogSearchQuery,
-  PaginatedBookResponse,
-} from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
 import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
+import { pick } from 'lodash-es'
 import { vi } from 'vitest'
 
 /**
  * Sample books for testing. You can customize this as needed.
  */
-export const sampleBooks: BookDTO[] = [
+export const sampleBooks: schemas.Book[] = [
   {
-    id: 'book-1',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
     isbn: '978-3-16-148410-0',
     title: 'Book One',
     author: 'Author One',
@@ -22,7 +19,7 @@ export const sampleBooks: BookDTO[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'book-2',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a11',
     isbn: '978-3-16-148410-1',
     title: 'Book Two',
     author: 'Author Two',
@@ -33,7 +30,7 @@ export const sampleBooks: BookDTO[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'book-3',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a12',
     isbn: '978-3-16-148410-2',
     title: 'Book Three',
     author: 'Author Three',
@@ -53,7 +50,7 @@ export const sampleBooks: BookDTO[] = [
  * @returns A mock repository that implements IBookProjectionRepository
  */
 export function createMockBookProjectionRepository(
-  customBooks?: BookDTO[],
+  customBooks?: schemas.Book[],
 ): IBookProjectionRepository {
   const books = customBooks || sampleBooks
 
@@ -61,7 +58,10 @@ export function createMockBookProjectionRepository(
     getAllBooks: vi
       .fn()
       .mockImplementation(
-        async (query: CatalogSearchQuery, fields?: string[]) => {
+        async (
+          query: schemas.CatalogSearchQuery,
+          fields?: schemas.BookField[],
+        ) => {
           let filteredBooks = [...books]
 
           // Apply filtering if specified
@@ -100,6 +100,7 @@ export function createMockBookProjectionRepository(
           if (query.publicationYearMin) {
             filteredBooks = filteredBooks.filter(
               (book) =>
+                book.publicationYear &&
                 book.publicationYear >= Number(query.publicationYearMin),
             )
           }
@@ -107,6 +108,7 @@ export function createMockBookProjectionRepository(
           if (query.publicationYearMax) {
             filteredBooks = filteredBooks.filter(
               (book) =>
+                book.publicationYear &&
                 book.publicationYear <= Number(query.publicationYearMax),
             )
           }
@@ -119,34 +121,34 @@ export function createMockBookProjectionRepository(
 
           if (query.priceMin) {
             filteredBooks = filteredBooks.filter(
-              (book) => book.price >= Number(query.priceMin),
+              (book) => book.price && book.price >= Number(query.priceMin),
             )
           }
 
           if (query.priceMax) {
             filteredBooks = filteredBooks.filter(
-              (book) => book.price <= Number(query.priceMax),
+              (book) => book.price && book.price <= Number(query.priceMax),
             )
           }
 
           // Apply sorting if specified
           if (query.sortBy && query.sortOrder) {
             filteredBooks.sort((a, b) => {
-              const fieldA = a[query.sortBy as keyof BookDTO]
-              const fieldB = b[query.sortBy as keyof BookDTO]
+              const fieldA = a[query.sortBy as keyof schemas.Book]
+              const fieldB = b[query.sortBy as keyof schemas.Book]
 
               if (fieldA === undefined || fieldB === undefined) {
                 return 0
               }
 
               if (typeof fieldA === 'string' && typeof fieldB === 'string') {
-                return query.sortOrder === 'ASC'
+                return query.sortOrder === 'asc'
                   ? fieldA.localeCompare(fieldB)
                   : fieldB.localeCompare(fieldA)
               }
 
               if (typeof fieldA === 'number' && typeof fieldB === 'number') {
-                return query.sortOrder === 'ASC'
+                return query.sortOrder === 'asc'
                   ? fieldA - fieldB
                   : fieldB - fieldA
               }
@@ -173,20 +175,17 @@ export function createMockBookProjectionRepository(
 
           if (fields && fields.length > 0) {
             resultBooks = paginatedBooks.map((book) => {
-              const filteredBook = {} as Partial<BookDTO>
+              const validFields = fields.filter((field) =>
+                schemas.ALLOWED_BOOK_FIELDS.includes(
+                  field as schemas.BookField,
+                ),
+              )
 
-              fields.forEach((field) => {
-                if (field in book) {
-                  filteredBook[field as keyof BookDTO] =
-                    book[field as keyof BookDTO]
-                }
-              })
-
-              return filteredBook as BookDTO
+              return pick(book, validFields) as schemas.Book
             })
           }
 
-          const mockPaginatedResponse: PaginatedBookResponse = {
+          const mockPaginatedResponse: schemas.PaginatedResult<schemas.Book> = {
             data: resultBooks,
             pagination: {
               total: filteredBooks.length,
@@ -210,16 +209,11 @@ export function createMockBookProjectionRepository(
         if (!book) return null
 
         if (fields && fields.length > 0) {
-          const filteredBook = {} as Partial<BookDTO>
+          const validFields = fields.filter((field) =>
+            schemas.ALLOWED_BOOK_FIELDS.includes(field as schemas.BookField),
+          )
 
-          fields.forEach((field) => {
-            if (field in book) {
-              filteredBook[field as keyof BookDTO] =
-                book[field as keyof BookDTO]
-            }
-          })
-
-          return filteredBook as BookDTO
+          return pick(book, validFields) as schemas.Book
         }
 
         return book
@@ -233,36 +227,31 @@ export function createMockBookProjectionRepository(
         if (!book) return null
 
         if (fields && fields.length > 0) {
-          const filteredBook = {} as Partial<BookDTO>
+          const validFields = fields.filter((field) =>
+            schemas.ALLOWED_BOOK_FIELDS.includes(field as schemas.BookField),
+          )
 
-          fields.forEach((field) => {
-            if (field in book) {
-              filteredBook[field as keyof BookDTO] =
-                book[field as keyof BookDTO]
-            }
-          })
-
-          return filteredBook as BookDTO
+          return pick(book, validFields) as schemas.Book
         }
 
         return book
       }),
 
-    saveProjection: vi
+    saveBookProjection: vi
       .fn()
-      .mockImplementation(async (bookProjection: BookDTO) => {
+      .mockImplementation(async (bookProjection: schemas.Book) => {
         // Mock implementation just records the call
         return Promise.resolve()
       }),
 
-    updateProjection: vi
+    updateBookProjection: vi
       .fn()
       .mockImplementation(
         async (
           id: string,
           changes: Partial<
             Pick<
-              BookDTO,
+              schemas.Book,
               | 'title'
               | 'author'
               | 'publicationYear'
@@ -300,12 +289,6 @@ export function createMockBookProjectionRepository(
         // Mock implementation just records the call
         return Promise.resolve()
       }),
-
-    findBookForReservation: vi.fn().mockImplementation(async (isbn: string) => {
-      const book = books.find((b) => b.isbn === isbn)
-
-      return book || null
-    }),
   }
 }
 
@@ -351,9 +334,8 @@ export function createErrorMockBookProjectionRepository(
     getAllBooks: vi.fn().mockRejectedValue(error),
     getBookById: vi.fn().mockRejectedValue(error),
     getBookByIsbn: vi.fn().mockRejectedValue(error),
-    saveProjection: vi.fn().mockRejectedValue(error),
-    updateProjection: vi.fn().mockRejectedValue(error),
+    saveBookProjection: vi.fn().mockRejectedValue(error),
+    updateBookProjection: vi.fn().mockRejectedValue(error),
     markAsDeleted: vi.fn().mockRejectedValue(error),
-    findBookForReservation: vi.fn().mockRejectedValue(error),
   }
 }

@@ -1,9 +1,5 @@
-import type {
-  Book,
-  BookUpdateRequest,
-  CatalogSearchQuery,
-  PaginatedBookResponse,
-} from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
+import type { BookUpdateRequest } from '@book-library-tool/sdk'
 import { BookProjectionRepository } from '@books/persistence/mongo/BookProjectionRepository.js'
 import type { BookDocument } from '@books/persistence/mongo/documents/BookDocument.js'
 import { Collection, MongoClient } from 'mongodb'
@@ -44,8 +40,8 @@ describe('BookProjectionRepository Integration', () => {
     await collection.deleteMany({})
 
     // Insert baseline book via repository to ensure correct mapping
-    const baseBook: Book = {
-      id: 'test-id-123', // Add ID field
+    const baseBook: schemas.Book = {
+      id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
       isbn: '978-3-16-148410-0',
       title: 'Test Book',
       author: 'Test Author',
@@ -56,12 +52,12 @@ describe('BookProjectionRepository Integration', () => {
       updatedAt: new Date().toISOString(),
     }
 
-    await repository.saveProjection(baseBook)
+    await repository.saveBookProjection(baseBook)
 
     // Save the ID for later use
     const savedBook = await collection.findOne({ isbn: baseBook.isbn })
 
-    testBookId = savedBook?.id || 'test-id-123'
+    testBookId = savedBook?.id || '5a1018f2-3526-4275-a84b-784e4f2e5a10'
   })
 
   afterAll(async () => {
@@ -89,8 +85,8 @@ describe('BookProjectionRepository Integration', () => {
 
   describe('getAllBooks', () => {
     it('returns paginated books', async () => {
-      const second: Book = {
-        id: 'test-id-456', // Add ID field
+      const second: schemas.Book = {
+        id: '5a1018f2-3526-4275-a84b-784e4f2e5a11',
         isbn: '978-3-16-148410-1',
         title: 'Another',
         author: 'Author',
@@ -101,27 +97,32 @@ describe('BookProjectionRepository Integration', () => {
         updatedAt: new Date().toISOString(),
       }
 
-      await repository.saveProjection(second)
+      await repository.saveBookProjection(second)
 
-      const query: CatalogSearchQuery = { page: 1, limit: 10 }
-      const resp: PaginatedBookResponse = await repository.getAllBooks(query)
+      const query: schemas.CatalogSearchQuery = { page: 1, limit: 10 }
+      const resp: schemas.PaginatedResult<schemas.Book> =
+        await repository.getAllBooks(query)
 
       expect(resp.data).toHaveLength(2)
       expect(resp.pagination.total).toBe(2)
     })
 
     it('filters by title', async () => {
-      const query: CatalogSearchQuery = { title: 'Test', page: 1, limit: 10 }
+      const query: schemas.CatalogSearchQuery = {
+        title: 'Test',
+        page: 1,
+        limit: 10,
+      }
       const resp = await repository.getAllBooks(query)
 
-      expect(resp.data.every((b) => b.title.includes('Test'))).toBe(true)
+      expect(resp.data.every((b) => b.title?.includes('Test'))).toBe(true)
     })
   })
 
   describe('saveProjection and updateProjection', () => {
     it('saves and updates correctly', async () => {
-      const newBook: Book = {
-        id: 'test-id-789', // Add ID field
+      const newBook: schemas.Book = {
+        id: '46decb22-c152-482b-909e-693c20e416a6',
         isbn: '978-3-16-148410-2',
         title: 'New',
         author: 'New',
@@ -132,10 +133,10 @@ describe('BookProjectionRepository Integration', () => {
         updatedAt: new Date().toISOString(),
       }
 
-      await repository.saveProjection(newBook)
+      await repository.saveBookProjection(newBook)
 
       // Changed from getBookByISBN to getBookByIsbn
-      let fetched = await repository.getBookByIsbn(newBook.isbn)
+      let fetched = await repository.getBookByIsbn(newBook.isbn || '')
 
       expect(fetched).not.toBeNull()
 
@@ -153,10 +154,10 @@ describe('BookProjectionRepository Integration', () => {
       }
 
       // Include updatedAt timestamp as third parameter
-      await repository.updateProjection(id, updates, new Date())
+      await repository.updateBookProjection(id, updates, new Date())
 
       // Changed from getBookByISBN to getBookByIsbn
-      fetched = await repository.getBookByIsbn(newBook.isbn)
+      fetched = await repository.getBookByIsbn(newBook.isbn || '')
       expect(fetched?.title).toBe('Updated')
       expect(fetched?.author).toBe('Edited')
     })
@@ -173,7 +174,7 @@ describe('BookProjectionRepository Integration', () => {
 
       expect(all.data).toHaveLength(0)
 
-      const found = await repository.findBookForReservation('978-3-16-148410-0')
+      const found = await repository.getBookById('978-3-16-148410-0')
 
       expect(found).toBeNull()
     })

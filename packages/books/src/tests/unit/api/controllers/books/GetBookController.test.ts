@@ -1,4 +1,4 @@
-import { Book as BookDTO } from '@book-library-tool/sdk'
+import { Book as Book } from '@book-library-tool/sdk'
 import { GetBookController } from '@books/controllers/books/GetBookController.js'
 import { GetBookHandler } from '@books/queries/GetBookHandler.js'
 import { FastifyRequest } from 'fastify'
@@ -27,7 +27,7 @@ describe('GetBookController', () => {
 
   // Sample book ID and mock book data
   const bookId = 'test-id-123'
-  const mockBook: BookDTO = {
+  const mockBook: Book = {
     id: bookId,
     isbn: '978-3-16-148410-0',
     title: 'Test Book',
@@ -61,10 +61,7 @@ describe('GetBookController', () => {
       const result = await controller.getBook(mockRequest)
 
       // Verify the handler was called with the correct query and no fields
-      expect(getBookHandler.execute).toHaveBeenCalledWith(
-        { id: bookId },
-        undefined,
-      )
+      expect(getBookHandler.execute).toHaveBeenCalledWith(bookId, undefined)
 
       // Verify the controller returns the handler's response
       expect(result).toEqual(mockBook)
@@ -81,7 +78,7 @@ describe('GetBookController', () => {
       await controller.getBook(mockRequest)
 
       // Verify the handler was called with the correct fields
-      expect(getBookHandler.execute).toHaveBeenCalledWith({ id: bookId }, [
+      expect(getBookHandler.execute).toHaveBeenCalledWith(bookId, [
         'id',
         'title',
         'author',
@@ -99,7 +96,7 @@ describe('GetBookController', () => {
       await controller.getBook(mockRequest)
 
       // Verify the handler was called with only valid fields
-      expect(getBookHandler.execute).toHaveBeenCalledWith({ id: bookId }, [
+      expect(getBookHandler.execute).toHaveBeenCalledWith(bookId, [
         'id',
         'title',
       ])

@@ -1,6 +1,8 @@
-import type { ReservationRequest } from '@book-library-tool/sdk'
+import { schemas } from '@book-library-tool/api'
+import { EventResponse } from '@book-library-tool/sdk'
 import { CreateReservationHandler } from '@reservations/commands/CreateReservationHandler.js'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import { CreateReservationCommand } from '@reservations/use_cases/commands/CreateReservationCommand.js'
+import { FastifyRequest } from 'fastify'
 
 export class CreateReservationController {
   constructor(
@@ -12,31 +14,28 @@ export class CreateReservationController {
 
   /**
    * POST /reservations
-   * Create a new reservation.
+   * Creates a new reservation using the event-sourced process.
    * Expects a JSON body with:
    * {
    *   "userId": string,
-   *   "isbn": string
+   *   "bookId": string
    * }
-   * The handler will generate a ReservationCreated event, persist it, and publish it.
+   * Generates a ReservationCreated event, persists it, and publishes it.
    */
   async createReservation(
-    request: FastifyRequest<{ Body: ReservationRequest }>,
-    reply: FastifyReply,
-  ): Promise<void> {
-    const { userId, isbn } = request.body
+    request: FastifyRequest<{
+      Body: schemas.ReservationRequest
+    }>,
+  ): Promise<EventResponse & { id: string }> {
+    const { userId, bookId } = request.body
 
-    // Build the command
-    const reservationCommand: ReservationRequest = {
+    const command: CreateReservationCommand = {
       userId,
-      isbn,
+      bookId,
     }
 
-    // Directly delegate to the handler which enforces business rules and generates events
-    await this.createReservationHandler.execute(reservationCommand)
+    const result = await this.createReservationHandler.execute(command)
 
-    await reply
-      .status(201)
-      .send({ success: true, message: 'Reservation created successfully' })
+    return result
   }
 }

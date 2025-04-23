@@ -18,6 +18,7 @@
       "@reservations/use_cases/*": ["src/application/use_cases/*"],
       "@reservations/commands/*": ["src/application/use_cases/commands/*"],
       "@reservations/queries/*": ["src/application/use_cases/queries/*"],
+      "@reservations/mappers/*": ["src/application/mappers/*"],
 
       // Domain
       "@reservations/entities/*": ["src/domain/entities/*"],

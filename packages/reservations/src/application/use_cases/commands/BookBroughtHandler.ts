@@ -1,8 +1,8 @@
 import { EventBus } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
-import { BookBroughtCommand } from '@reservations/commands/BookBroughtCommand.js'
 import { Reservation } from '@reservations/entities/Reservation.js'
-import { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
+import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
+import { BookBroughtCommand } from '@reservations/use_cases/commands/BookBroughtCommand.js'
 
 /**
  * Handler for processing book purchase scenarios in the reservation system.
@@ -17,7 +17,7 @@ import { IReservationRepository } from '@reservations/repositories/IReservationR
  */
 export class BookBroughtHandler {
   constructor(
-    private readonly reservationRepository: IReservationRepository,
+    private readonly reservationWriteRepository: IReservationWriteRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -34,8 +34,7 @@ export class BookBroughtHandler {
    * 4. Generating the purchase event
    * 5. Persisting and publishing the event
    *
-   * @param userId - The ID of the user making the purchase
-   * @param reservationId - The ID of the reservation being converted to a purchase
+   * @param command - The command containing the reservationId and userId
    * @returns Promise that resolves when the process is complete
    *
    * @throws {Error} If there are issues with event persistence or publishing
@@ -49,7 +48,7 @@ export class BookBroughtHandler {
 
       // Retrieve events for the reservation
       const reservationEvents =
-        await this.reservationRepository.getEventsForAggregate(
+        await this.reservationWriteRepository.getEventsForAggregate(
           command.reservationId,
         )
 
@@ -77,7 +76,7 @@ export class BookBroughtHandler {
       const result = reservation.markAsBroughtViaPurchase()
 
       // Save the event
-      await this.reservationRepository.saveEvents(
+      await this.reservationWriteRepository.saveEvents(
         reservation.id,
         [result.event],
         reservation.version,

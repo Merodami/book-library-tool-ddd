@@ -32,7 +32,13 @@ export const UserIdParameterRef = Type.Ref(
  */
 export const UserSchema = Type.Object(
   {
-    userId: Type.String({ format: 'uuid' }),
+    id: Type.Optional(
+      Type.String({
+        format: 'uuid',
+        minLength: 1,
+        pattern: '^(?!\\s*$).+',
+      }),
+    ),
     email: Type.String({ format: 'email' }),
     role: Type.String({ minLength: 1 }),
     createdAt: Type.Optional(Type.String({ format: 'date-time' })),
@@ -41,7 +47,7 @@ export const UserSchema = Type.Object(
   },
   { $id: '#/components/schemas/User' },
 )
-export type UserDTO = Static<typeof UserSchema>
+export type User = Static<typeof UserSchema>
 export const UserRef = Type.Ref('#/components/schemas/User')
 
 // --------------------------------

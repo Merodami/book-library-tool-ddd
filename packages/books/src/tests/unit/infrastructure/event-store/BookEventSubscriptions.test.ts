@@ -109,7 +109,7 @@ describe('BookEventSubscriptions', () => {
     handleBookCreated: vi.fn().mockResolvedValue(undefined),
     handleBookUpdated: vi.fn().mockResolvedValue(undefined),
     handleBookDeleted: vi.fn().mockResolvedValue(undefined),
-    handleReservationValidateBook: vi.fn(),
+    handleValidateBook: vi.fn(),
     projectionRepository: {}, // Add the missing property
   } as unknown as BookProjectionHandler
 
@@ -390,18 +390,18 @@ describe('BookEventSubscriptions', () => {
       schemaVersion: 1,
     }
 
-    const mockedHandleReservationValidateBook =
-      mockProjectionHandler.handleReservationValidateBook as MockedFn<
-        typeof mockProjectionHandler.handleReservationValidateBook
+    const mockedhandleValidateBook =
+      mockProjectionHandler.handleValidateBook as MockedFn<
+        typeof mockProjectionHandler.handleValidateBook
       >
 
-    mockedHandleReservationValidateBook.mockResolvedValue(validationResult)
+    mockedhandleValidateBook.mockResolvedValue(validationResult)
 
     await validationHandler(mockEvent)
 
-    expect(
-      mockProjectionHandler.handleReservationValidateBook,
-    ).toHaveBeenCalledWith(mockEvent)
+    expect(mockProjectionHandler.handleValidateBook).toHaveBeenCalledWith(
+      mockEvent,
+    )
     expect(mockEventBus.publish).toHaveBeenCalledWith(validationResult)
     expect(logger.info).toHaveBeenCalled()
   })
@@ -490,12 +490,12 @@ describe('BookEventSubscriptions', () => {
     }
 
     const error = new Error('Validation error')
-    const mockedHandleReservationValidateBook =
-      mockProjectionHandler.handleReservationValidateBook as MockedFn<
-        typeof mockProjectionHandler.handleReservationValidateBook
+    const mockedhandleValidateBook =
+      mockProjectionHandler.handleValidateBook as MockedFn<
+        typeof mockProjectionHandler.handleValidateBook
       >
 
-    mockedHandleReservationValidateBook.mockRejectedValue(error)
+    mockedhandleValidateBook.mockRejectedValue(error)
 
     await validationHandler(mockEvent)
 

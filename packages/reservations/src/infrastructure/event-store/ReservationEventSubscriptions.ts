@@ -2,6 +2,7 @@ import {
   BOOK_DELETED,
   BOOK_UPDATED,
   BOOK_VALIDATION_RESULT,
+  DomainEvent,
   EventBus,
   RESERVATION_BOOK_BROUGHT,
   RESERVATION_CANCELLED,
@@ -14,6 +15,7 @@ import {
   WALLET_PAYMENT_DECLINED,
   WALLET_PAYMENT_SUCCESS,
 } from '@book-library-tool/event-store'
+import { RedisService } from '@book-library-tool/redis'
 import { logger } from '@book-library-tool/shared'
 import { ValidateReservationHandler } from '@reservations/commands/ValidateReservationHandler.js'
 import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
@@ -39,47 +41,58 @@ import { PaymentHandler } from '@reservations/use_cases/commands/PaymentHandler.
  */
 export function ReservationEventSubscriptions(
   eventBus: EventBus,
+  cacheService: RedisService,
   projectionHandler: ReservationProjectionHandler,
   validateReservationHandler: ValidateReservationHandler,
   paymentHandler: PaymentHandler,
   bookBroughtHandler: BookBroughtHandler,
 ): void {
   // Internal domain events for reservations
-  eventBus.subscribe(RESERVATION_CREATED, async (event) => {
+  eventBus.subscribe(RESERVATION_CREATED, async (event: DomainEvent) => {
     try {
       await projectionHandler.handleReservationCreated(event)
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling ReservationCreated event: ${error}`)
     }
   })
 
-  eventBus.subscribe(RESERVATION_RETURNED, async (event) => {
+  eventBus.subscribe(RESERVATION_RETURNED, async (event: DomainEvent) => {
     try {
       await projectionHandler.handleReservationReturned(event)
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling ReservationReturned event: ${error}`)
     }
   })
 
-  eventBus.subscribe(RESERVATION_CANCELLED, async (event) => {
+  eventBus.subscribe(RESERVATION_CANCELLED, async (event: DomainEvent) => {
     try {
       await projectionHandler.handleReservationCancelled(event)
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling ReservationCancelled event: ${error}`)
     }
   })
 
-  eventBus.subscribe(RESERVATION_OVERDUE, async (event) => {
+  eventBus.subscribe(RESERVATION_OVERDUE, async (event: DomainEvent) => {
     try {
       await projectionHandler.handleReservationOverdue(event)
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling ReservationOverdue event: ${error}`)
     }
   })
 
-  eventBus.subscribe(RESERVATION_DELETED, async (event) => {
+  eventBus.subscribe(RESERVATION_DELETED, async (event: DomainEvent) => {
     try {
       await projectionHandler.handleReservationDeleted(event)
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling ReservationDeleted event: ${error}`)
     }
@@ -90,19 +103,21 @@ export function ReservationEventSubscriptions(
    * Updates both the read model (projection) and the write model (reservation aggregate)
    * with the validation outcome.
    */
-  eventBus.subscribe(BOOK_VALIDATION_RESULT, async (event) => {
+  eventBus.subscribe(BOOK_VALIDATION_RESULT, async (event: DomainEvent) => {
     try {
       logger.debug(
         `Processing BookValidationResult event for reservation ${event.payload.reservationId}`,
       )
 
-      // Also update the write model (reservation aggregate)
       await validateReservationHandler.execute(event, {
         reservationId: event.payload.reservationId,
+        bookId: event.payload.bookId,
         isValid: event.payload.isValid,
         reason: event.payload.reason,
         retailPrice: event.payload.retailPrice,
       })
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling BookValidationResult event: ${error}`)
     }
@@ -113,11 +128,13 @@ export function ReservationEventSubscriptions(
    * Only processes updates that affect the book's title, as this is relevant
    * for reservation records.
    */
-  eventBus.subscribe(BOOK_UPDATED, async (event) => {
+  eventBus.subscribe(BOOK_UPDATED, async (event: DomainEvent) => {
     try {
       // Only handle this event if the title was updated
       if (event.payload.updated && event.payload.updated.title) {
         await projectionHandler.handleBookDetailsUpdated(event)
+
+        await cacheService.delPattern('reservation:getReservationHistory*')
       }
     } catch (error) {
       logger.error(`Error handling BookUpdated event: ${error}`)
@@ -128,9 +145,11 @@ export function ReservationEventSubscriptions(
    * Handles book deletions from the books bounded context.
    * Updates the reservation projection to reflect the book's deletion.
    */
-  eventBus.subscribe(BOOK_DELETED, async (event) => {
+  eventBus.subscribe(BOOK_DELETED, async (event: DomainEvent) => {
     try {
       await projectionHandler.handleBookDeleted(event)
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling BookDeleted event: ${error}`)
     }
@@ -140,9 +159,11 @@ export function ReservationEventSubscriptions(
    * Handles declined payment events from the wallet bounded context.
    * Updates the reservation state to reflect the failed payment.
    */
-  eventBus.subscribe(WALLET_PAYMENT_DECLINED, async (event) => {
+  eventBus.subscribe(WALLET_PAYMENT_DECLINED, async (event: DomainEvent) => {
     try {
       await paymentHandler.handlePaymentDeclined(event)
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling payment declined event: ${error}`, error)
     }
@@ -152,9 +173,11 @@ export function ReservationEventSubscriptions(
    * Handles successful payment events from the wallet bounded context.
    * Updates the reservation state to reflect the completed payment.
    */
-  eventBus.subscribe(WALLET_PAYMENT_SUCCESS, async (event) => {
+  eventBus.subscribe(WALLET_PAYMENT_SUCCESS, async (event: DomainEvent) => {
     try {
       await paymentHandler.handlePaymentSuccess(event)
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling payment success event: ${error}`, error)
     }
@@ -164,23 +187,30 @@ export function ReservationEventSubscriptions(
    * Handles retail price updates for reservations.
    * Updates the projection with the new price information.
    */
-  eventBus.subscribe(RESERVATION_RETAIL_PRICE_UPDATED, async (event) => {
-    try {
-      await projectionHandler.handleRetailPriceUpdated(event)
-    } catch (error) {
-      logger.error(
-        `Error handling RESERVATION_RETAIL_PRICE_UPDATED event: ${error}`,
-      )
-    }
-  })
+  eventBus.subscribe(
+    RESERVATION_RETAIL_PRICE_UPDATED,
+    async (event: DomainEvent) => {
+      try {
+        await projectionHandler.handleRetailPriceUpdated(event)
+
+        await cacheService.delPattern('reservation:getReservationHistory*')
+      } catch (error) {
+        logger.error(
+          `Error handling RESERVATION_RETAIL_PRICE_UPDATED event: ${error}`,
+        )
+      }
+    },
+  )
 
   /**
    * Handles events when a book is brought back to the library.
    * Updates the reservation projection to reflect the book's return.
    */
-  eventBus.subscribe(RESERVATION_BOOK_BROUGHT, async (event) => {
+  eventBus.subscribe(RESERVATION_BOOK_BROUGHT, async (event: DomainEvent) => {
     try {
       await projectionHandler.handleReservationBookBrought(event)
+
+      await cacheService.delPattern('reservation:getReservationHistory*')
     } catch (error) {
       logger.error(`Error handling RESERVATION_BOOK_BROUGHT event: ${error}`)
     }
@@ -191,7 +221,7 @@ export function ReservationEventSubscriptions(
    * If the late fees have accumulated to the purchase price, triggers
    * the book purchase process.
    */
-  eventBus.subscribe(WALLET_LATE_FEE_APPLIED, async (event) => {
+  eventBus.subscribe(WALLET_LATE_FEE_APPLIED, async (event: DomainEvent) => {
     try {
       // Check if the book was purchased based on late fees
       if (event.payload.bookBrought) {
@@ -201,6 +231,8 @@ export function ReservationEventSubscriptions(
           lateFees: event.payload.lateFees,
           retailPrice: event.payload.retailPrice,
         })
+
+        await cacheService.delPattern('reservation:getReservationHistory*')
       }
     } catch (error) {
       logger.error(`Error handling WALLET_LATE_FEE_APPLIED event: ${error}`)

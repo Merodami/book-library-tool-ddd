@@ -1,10 +1,8 @@
 import { schemas } from '@book-library-tool/api'
-import { ALLOWED_BOOK_FIELDS } from '@book-library-tool/api/src/schemas/books.js'
-import { parseAndValidate } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
+import { parseAndValidate } from '@book-library-tool/http'
 import { Cache, httpRequestKeyGenerator } from '@book-library-tool/redis'
-import { Book as BookDTO } from '@book-library-tool/sdk'
+import { Book as Book } from '@book-library-tool/sdk'
 import { GetBookHandler } from '@books/queries/GetBookHandler.js'
-import type { GetBookQuery } from '@books/queries/GetBookQuery.js'
 import type { FastifyRequest } from 'fastify'
 
 export class GetBookController {
@@ -24,24 +22,23 @@ export class GetBookController {
   })
   async getBook(
     request: FastifyRequest<{
-      Params: { id: string }
+      Params: schemas.IdParameter
+      Querystring: schemas.CatalogSearchQuery
     }>,
-  ): Promise<BookDTO> {
+  ): Promise<Book> {
     const { id } = request.params
 
     const query = request.query as schemas.CatalogSearchQuery
 
     const validFields = parseAndValidate<schemas.BookSortField>(
       query.fields,
-      ALLOWED_BOOK_FIELDS,
+      schemas.ALLOWED_BOOK_FIELDS,
     )
 
-    const bookQuery: GetBookQuery = {
-      id,
-    }
-
     const result = await this.getBookHandler.execute(
-      bookQuery,
+      {
+        id,
+      },
       validFields || undefined,
     )
 

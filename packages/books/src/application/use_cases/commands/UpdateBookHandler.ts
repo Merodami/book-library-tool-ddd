@@ -3,13 +3,11 @@ import { EventBus } from '@book-library-tool/event-store'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
 import { Book } from '@books/entities/Book.js'
-import { IBookProjectionRepository } from '@books/repositories/IBookProjectionRepository.js'
-import { IBookRepository } from '@books/repositories/IBookRepository.js'
+import { IBookWriteRepository } from '@books/repositories/IBookWriteRepository.js'
 
 export class UpdateBookHandler {
   constructor(
-    private readonly repository: IBookRepository,
-    private readonly projectionRepository: IBookProjectionRepository,
+    private readonly writeRepository: IBookWriteRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -26,17 +24,7 @@ export class UpdateBookHandler {
   async execute(
     command: UpdateBookCommand,
   ): Promise<EventResponse & { bookId: string }> {
-    const existing = await this.projectionRepository.getBookById(command.id)
-
-    if (!existing || !existing.id) {
-      throw new Errors.ApplicationError(
-        404,
-        ErrorCode.BOOK_NOT_FOUND,
-        `Book with ID ${command.id} not found.`,
-      )
-    }
-
-    const events = await this.repository.getEventsForAggregate(existing.id)
+    const events = await this.writeRepository.getEventsForAggregate(command.id)
 
     if (events.length === 0) {
       throw new Errors.ApplicationError(
@@ -56,7 +44,11 @@ export class UpdateBookHandler {
       price: command.price,
     })
 
-    await this.repository.saveEvents(existing.id, [event], currentBook.version)
+    await this.writeRepository.saveEvents(
+      command.id,
+      [event],
+      currentBook.version,
+    )
 
     await this.eventBus.publish(event)
 

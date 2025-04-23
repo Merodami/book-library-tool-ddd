@@ -1,7 +1,5 @@
 import { Static, Type } from '@sinclair/typebox'
 
-import { PaginationMetadataSchema } from './pagination.js'
-
 // --------------------------------
 // Query Schemas
 // --------------------------------
@@ -28,6 +26,7 @@ export const ALLOWED_BOOK_SORT_FIELDS = [
   'price',
   'createdAt',
   'updatedAt',
+  'deletedAt',
 ] as const
 
 export type BookSortField = (typeof ALLOWED_BOOK_SORT_FIELDS)[number]
@@ -35,23 +34,6 @@ export type BookSortField = (typeof ALLOWED_BOOK_SORT_FIELDS)[number]
 // --------------------------------
 // Parameter Schemas
 // --------------------------------
-
-/**
- * Book Parameter Schema
- */
-export const BookIdParameterSchema = Type.Object(
-  {
-    id: Type.String({ minLength: 1 }),
-  },
-  {
-    $id: '#/components/parameters/BookIdParameter',
-    description: 'The book ID',
-  },
-)
-export type BookIdParameter = Static<typeof BookIdParameterSchema>
-export const BookIdParameterRef = Type.Ref(
-  '#/components/parameters/BookIdParameter',
-)
 
 // --------------------------------
 // Request Schemas
@@ -110,7 +92,13 @@ export const BookUpdateRequestRef = Type.Ref(
  */
 export const BookSchema = Type.Object(
   {
-    id: Type.Optional(Type.String({ minLength: 1 })),
+    id: Type.Optional(
+      Type.String({
+        format: 'uuid',
+        minLength: 1,
+        pattern: '^(?!\\s*$).+',
+      }),
+    ),
     isbn: Type.Optional(Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' })),
     title: Type.Optional(
       Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
@@ -123,6 +111,7 @@ export const BookSchema = Type.Object(
       Type.String({ minLength: 1, pattern: '^(?!\\s*$).+' }),
     ),
     price: Type.Optional(Type.Number({ minimum: 0 })),
+    version: Type.Optional(Type.Number({ minimum: 0 })),
     createdAt: Type.Optional(Type.String({ format: 'date-time' })),
     updatedAt: Type.Optional(
       Type.String({ format: 'date-time', nullable: true }),
@@ -133,24 +122,5 @@ export const BookSchema = Type.Object(
   },
   { $id: '#/components/schemas/Book' },
 )
-export type BookDTO = Static<typeof BookSchema>
+export type Book = Static<typeof BookSchema>
 export const BookRef = Type.Ref('#/components/schemas/Book')
-
-// --------------------------------
-// Paginated Response Schemas
-// --------------------------------
-
-/**
- * Paginated Book Response Schema
- */
-export const PaginatedBookResponseSchema = Type.Object(
-  {
-    data: Type.Array(BookRef),
-    pagination: PaginationMetadataSchema,
-  },
-  { $id: '#/components/schemas/PaginatedBookResponse' },
-)
-export type PaginatedBookResponse = Static<typeof PaginatedBookResponseSchema>
-export const PaginatedBookResponseRef = Type.Ref(
-  '#/components/schemas/PaginatedBookResponse',
-)

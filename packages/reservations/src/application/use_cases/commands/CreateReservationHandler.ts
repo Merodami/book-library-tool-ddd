@@ -3,12 +3,13 @@ import {
   type EventBus,
   RESERVATION_BOOK_VALIDATION,
 } from '@book-library-tool/event-store'
-import type { ReservationRequest } from '@book-library-tool/sdk'
+import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Reservation } from '@reservations/entities/Reservation.js'
-import { IReservationProjectionRepository } from '@reservations/repositories/IReservationProjectionRepository.js'
-import { IReservationRepository } from '@reservations/repositories/IReservationRepository.js'
+import { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
+import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
+import { CreateReservationCommand } from '@reservations/use_cases/commands/CreateReservationCommand.js'
 
 /**
  * Handles the creation of new reservations.
@@ -16,8 +17,8 @@ import { IReservationRepository } from '@reservations/repositories/IReservationR
  */
 export class CreateReservationHandler {
   constructor(
-    private readonly reservationRepository: IReservationRepository,
-    private readonly reservationProjectionRepository: IReservationProjectionRepository,
+    private readonly reservationWriteRepository: IReservationWriteRepository,
+    private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -27,28 +28,30 @@ export class CreateReservationHandler {
    * @param command - The reservation request data
    * @returns The ID of the newly created reservation
    */
-  async execute(command: ReservationRequest): Promise<void> {
+  async execute(
+    command: CreateReservationCommand,
+  ): Promise<EventResponse & { id: string }> {
     // Validate command data
-    if (!command.userId || !command.isbn) {
+    if (!command.userId || !command.bookId) {
       throw new Errors.ApplicationError(
         400,
         ErrorCode.RESERVATION_INVALID_DATA,
-        'User ID and ISBN are required',
+        'User ID and Book ID are required',
       )
     }
 
     // Check if user already has an active reservation for this book
-    const existingReservation =
-      await this.reservationProjectionRepository.getBookReservations(
-        command.isbn,
+    const exiting =
+      await this.reservationReadProjectionRepository.hasActiveReservations(
+        command.bookId,
         command.userId,
       )
 
-    if (existingReservation.data.length > 0) {
+    if (exiting) {
       throw new Errors.ApplicationError(
         409,
         ErrorCode.RESERVATION_ALREADY_EXISTS,
-        `User ${command.userId} already has an active reservation for book ${command.isbn}`,
+        `User ${command.userId} already has an active reservation for book ${command.bookId}`,
       )
     }
 
@@ -56,13 +59,13 @@ export class CreateReservationHandler {
     // We don't care about book existence for eventual consistency
     const { reservation, event } = Reservation.create({
       userId: command.userId.trim(),
-      isbn: command.isbn.trim(),
+      bookId: command.bookId.trim(),
       reservedAt: new Date().toISOString(),
       status: RESERVATION_STATUS.CREATED,
     })
 
     // Persist the new event with the expected aggregate version (0 for new aggregates)
-    await this.reservationRepository.saveEvents(reservation.id, [event], 0)
+    await this.reservationWriteRepository.saveEvents(reservation.id, [event], 0)
 
     // Publish a separate event to request book validation
     const validationEvent: DomainEvent = {
@@ -70,7 +73,7 @@ export class CreateReservationHandler {
       aggregateId: reservation.id,
       payload: {
         reservationId: reservation.id,
-        isbn: command.isbn,
+        bookId: command.bookId,
       },
       timestamp: new Date(),
       version: 1,
@@ -84,5 +87,12 @@ export class CreateReservationHandler {
 
     // Clear domain events after they've been persisted and published
     reservation.clearDomainEvents()
+
+    // Return the reservation entity
+    return {
+      success: true,
+      id: reservation.id,
+      version: reservation.version,
+    }
   }
 }

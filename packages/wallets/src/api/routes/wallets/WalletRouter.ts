@@ -1,8 +1,9 @@
 import type { EventBus } from '@book-library-tool/event-store'
-import type { IWalletProjectionRepository } from '@wallets/repositories/IWalletProjectionRepository.js'
-import type { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
 import { FastifyInstance } from 'fastify'
 
+import { IWalletReadProjectionRepository } from '../../../domain/repositories/IWalletReadProjectionRepository.js'
+import { IWalletReadRepository } from '../../../domain/repositories/IWalletReadRepository.js'
+import { IWalletWriteRepository } from '../../../domain/repositories/IWalletWriteRepository.js'
 import { createWalletCommandRouter } from './WalletCommandRouter.js'
 import { createWalletQueryRouter } from './WalletQueryRouter.js'
 
@@ -11,19 +12,22 @@ import { createWalletQueryRouter } from './WalletQueryRouter.js'
  * This router combines command and query routers
  */
 export function createWalletRouter(
-  walletRepository: IWalletRepository,
-  walletProjectionRepository: IWalletProjectionRepository,
+  walletReadRepository: IWalletReadRepository,
+  walletWriteRepository: IWalletWriteRepository,
+  walletReadProjectionRepository: IWalletReadProjectionRepository,
   eventBus: EventBus,
 ): (fastify: FastifyInstance) => Promise<void> {
   return async (fastify: FastifyInstance) => {
     // Register query router (read operations)
-    await fastify.register(createWalletQueryRouter(walletProjectionRepository))
+    await fastify.register(
+      createWalletQueryRouter(walletReadProjectionRepository),
+    )
 
     // Register command router (write operations)
     await fastify.register(
       createWalletCommandRouter(
-        walletRepository,
-        walletProjectionRepository,
+        walletReadRepository,
+        walletWriteRepository,
         eventBus,
       ),
     )

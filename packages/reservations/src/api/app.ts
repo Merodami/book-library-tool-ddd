@@ -1,17 +1,20 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { RabbitMQEventBus } from '@book-library-tool/event-store'
+import { DomainEvent, RabbitMQEventBus } from '@book-library-tool/event-store'
 import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis/src/application/decorators/cache.js'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
 import { logger } from '@book-library-tool/shared'
-import { BookBroughtHandler } from '@reservations/commands/BookBroughtHandler.js'
-import { PaymentHandler } from '@reservations/commands/PaymentHandler.js'
-import { ValidateReservationHandler } from '@reservations/commands/ValidateReservationHandler.js'
 import { ReservationEventSubscriptions } from '@reservations/event-store/ReservationEventSubscriptions.js'
 import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
-import { ReservationProjectionRepository } from '@reservations/persistence/mongo/ReservationProjectionRepository.js'
-import { ReservationRepository } from '@reservations/persistence/mongo/ReservationRepository.js'
-import { createReservationRouter } from '@reservations/routes/reservations/createReservationRouter.js'
+import { ReservationDocument } from '@reservations/persistence/mongo/documents/ReservationDocument.js'
+import { ReservationReadProjectionRepository } from '@reservations/persistence/mongo/ReservationReadProjectionRepository.js'
+import { ReservationReadRepository } from '@reservations/persistence/mongo/ReservationReadRepository.js'
+import { ReservationWriteProjectionRepository } from '@reservations/persistence/mongo/ReservationWriteProjectionRepository.js'
+import { ReservationWriteRepository } from '@reservations/persistence/mongo/ReservationWriteRepository.js'
+import { createReservationRouter } from '@reservations/routes/reservations/ReservationRouter.js'
+import { BookBroughtHandler } from '@reservations/use_cases/commands/BookBroughtHandler.js'
+import { PaymentHandler } from '@reservations/use_cases/commands/PaymentHandler.js'
+import { ValidateReservationHandler } from '@reservations/use_cases/commands/ValidateReservationHandler.js'
 
 async function startReservationService() {
   // Initialize the infrastructure service (database connection)
@@ -63,36 +66,50 @@ async function startReservationService() {
   }
 
   // Instantiate the repository used for command (write) operations
-  const reservationRepository = new ReservationRepository(dbService)
+  const reservationReadRepository = new ReservationReadRepository(
+    dbService.getCollection<DomainEvent>('event_store'),
+  )
 
-  // Instantiate the repository used for query (read) operations: your projections
-  const reservationProjectionRepository = new ReservationProjectionRepository(
+  const reservationWriteRepository = new ReservationWriteRepository(
+    dbService.getCollection<DomainEvent>('event_store'),
     dbService,
   )
 
-  // Set up event subscriptions to update read models (via the projection handler)
+  const reservationProjectionCollection =
+    dbService.getCollection<ReservationDocument>('reservation_projection')
+
+  const reservationWriteProjectionRepository =
+    new ReservationWriteProjectionRepository(reservationProjectionCollection)
+
+  const reservationReadProjectionRepository =
+    new ReservationReadProjectionRepository(reservationProjectionCollection)
+
   const reservationProjectionHandler = new ReservationProjectionHandler(
-    reservationProjectionRepository,
+    reservationWriteProjectionRepository,
   )
 
   const validateReservationHandler = new ValidateReservationHandler(
-    reservationRepository,
-    reservationProjectionRepository,
+    reservationWriteRepository,
+    reservationReadProjectionRepository,
     reservationProjectionHandler,
     eventBus,
   )
 
   const paymentHandler = new PaymentHandler(
-    reservationRepository,
+    reservationWriteRepository,
     reservationProjectionHandler,
     eventBus,
   )
 
-  const bookBrought = new BookBroughtHandler(reservationRepository, eventBus)
+  const bookBrought = new BookBroughtHandler(
+    reservationWriteRepository,
+    eventBus,
+  )
 
   // Subscribe to internal domain events for reservations
   await ReservationEventSubscriptions(
     eventBus,
+    redisService,
     reservationProjectionHandler,
     validateReservationHandler,
     paymentHandler,
@@ -165,8 +182,9 @@ async function startReservationService() {
     async (instance) => {
       return instance.register(
         createReservationRouter(
-          reservationRepository,
-          reservationProjectionRepository,
+          reservationReadRepository,
+          reservationWriteRepository,
+          reservationReadProjectionRepository,
           eventBus,
         ),
       )

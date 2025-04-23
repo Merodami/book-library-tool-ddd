@@ -6,7 +6,9 @@ import {
 } from '@book-library-tool/shared/src/errorCodes.js'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
 import { BookReturnCommand } from '@wallets/commands/BookReturnCommand.js'
-import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
+import { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletReadProjectionRepository.js'
+import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
+import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'
 
 /**
  * Command handler for applying late fees to a wallet.
@@ -16,7 +18,9 @@ import { IWalletRepository } from '@wallets/repositories/IWalletRepository.js'
  */
 export class BookReturnHandler {
   constructor(
-    private readonly walletRepository: IWalletRepository,
+    private readonly walletWriteRepository: IWalletWriteRepository,
+    private readonly walletReadRepository: IWalletReadRepository,
+    private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -38,18 +42,37 @@ export class BookReturnHandler {
   async execute(
     command: BookReturnCommand,
   ): Promise<{ bookPurchased: boolean }> {
+    const { userId, reservationId, daysLate, retailPrice } = command
+
     try {
       logger.info(
-        `Processing book return for user ${command.userId} with days late: ${command.daysLate}`,
+        `Processing book return for user ${userId} with days late: ${daysLate}`,
       )
 
-      const existingWallet = await this.walletRepository.findByUserId(
-        command.userId,
+      const existingWalletProjection =
+        await this.walletReadProjectionRepository.getWallet({
+          userId,
+        })
+
+      if (!existingWalletProjection || !existingWalletProjection.id) {
+        logger.warn(
+          `No existing wallet found for user ${userId}. Cannot apply late fee.`,
+        )
+
+        throw new ApplicationError(
+          404,
+          ErrorCode.WALLET_NOT_FOUND,
+          getDefaultMessageForError(ErrorCode.WALLET_NOT_FOUND),
+        )
+      }
+
+      const existingWallet = await this.walletReadRepository.findById(
+        existingWalletProjection.id,
       )
 
       if (!existingWallet) {
         logger.warn(
-          `No existing wallet found for user ${command.userId}. Cannot apply late fee.`,
+          `No existing wallet events found for user ${userId}. Cannot apply late fee.`,
         )
 
         throw new ApplicationError(
@@ -84,7 +107,7 @@ export class BookReturnHandler {
 
       // Save event using the current version from the original wallet
       // NOT the newly created wallet instance's version
-      await this.walletRepository.saveEvents(
+      await this.walletWriteRepository.saveEvents(
         wallet.id,
         [event],
         existingWallet.version,

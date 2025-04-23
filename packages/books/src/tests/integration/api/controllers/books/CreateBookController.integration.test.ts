@@ -1,23 +1,23 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-
-// Silence Fastify error logs in tests
-beforeAll(() => {
-  vi.spyOn(console, 'error').mockImplementation(() => {})
-})
 import { EventResponse } from '@book-library-tool/sdk'
 import { createTestServer } from '@book-library-tool/tests'
 import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
 import { CreateBookController } from '@books/controllers/books/CreateBookController.js'
 import type { FastifyInstance } from 'fastify'
 import supertest from 'supertest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// Silence Fastify error logs in tests
+beforeAll(() => {
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+})
 
 // Shared mock handler instance
 const handler = {
   execute: vi.fn().mockResolvedValue({
     success: true,
-    bookId: 'book-123',
+    id: '5a1018f2-3526-4275-a84b-784e4f2e5a10',
     version: 1,
-  } as EventResponse & { bookId: string }),
+  } as EventResponse & { id: string }),
 }
 
 describe('CreateBookController Integration Tests', () => {
@@ -57,7 +57,7 @@ describe('CreateBookController Integration Tests', () => {
 
     expect(res.body).toMatchObject({
       success: true,
-      bookId: expect.any(String),
+      id: expect.any(String),
       version: 1,
     })
     expect(handler.execute).toHaveBeenCalledWith(cmd)
