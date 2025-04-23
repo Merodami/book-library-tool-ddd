@@ -67,11 +67,11 @@ async function startReservationService() {
 
   // Instantiate the repository used for command (write) operations
   const reservationReadRepository = new ReservationReadRepository(
-    dbService.getCollection<DomainEvent>('reservation_events'),
+    dbService.getCollection<DomainEvent>('event_store'),
   )
 
   const reservationWriteRepository = new ReservationWriteRepository(
-    dbService.getCollection<DomainEvent>('reservation_events'),
+    dbService.getCollection<DomainEvent>('event_store'),
     dbService,
   )
 

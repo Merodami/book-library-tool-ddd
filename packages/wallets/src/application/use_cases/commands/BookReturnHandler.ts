@@ -6,6 +6,7 @@ import {
 } from '@book-library-tool/shared/src/errorCodes.js'
 import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
 import { BookReturnCommand } from '@wallets/commands/BookReturnCommand.js'
+import { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletReadProjectionRepository.js'
 import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
 import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'
 
@@ -19,6 +20,7 @@ export class BookReturnHandler {
   constructor(
     private readonly walletWriteRepository: IWalletWriteRepository,
     private readonly walletReadRepository: IWalletReadRepository,
+    private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -40,18 +42,37 @@ export class BookReturnHandler {
   async execute(
     command: BookReturnCommand,
   ): Promise<{ bookPurchased: boolean }> {
+    const { userId, reservationId, daysLate, retailPrice } = command
+
     try {
       logger.info(
-        `Processing book return for user ${command.userId} with days late: ${command.daysLate}`,
+        `Processing book return for user ${userId} with days late: ${daysLate}`,
       )
 
-      const existingWallet = await this.walletReadRepository.findByUserId(
-        command.userId,
+      const existingWalletProjection =
+        await this.walletReadProjectionRepository.getWallet({
+          userId,
+        })
+
+      if (!existingWalletProjection || !existingWalletProjection.id) {
+        logger.warn(
+          `No existing wallet found for user ${userId}. Cannot apply late fee.`,
+        )
+
+        throw new ApplicationError(
+          404,
+          ErrorCode.WALLET_NOT_FOUND,
+          getDefaultMessageForError(ErrorCode.WALLET_NOT_FOUND),
+        )
+      }
+
+      const existingWallet = await this.walletReadRepository.findById(
+        existingWalletProjection.id,
       )
 
       if (!existingWallet) {
         logger.warn(
-          `No existing wallet found for user ${command.userId}. Cannot apply late fee.`,
+          `No existing wallet events found for user ${userId}. Cannot apply late fee.`,
         )
 
         throw new ApplicationError(

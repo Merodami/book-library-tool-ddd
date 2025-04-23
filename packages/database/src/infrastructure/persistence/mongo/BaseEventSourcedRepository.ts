@@ -1,6 +1,6 @@
+import { DomainEvent } from '@book-library-tool/event-store'
+import { AggregateRoot } from '@book-library-tool/event-store'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { DomainEvent } from '@event-store/events/DomainEvent.js'
-import { AggregateRoot } from '@event-store/model/AggregateRoot.js'
 import { Collection } from 'mongodb'
 
 export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {

@@ -1,8 +1,8 @@
-import { MongoDatabaseService } from '@book-library-tool/database'
 import {
   BaseWriteEventSourcedRepository,
-  type DomainEvent,
-} from '@book-library-tool/event-store'
+  MongoDatabaseService,
+} from '@book-library-tool/database'
+import { DomainEvent } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Wallet } from '@wallets/entities/Wallet.js'
 import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'

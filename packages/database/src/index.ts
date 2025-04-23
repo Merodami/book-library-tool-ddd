@@ -1,4 +1,6 @@
+export * from '@database/persistence/mongo/BaseReadEventSourcedRepository.js'
 export * from '@database/persistence/mongo/BaseReadProjectionRepository.js'
+export * from '@database/persistence/mongo/BaseWriteEventSourcedRepository.js'
 export * from '@database/persistence/mongo/BaseWriteProjectionRepository.js'
 export * from '@database/persistence/mongo/getNextGlobalVersion.js'
 export * from '@database/persistence/mongo/MongoDatabaseService.js'

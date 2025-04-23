@@ -28,33 +28,44 @@ export class WalletReadProjectionRepository
   }
 
   /**
-   * Retrieves a wallet by user ID from the projection store.
+   * Retrieves a wallet by either ID or user ID from the projection store.
    * This method implements several optimizations:
    * - Field projection to minimize data transfer
    * - Soft delete filtering
    * - Comprehensive error handling
    *
-   * @param userId - The ID of the user whose wallet to retrieve
+   * @param param - Object containing either id or userId
+   * @param param.id - The ID of the wallet to retrieve
+   * @param param.userId - The ID of the user whose wallet to retrieve
    * @returns Promise resolving to the wallet DTO or null if not found
    * @throws {ApplicationError} If:
-   *   - userId is invalid (400)
+   *   - Neither id nor userId is provided (400)
    *   - Collection is not initialized (500)
    *   - Database operation fails (500)
    */
-  async getWalletByUserId(userId: string): Promise<DomainWallet | null> {
-    if (!userId) {
-      logger.error('Invalid userId provided to getWalletByUserId')
+  async getWallet({
+    id,
+    userId,
+  }: {
+    id?: string
+    userId?: string
+  }): Promise<DomainWallet | null> {
+    // Validate that at least one parameter is provided
+    if (!id && !userId) {
+      logger.error(
+        'Invalid parameters provided to getWallet - either id or userId is required',
+      )
 
       throw new Errors.ApplicationError(
         400,
-        ErrorCode.USER_NOT_FOUND,
-        'User ID is required',
+        ErrorCode.WALLET_NOT_FOUND,
+        'Either wallet ID or user ID is required',
       )
     }
 
     try {
       if (!this.collection) {
-        logger.error('Collection not initialized in getWalletByUserId')
+        logger.error('Collection not initialized in getWallet')
 
         throw new Errors.ApplicationError(
           500,
@@ -63,36 +74,46 @@ export class WalletReadProjectionRepository
         )
       }
 
-      logger.debug(`Finding wallet for user: ${userId}`)
+      // Build the query based on which parameter is provided
+      const query: Record<string, any> = {
+        deletedAt: { $exists: false },
+      }
 
-      const wallet = await this.collection.findOne(
-        {
-          userId,
-          deletedAt: { $exists: false },
+      if (id) {
+        query.id = id
+        logger.debug(`Finding wallet for id: ${id}`)
+      } else if (userId) {
+        query.userId = userId
+        logger.debug(`Finding wallet for userId: ${userId}`)
+      }
+
+      const wallet = await this.collection.findOne(query, {
+        // Optimize query performance with projection
+        projection: {
+          _id: 0,
+          id: 1,
+          userId: 1,
+          balance: 1,
+          version: 1,
+          createdAt: 1,
+          updatedAt: 1,
         },
-        {
-          // Optimize query performance with projection
-          projection: {
-            _id: 0,
-            id: 1,
-            userId: 1,
-            balance: 1,
-            version: 1,
-            createdAt: 1,
-            updatedAt: 1,
-          },
-        },
-      )
+      })
 
       if (!wallet) {
-        logger.info(`No wallet found for user: ${userId}`)
+        if (id) {
+          logger.info(`No wallet found for id: ${id}`)
+        } else if (userId) {
+          logger.info(`No wallet found for userId: ${userId}`)
+        }
 
         return null
       }
 
       return wallet
     } catch (error) {
-      const errorMessage = `Error retrieving wallet for user ${userId}: ${error.message}`
+      const paramType = id ? `id ${id}` : `userId ${userId}`
+      const errorMessage = `Error retrieving wallet for ${paramType}: ${error.message}`
 
       logger.error(errorMessage)
 

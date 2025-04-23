@@ -1,13 +1,10 @@
-import {
-  getNextGlobalVersion,
-  MongoDatabaseService,
-} from '@book-library-tool/database'
+import { AggregateRoot, DomainEvent } from '@book-library-tool/event-store'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { DomainEvent } from '@event-store/events/DomainEvent.js'
-import { AggregateRoot } from '@event-store/model/AggregateRoot.js'
+import { BaseEventSourcedRepository } from '@database/persistence/mongo/BaseEventSourcedRepository.js'
 import { Collection } from 'mongodb'
 
-import { BaseEventSourcedRepository } from './BaseEventSourcedRepository.js'
+import { getNextGlobalVersion } from './getNextGlobalVersion.js'
+import { MongoDatabaseService } from './MongoDatabaseService.js'
 
 export abstract class BaseWriteEventSourcedRepository<
   T extends AggregateRoot,

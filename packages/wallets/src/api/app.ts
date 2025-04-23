@@ -68,11 +68,11 @@ async function startWalletService() {
 
   // Instantiate the repository used for command (write) operations
   const walletWriteRepository = new WalletWriteRepository(
-    dbService.getCollection<DomainEvent>('wallet_events'),
+    dbService.getCollection<DomainEvent>('event_store'),
     dbService,
   )
   const walletReadRepository = new WalletReadRepository(
-    dbService.getCollection<DomainEvent>('wallet_events'),
+    dbService.getCollection<DomainEvent>('event_store'),
   )
 
   // Instantiate the repository used for query (read) operations: your projections
@@ -98,6 +98,7 @@ async function startWalletService() {
   const bookReturnHandler = new BookReturnHandler(
     walletWriteRepository,
     walletReadRepository,
+    walletReadProjectionRepository,
     eventBus,
   )
 
@@ -171,8 +172,9 @@ async function startWalletService() {
     async (instance) => {
       return instance.register(
         createWalletRouter(
-          walletRepository,
-          walletProjectionRepository,
+          walletReadRepository,
+          walletWriteRepository,
+          walletReadProjectionRepository,
           eventBus,
         ),
       )

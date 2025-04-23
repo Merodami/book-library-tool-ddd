@@ -1,4 +1,4 @@
-import { BaseReadProjectionRepository } from '@book-library-tool/database'
+import { BaseReadEventSourcedRepository } from '@book-library-tool/database'
 import {
   type DomainEvent,
   WALLET_CREATED,
@@ -7,28 +7,14 @@ import {
 import { logger } from '@book-library-tool/shared'
 import { Wallet } from '@wallets/entities/Wallet.js'
 import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
-import { Collection } from 'mongodb'
-
-import { DomainWallet } from '../../../domain/entities/DomainWallet.js'
-import { WalletDocument } from './documents/WalletDocument.js'
-import { mapToDomain } from './mappers/WalletDocCodec.js'
 
 /**
  * Repository implementation for wallet write operations following CQRS principles
  */
 export class WalletReadRepository
-  extends BaseReadProjectionRepository<WalletDocument, DomainWallet>
+  extends BaseReadEventSourcedRepository<Wallet>
   implements IWalletReadRepository
 {
-  /**
-   * Constructs a new WalletRepository
-   * @param collection - MongoDB collection
-   */
-  constructor(collection: Collection<DomainEvent>) {
-    super(collection, mapToDomain)
-    logger.info('Initialized WalletRepository')
-  }
-
   /**
    * Rehydrates a Wallet aggregate from domain events
    * @param events - The sequence of events to rehydrate from
@@ -45,13 +31,13 @@ export class WalletReadRepository
   }
 
   /**
-   * Finds a wallet by user ID - this is the only necessary read operation to support commands
-   * @param userId - The ID of the user whose wallet to find
+   * Finds a wallet by ID - this is the only necessary read operation to support commands
+   * @param id - The ID of the wallet to find
    * @returns The wallet if found, or null if not found
    */
-  async findByUserId(userId: string): Promise<Wallet | null> {
-    if (!userId) {
-      logger.error('Invalid userId provided to findByUserId')
+  async findById(id: string): Promise<Wallet | null> {
+    if (!id) {
+      logger.error('Invalid id provided to findById')
 
       return null
     }
@@ -60,7 +46,7 @@ export class WalletReadRepository
       // Find wallet creation events for this user
       const events = await this.collection
         .find({
-          'payload.userId': userId,
+          'payload.id': id,
           eventType: WALLET_CREATED,
         })
         .sort({ timestamp: -1 })
@@ -68,7 +54,7 @@ export class WalletReadRepository
         .toArray()
 
       if (events.length === 0) {
-        logger.debug(`No wallet found for user ${userId}`)
+        logger.debug(`No wallet found for id ${id}`)
 
         return null
       }
@@ -83,7 +69,7 @@ export class WalletReadRepository
       const isDeleted = walletEvents.some((e) => e.eventType === WALLET_DELETED)
 
       if (isDeleted) {
-        logger.debug(`Wallet for user ${userId} exists but is deleted`)
+        logger.debug(`Wallet for id ${id} exists but is deleted`)
 
         return null
       }
@@ -91,7 +77,7 @@ export class WalletReadRepository
       // Rehydrate the wallet from events
       return this.rehydrateFromEvents(walletEvents)
     } catch (error) {
-      logger.error(`Error finding wallet for user ${userId}: ${error.message}`)
+      logger.error(`Error finding wallet for id ${id}: ${error.message}`)
 
       return null
     }

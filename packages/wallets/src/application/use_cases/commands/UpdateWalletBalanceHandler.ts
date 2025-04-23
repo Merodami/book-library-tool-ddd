@@ -2,10 +2,9 @@ import { EventBus } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { UpdateWalletBalanceCommand } from '@wallets/commands/UpdateWalletBalanceCommand.js'
+import { Wallet } from '@wallets/entities/Wallet.js'
 import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
 import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'
-
-import { Wallet } from '../../../domain/entities/Wallet.js'
 
 /**
  * Command handler for updating wallet balance.
@@ -49,7 +48,7 @@ export class UpdateWalletBalanceHandler {
   ): Promise<EventResponse & { walletId: string }> {
     try {
       logger.info(
-        `Updating wallet balance for user ${command.userId} with amount ${command.amount}`,
+        `Updating wallet balance for wallet ${command.id} with amount ${command.amount}`,
       )
 
       // No wallet in event store, check if there's one in the projection
@@ -61,7 +60,7 @@ export class UpdateWalletBalanceHandler {
         throw new Errors.ApplicationError(
           404,
           ErrorCode.WALLET_NOT_FOUND,
-          `Wallet not found for user ${command.userId}`,
+          `Wallet not found for wallet ${command.id}`,
         )
       }
 

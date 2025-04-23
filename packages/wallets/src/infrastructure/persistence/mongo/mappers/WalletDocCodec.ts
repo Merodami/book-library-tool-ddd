@@ -157,8 +157,6 @@ export function mapToDomain(raw: unknown): DomainWallet {
 
   const doc = decoded.right
 
-  console.log('🚀 ~ mapToDomain ~ doc:', doc)
-
   return {
     id: doc.id ?? undefined,
     userId: doc.userId ?? undefined,

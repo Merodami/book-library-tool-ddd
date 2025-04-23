@@ -14,10 +14,10 @@ export interface IWalletReadRepository {
   getEventsForAggregate(aggregateId: string): Promise<DomainEvent[]>
 
   /**
-   * Finds a wallet by user ID - necessary to support command operations
+   * Finds a wallet by ID - necessary to support command operations
    *
-   * @param userId - The ID of the user whose wallet to find
+   * @param id - The ID of the wallet to find
    * @returns The wallet if found, or null if not found
    */
-  findByUserId(userId: string): Promise<Wallet | null>
+  findById(id: string): Promise<Wallet | null>
 }

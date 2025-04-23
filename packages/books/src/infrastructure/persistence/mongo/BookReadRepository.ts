@@ -1,5 +1,5 @@
+import { BaseReadEventSourcedRepository } from '@book-library-tool/database'
 import {
-  BaseReadEventSourcedRepository,
   BOOK_CREATED,
   BOOK_DELETED,
   type DomainEvent,
@@ -7,7 +7,7 @@ import {
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Book } from '@books/entities/Book.js'
 import { IBookReadRepository } from '@books/repositories/IBookReadRepository.js'
-
+import { Collection } from 'mongodb'
 /**
  * Event-sourced repository implementation for the Book aggregate.
  * This repository is responsible for persisting and retrieving Book aggregates
@@ -22,6 +22,9 @@ export class BookReadRepository
   extends BaseReadEventSourcedRepository<Book>
   implements IBookReadRepository
 {
+  constructor(protected readonly collection: Collection<DomainEvent>) {
+    super(collection)
+  }
   /**
    * Rehydrates a Book aggregate from its event stream.
    * This method is called by the base repository to reconstruct the aggregate's

@@ -21,7 +21,6 @@
       "@wallets/use_cases/*": ["src/application/use_cases/*"],
       "@wallets/commands/*": ["src/application/use_cases/commands/*"],
       "@wallets/queries/*": ["src/application/use_cases/queries/*"],
-      "@wallets/mappers/*": ["src/application/mappers/*"],
 
       // Domain
       "@wallets/entities/*": ["src/domain/entities/*"],

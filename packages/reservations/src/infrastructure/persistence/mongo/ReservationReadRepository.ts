@@ -1,5 +1,5 @@
+import { BaseReadEventSourcedRepository } from '@book-library-tool/database'
 import {
-  BaseReadEventSourcedRepository,
   type DomainEvent,
   RESERVATION_CONFIRMED,
 } from '@book-library-tool/event-store'

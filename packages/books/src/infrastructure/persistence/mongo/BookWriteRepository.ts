@@ -1,5 +1,8 @@
 import {
   BaseWriteEventSourcedRepository,
+  MongoDatabaseService,
+} from '@book-library-tool/database'
+import {
   BOOK_CREATED,
   BOOK_DELETED,
   type DomainEvent,
@@ -7,6 +10,7 @@ import {
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Book } from '@books/entities/Book.js'
 import { IBookWriteRepository } from '@books/repositories/IBookWriteRepository.js'
+import { Collection } from 'mongodb'
 
 /**
  * Event-sourced repository implementation for the Book aggregate.
@@ -22,6 +26,13 @@ export class BookWriteRepository
   extends BaseWriteEventSourcedRepository<Book>
   implements IBookWriteRepository
 {
+  constructor(
+    protected readonly collection: Collection<DomainEvent>,
+    protected readonly dbService: MongoDatabaseService,
+  ) {
+    super(collection, dbService)
+  }
+
   /**
    * Rehydrates a Book aggregate from its event stream.
    * This method is called by the base repository to reconstruct the aggregate's

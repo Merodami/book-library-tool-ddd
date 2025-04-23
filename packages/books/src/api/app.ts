@@ -8,6 +8,7 @@ import { logger } from '@book-library-tool/shared'
 import { BookReadEventSubscriptions } from '../infrastructure/event-store/BookReadEventSubscriptions.js'
 import { BookReadProjectionHandler } from '../infrastructure/event-store/BookReadProjectionHandler.js'
 import { BookReadProjectionRepository } from '../infrastructure/persistence/mongo/BookReadProjectionRepository.js'
+import { BookReadRepository } from '../infrastructure/persistence/mongo/BookReadRepository.js'
 import { BookWriteRepository } from '../infrastructure/persistence/mongo/BookWriteRepository.js'
 import { BookDocument } from '../infrastructure/persistence/mongo/documents/BookDocument.js'
 import { createBookRouter } from './routes/books/BookRouter.js'
@@ -67,8 +68,12 @@ async function startBookService() {
 
   // Instantiate the repository used for command (write) operations
   const bookWriteRepository = new BookWriteRepository(
-    dbService.getCollection<DomainEvent>('book_events'),
+    dbService.getCollection<DomainEvent>('event_store'),
     dbService,
+  )
+
+  const bookReadRepository = new BookReadRepository(
+    dbService.getCollection<DomainEvent>('event_store'),
   )
 
   const bookProjectionCollection =
@@ -141,6 +146,7 @@ async function startBookService() {
       return instance.register(
         createBookRouter(
           bookWriteRepository,
+          bookReadRepository,
           bookProjectionRepository,
           eventBus,
         ),

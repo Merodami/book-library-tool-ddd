@@ -1,10 +1,9 @@
 import { BaseWriteProjectionRepository } from '@book-library-tool/database'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
+import { DomainWallet } from '@wallets/domain/entities/DomainWallet.js'
+import { mapToDomain } from '@wallets/persistence/mongo/mappers/WalletDocCodec.js'
 import { IWalletWriteProjectionRepository } from '@wallets/repositories/IWalletWriteProjectionRepository.js'
 import { Collection, MongoError } from 'mongodb'
-
-import { DomainWallet } from '../../../domain/entities/DomainWallet.js'
-import { mapToDomain } from './mappers/WalletDocCodec.js'
 
 /**
  * MongoDB implementation of the wallet projection repository.
@@ -36,9 +35,9 @@ export class WalletWriteProjectionRepository
     try {
       await this.collection.insertOne(walletData)
 
-      logger.info(`Created wallet projection for user ${walletData.userId}`)
+      logger.info(`Created wallet projection for wallet ${walletData.id}`)
     } catch (error) {
-      const errorMessage = `Error saving wallet for user ${walletData.userId}: ${error.message}`
+      const errorMessage = `Error saving wallet for wallet ${walletData.id}: ${error.message}`
 
       logger.error(errorMessage)
 
@@ -84,7 +83,7 @@ export class WalletWriteProjectionRepository
         },
       )
     } catch (error) {
-      const errorMessage = `Error updating wallet balance for ID ${id}: ${error.message}`
+      const errorMessage = `Error updating wallet balance for wallet ${id}: ${error.message}`
 
       logger.error(errorMessage)
 

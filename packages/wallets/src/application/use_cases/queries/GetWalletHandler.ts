@@ -31,16 +31,16 @@ export class GetWalletHandler {
    *   - The wallet is not found (404)
    *   - The repository operation fails
    */
-  async execute(query: { userId: string }): Promise<DomainWallet | null> {
-    const wallet = await this.walletReadProjectionRepository.getWalletByUserId(
-      query.userId,
-    )
+  async execute(query: { id: string }): Promise<DomainWallet | null> {
+    const wallet = await this.walletReadProjectionRepository.getWallet({
+      id: query.id,
+    })
 
     if (!wallet) {
       throw new Errors.ApplicationError(
         404,
         ErrorCode.WALLET_NOT_FOUND,
-        `Wallet not found for user ${query.userId}`,
+        `Wallet not found for id ${query.id}`,
       )
     }
 

@@ -42,24 +42,27 @@ export class ProcessWalletPaymentHandler {
    * @throws {ApplicationError} If payment processing fails (500)
    */
   async execute(command: ProcessWalletPaymentCommand): Promise<boolean> {
-    try {
-      const { userId, reservationId, amount = RESERVATION_FEE } = command
+    const { id, userId, reservationId, amount = RESERVATION_FEE } = command
 
+    try {
       logger.info(
         `Processing payment of ${amount} for reservation ${reservationId}`,
       )
 
       // Use projection repository to check if wallet exists and has sufficient funds
       const walletProjection =
-        await this.walletReadProjectionRepository.getWalletByUserId(userId)
+        await this.walletReadProjectionRepository.getWallet({
+          userId,
+        })
 
       if (!walletProjection) {
-        logger.warn(`Payment declined: No wallet found for user ${userId}`)
+        logger.warn(`Payment declined: No wallet found for wallet ${id}`)
 
         await this.publishDeclinedEvent(
+          id,
           userId,
           reservationId,
-          `No wallet found for user ${userId}`,
+          `No wallet found for wallet ${id}`,
         )
 
         return false
@@ -71,20 +74,21 @@ export class ProcessWalletPaymentHandler {
 
         logger.warn(`Payment declined: ${reason}`)
 
-        await this.publishDeclinedEvent(userId, reservationId, reason)
+        await this.publishDeclinedEvent(id, userId, reservationId, reason)
 
         return false
       }
 
       // Get the wallet from the write model to process the payment
-      const wallet = await this.walletReadRepository.findByUserId(userId)
+      const wallet = await this.walletReadRepository.findById(id)
 
       if (!wallet) {
         logger.error(
-          `Wallet aggregate not found for user ${userId} despite existing in projection`,
+          `Wallet aggregate not found for id ${id} despite existing in projection`,
         )
 
         await this.publishDeclinedEvent(
+          id,
           userId,
           reservationId,
           'Wallet data inconsistency',
@@ -107,7 +111,7 @@ export class ProcessWalletPaymentHandler {
       await this.eventBus.publish(updateResult.event)
 
       // Publish the integration success event
-      await this.publishSuccessEvent(userId, reservationId, amount)
+      await this.publishSuccessEvent(id, command.userId, reservationId, amount)
 
       logger.info(
         `Successfully processed payment for reservation ${reservationId}`,
@@ -119,8 +123,9 @@ export class ProcessWalletPaymentHandler {
 
       if (command.reservationId) {
         await this.publishDeclinedEvent(
-          command.userId,
-          command.reservationId,
+          id,
+          userId,
+          reservationId,
           `Payment processing error: ${error.message}`,
         )
       }
@@ -143,6 +148,7 @@ export class ProcessWalletPaymentHandler {
    * @param amount - The amount that was paid
    */
   private async publishSuccessEvent(
+    id: string,
     userId: string,
     reservationId: string,
     amount: number,
@@ -151,6 +157,7 @@ export class ProcessWalletPaymentHandler {
       eventType: WALLET_PAYMENT_SUCCESS,
       aggregateId: reservationId,
       payload: {
+        id,
         userId,
         reservationId,
         amount,
@@ -174,6 +181,7 @@ export class ProcessWalletPaymentHandler {
    * @param reason - The reason why the payment was declined
    */
   private async publishDeclinedEvent(
+    id: string,
     userId: string,
     reservationId: string,
     reason: string,
@@ -182,6 +190,7 @@ export class ProcessWalletPaymentHandler {
       eventType: WALLET_PAYMENT_DECLINED,
       aggregateId: reservationId,
       payload: {
+        id,
         userId,
         reservationId,
         reason,
