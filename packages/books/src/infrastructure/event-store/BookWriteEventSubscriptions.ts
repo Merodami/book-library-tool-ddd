@@ -58,7 +58,7 @@ export function BookWriteEventSubscriptions(
 
       // Delete the cache for the book
       const key = httpRequestKeyGenerator('book', 'getBook', [
-        { params: { id: event.aggregateId }, query: {} },
+        { params: { id: event.aggregateId } },
       ])
 
       await cacheService.del(key)
@@ -74,7 +74,7 @@ export function BookWriteEventSubscriptions(
   eventBus.subscribe(BOOK_DELETED, async (event: DomainEvent) => {
     // Delete the cache for the book
     const key = httpRequestKeyGenerator('book', 'getBook', [
-      { params: { id: event.aggregateId }, query: {} },
+      { params: { id: event.aggregateId } },
     ])
 
     try {
