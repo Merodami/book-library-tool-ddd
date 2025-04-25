@@ -1,10 +1,11 @@
+import { WalletSortField } from '@book-library-tool/api/src/schemas/wallets.js'
 import { MongoReadProjectionRepository } from '@book-library-tool/database'
-import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
+import { GetWalletQuery } from '@wallets/application/use_cases/queries/GetWalletQuery.js'
 import { DomainWallet } from '@wallets/domain/entities/DomainWallet.js'
 import { WalletReadProjectionRepositoryPort } from '@wallets/domain/port/WalletReadProjectionRepositoryPort.js'
 import { WalletDocument } from '@wallets/infrastructure/persistence/mongo/documents/WalletDocument.js'
 import { mapToDomain } from '@wallets/infrastructure/persistence/mongo/mappers/WalletDocCodec.js'
-import { Collection, MongoError } from 'mongodb'
+import { Collection, Filter } from 'mongodb'
 
 /**
  * MongoDB implementation of the wallet projection repository.
@@ -43,89 +44,14 @@ export class WalletReadProjectionRepository
    *   - Collection is not initialized (500)
    *   - Database operation fails (500)
    */
-  async getWallet({
-    id,
-    userId,
-  }: {
-    id?: string
-    userId?: string
-  }): Promise<DomainWallet | null> {
-    // Validate that at least one parameter is provided
-    if (!id && !userId) {
-      logger.error(
-        'Invalid parameters provided to getWallet - either id or userId is required',
-      )
-
-      throw new Errors.ApplicationError(
-        400,
-        ErrorCode.WALLET_NOT_FOUND,
-        'Either wallet ID or user ID is required',
-      )
-    }
-
-    try {
-      if (!this.collection) {
-        logger.error('Collection not initialized in getWallet')
-
-        throw new Errors.ApplicationError(
-          500,
-          ErrorCode.DATABASE_ERROR,
-          'Database collection not initialized',
-        )
-      }
-
-      // Build the query based on which parameter is provided
-      const query: Record<string, any> = {
-        deletedAt: { $exists: false },
-      }
-
-      if (id) {
-        query.id = id
-        logger.debug(`Finding wallet for id: ${id}`)
-      } else if (userId) {
-        query.userId = userId
-        logger.debug(`Finding wallet for userId: ${userId}`)
-      }
-
-      const wallet = await this.collection.findOne(query, {
-        // Optimize query performance with projection
-        projection: {
-          _id: 0,
-          id: 1,
-          userId: 1,
-          balance: 1,
-          version: 1,
-          createdAt: 1,
-          updatedAt: 1,
-        },
-      })
-
-      if (!wallet) {
-        if (id) {
-          logger.info(`No wallet found for id: ${id}`)
-        } else if (userId) {
-          logger.info(`No wallet found for userId: ${userId}`)
-        }
-
-        return null
-      }
-
-      return wallet
-    } catch (error) {
-      const paramType = id ? `id ${id}` : `userId ${userId}`
-      const errorMessage = `Error retrieving wallet for ${paramType}: ${error.message}`
-
-      logger.error(errorMessage)
-
-      if (error instanceof MongoError) {
-        throw new Errors.ApplicationError(
-          500,
-          ErrorCode.DATABASE_ERROR,
-          errorMessage,
-        )
-      }
-
-      throw error
-    }
+  async getWallet(
+    query: GetWalletQuery,
+    fields?: WalletSortField[],
+  ): Promise<DomainWallet | null> {
+    return this.findOne(
+      { id: query.id } as Filter<WalletDocument>,
+      fields,
+      `wallet doc for ID ${query.id}`,
+    )
   }
 }

@@ -1,12 +1,29 @@
+import {
+  createFieldsSelectionSchema,
+  createSortSchema,
+} from '@api/schemas/helper/helper.js'
+import { createPaginationSchema } from '@api/schemas/helper/helper.js'
+import { WalletFieldEnum, WalletSortFieldEnum } from '@book-library-tool/sdk'
 import { Static, Type } from '@sinclair/typebox'
-
-// --------------------------------
-// Common Schema Components
-// --------------------------------
 
 // --------------------------------
 // Query Schemas
 // --------------------------------
+
+/**
+ * Wallet Field Schema
+ */
+export const WalletFieldSchema = Type.Enum(WalletFieldEnum, {
+  $id: '#/components/schemas/WalletField',
+})
+
+export type WalletField = Static<typeof WalletFieldSchema>
+
+export const WalletSortFieldSchema = Type.Enum(WalletSortFieldEnum, {
+  $id: '#/components/schemas/WalletSortField',
+})
+
+export type WalletSortField = Static<typeof WalletSortFieldSchema>
 
 /**
  * Balance Wallet Request Schema
@@ -35,6 +52,31 @@ export const LateReturnRequestSchema = Type.Object(
 export type LateReturnRequest = Static<typeof LateReturnRequestSchema>
 export const LateReturnRequestRef = Type.Ref(
   '#/components/schemas/LateReturnRequest',
+)
+
+/**
+ * Wallet Search Query Schema
+ */
+export const WalletSearchQuerySchema = Type.Object(
+  {
+    userId: Type.Optional(Type.String({ minLength: 1 })),
+    balance: Type.Optional(Type.Number()),
+    createdAt: Type.Optional(Type.String({ minLength: 1 })),
+    updatedAt: Type.Optional(Type.String({ minLength: 1 })),
+    deletedAt: Type.Optional(Type.String({ minLength: 1 })),
+
+    // Pagination and sort
+    ...createPaginationSchema(),
+    ...createSortSchema(WalletSortFieldSchema),
+
+    // GraphQL fields selection
+    fields: createFieldsSelectionSchema(WalletFieldSchema),
+  },
+  { additionalProperties: false },
+)
+export type WalletSearchQuery = Static<typeof WalletSearchQuerySchema>
+export const WalletSearchQueryRef = Type.Ref(
+  '#/components/schemas/WalletSearchQuery',
 )
 
 // --------------------------------

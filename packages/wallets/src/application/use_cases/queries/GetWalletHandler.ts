@@ -1,4 +1,6 @@
+import { WalletSortField } from '@book-library-tool/api/src/schemas/wallets.js'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
+import { GetWalletQuery } from '@wallets/application/use_cases/queries/GetWalletQuery.js'
 import { DomainWallet } from '@wallets/domain/entities/DomainWallet.js'
 import { WalletReadProjectionRepositoryPort } from '@wallets/domain/port/index.js'
 
@@ -31,10 +33,16 @@ export class GetWalletHandler {
    *   - The wallet is not found (404)
    *   - The repository operation fails
    */
-  async execute(query: { id: string }): Promise<DomainWallet | null> {
-    const wallet = await this.walletReadProjectionRepository.getWallet({
-      id: query.id,
-    })
+  async execute(
+    query: GetWalletQuery,
+    validFields?: WalletSortField[],
+  ): Promise<DomainWallet> {
+    const wallet = await this.walletReadProjectionRepository.getWallet(
+      {
+        id: query.id,
+      },
+      validFields,
+    )
 
     if (!wallet) {
       throw new Errors.ApplicationError(

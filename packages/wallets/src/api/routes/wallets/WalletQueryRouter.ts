@@ -32,7 +32,11 @@ export function createWalletQueryRouter(
           params: schemas.IdParameterSchema,
         },
       },
-      (request, reply) => getWalletController.getWallet(request, reply),
+      async (request, reply) => {
+        const result = await getWalletController.getWallet(request)
+
+        reply.code(200).send(result)
+      },
     )
   }
 }

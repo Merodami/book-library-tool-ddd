@@ -40,7 +40,10 @@ import { UserSchema } from './schemas/users.js'
 import {
   LateReturnRequestSchema,
   WalletBalanceRequestSchema,
+  WalletFieldSchema,
   WalletSchema,
+  WalletSearchQuerySchema,
+  WalletSortFieldSchema,
 } from './schemas/wallets.js'
 
 // Books schemas
@@ -89,6 +92,9 @@ registry.register('User', UserSchema)
 registry.register('Wallet', WalletSchema)
 registry.register('WalletBalanceRequest', WalletBalanceRequestSchema)
 registry.register('LateReturnRequest', LateReturnRequestSchema)
+registry.register('WalletField', WalletFieldSchema)
+registry.register('WalletSortField', WalletSortFieldSchema)
+registry.register('WalletSearchQuery', WalletSearchQuerySchema)
 
 // Parameter schemas
 registry.register('IdParameter', IdParameterSchema)

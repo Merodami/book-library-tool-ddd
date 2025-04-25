@@ -1,9 +1,9 @@
 import { schemas } from '@book-library-tool/api'
-import { ReservationSortFieldSchema } from '@book-library-tool/api/src/schemas/reservations.js'
 import { ReservationSortField } from '@book-library-tool/api/src/schemas/reservations.js'
 import { parseAndValidate } from '@book-library-tool/http'
 import { Cache } from '@book-library-tool/redis'
 import { httpRequestKeyGenerator } from '@book-library-tool/redis'
+import { ReservationSortFieldEnum } from '@book-library-tool/sdk'
 import { toApiReservation } from '@reservations/application/mappers/reservationMapper.js'
 import { GetReservationHistoryHandler } from '@reservations/application/use_cases/queries/GetReservationHistoryHandler.js'
 import type { FastifyRequest } from 'fastify'
@@ -39,7 +39,7 @@ export class GetReservationHistoryController {
     let validFields: ReservationSortField[] | null = null
 
     if (query.fields && typeof query.fields === 'string') {
-      const allowed = ReservationSortFieldSchema.enum as ReservationSortField[]
+      const allowed = Object.values(ReservationSortFieldEnum)
 
       validFields = parseAndValidate<ReservationSortField>(
         query.fields,

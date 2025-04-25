@@ -1,3 +1,4 @@
+import { WalletSortField } from '@book-library-tool/api/src/schemas/wallets.js'
 import { DomainWallet } from '@wallets/domain/entities/DomainWallet.js'
 
 /**
@@ -20,11 +21,14 @@ export interface WalletReadProjectionRepositoryPort {
    *   - Collection is not initialized (500)
    *   - Database operation fails (500)
    */
-  getWallet({
-    id,
-    userId,
-  }: {
-    id?: string
-    userId?: string
-  }): Promise<DomainWallet | null>
+  getWallet(
+    {
+      id,
+      userId,
+    }: {
+      id?: string
+      userId?: string
+    },
+    validFields?: WalletSortField[],
+  ): Promise<DomainWallet | null>
 }

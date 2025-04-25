@@ -37,7 +37,7 @@ export abstract class MongoReadProjectionRepository<
     errorContext?: string,
     includeDeleted?: boolean,
   ): Promise<TDto | null> {
-    const completeFilter = this.buildCompleteFilter(filter, true)
+    const completeFilter = this.buildCompleteFilter(filter, includeDeleted)
 
     // Handle string array or potentially string with comma separated values
     const projectionFields = Array.isArray(fields)
