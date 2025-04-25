@@ -1,11 +1,14 @@
 import { schemas } from '@book-library-tool/api'
-import { buildRangeFilter, buildTextFilter } from '@book-library-tool/database'
-import { BaseReadProjectionRepository } from '@book-library-tool/database'
+import {
+  buildRangeFilter,
+  buildTextFilter,
+  MongoReadProjectionRepository,
+} from '@book-library-tool/database'
 import { BookSortField } from '@book-library-tool/sdk'
 import { GetBookQuery } from '@books/application/index.js'
 import {
+  BookReadProjectionRepositoryPort,
   DomainBook,
-  IBookReadProjectionRepository,
 } from '@books/domain/index.js'
 import { type BookDocument, mapToDomain } from '@books/infrastructure/index.js'
 import { Collection, Filter } from 'mongodb'
@@ -15,8 +18,8 @@ import { Collection, Filter } from 'mongodb'
  * Implements filtering, pagination, and mapping to/from domain models.
  */
 export class BookReadProjectionRepository
-  extends BaseReadProjectionRepository<BookDocument, DomainBook>
-  implements IBookReadProjectionRepository
+  extends MongoReadProjectionRepository<BookDocument, DomainBook>
+  implements BookReadProjectionRepositoryPort
 {
   /**
    * Constructs a new BookReadProjectionRepository.
@@ -98,11 +101,13 @@ export class BookReadProjectionRepository
   async getBookByIsbn(
     isbn: string,
     fields?: BookSortField[],
+    includeDeleted?: boolean,
   ): Promise<DomainBook | null> {
     return this.findOne(
       { isbn } as Filter<BookDocument>,
       fields,
       `book doc for ISBN ${isbn}`,
+      includeDeleted,
     )
   }
 }

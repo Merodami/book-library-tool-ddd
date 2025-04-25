@@ -1,9 +1,9 @@
-import { BaseWriteProjectionRepository } from '@book-library-tool/database'
+import { MongoWriteProjectionRepository } from '@book-library-tool/database'
 import { BookField, BookFieldEnum } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import type {
+  BookWriteProjectionRepositoryPort,
   DomainBook,
-  IBookWriteProjectionRepository,
 } from '@books/domain/index.js'
 import {
   type BookDocument,
@@ -17,8 +17,8 @@ import { Collection, Filter } from 'mongodb'
  * Implements saving and updating book projections.
  */
 export class BookWriteProjectionRepository
-  extends BaseWriteProjectionRepository<BookDocument, DomainBook>
-  implements IBookWriteProjectionRepository
+  extends MongoWriteProjectionRepository<BookDocument, DomainBook>
+  implements BookWriteProjectionRepositoryPort
 {
   /**
    * Constructs a new BookProjectionRepository.

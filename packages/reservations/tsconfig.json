@@ -10,25 +10,16 @@
     "baseUrl": ".",
     "paths": {
       // API
-      "@reservations/controllers/*": ["src/api/controllers/*"],
-      "@reservations/routes/*": ["src/api/routes/*"],
+      "@reservations/api/*": ["src/api/*"],
 
       // Application
-      "@reservations/dto/*": ["src/application/dtos/*"],
-      "@reservations/use_cases/*": ["src/application/use_cases/*"],
-      "@reservations/commands/*": ["src/application/use_cases/commands/*"],
-      "@reservations/queries/*": ["src/application/use_cases/queries/*"],
-      "@reservations/mappers/*": ["src/application/mappers/*"],
+      "@reservations/application/*": ["src/application/*"],
 
       // Domain
-      "@reservations/entities/*": ["src/domain/entities/*"],
-      "@reservations/repositories/*": ["src/domain/repositories/*"],
-      "@reservations/value_objects/*": ["src/domain/value_objects/*"],
+      "@reservations/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@reservations/database/*": ["src/infrastructure/database/*"],
-      "@reservations/persistence/*": ["src/infrastructure/persistence/*"],
-      "@reservations/event-store/*": ["src/infrastructure/event-store/*"]
+      "@reservations/infrastructure/*": ["src/infrastructure/*"]
     }
   },
   "include": ["src"],

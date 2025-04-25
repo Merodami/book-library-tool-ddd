@@ -1,8 +1,8 @@
-import { IEventBus } from '@book-library-tool/event-store'
+import type { EventBusPort } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
-import { Reservation } from '@reservations/entities/Reservation.js'
-import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
-import { BookBroughtCommand } from '@reservations/use_cases/commands/BookBroughtCommand.js'
+import { BookBroughtCommand } from '@reservations/application/use_cases/commands/BookBroughtCommand.js'
+import { Reservation } from '@reservations/domain/entities/Reservation.js'
+import { ReservationWriteRepositoryPort } from 'src/domain/port/index.js'
 
 /**
  * Handler for processing book purchase scenarios in the reservation system.
@@ -17,8 +17,8 @@ import { BookBroughtCommand } from '@reservations/use_cases/commands/BookBrought
  */
 export class BookBroughtHandler {
   constructor(
-    private readonly reservationWriteRepository: IReservationWriteRepository,
-    private readonly eventBus: IEventBus,
+    private readonly reservationWriteRepository: ReservationWriteRepositoryPort,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   /**

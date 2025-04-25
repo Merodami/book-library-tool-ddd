@@ -1,16 +1,20 @@
 import { schemas } from '@book-library-tool/api'
-import type { IEventBus } from '@book-library-tool/event-store'
+import type { EventBusPort } from '@book-library-tool/event-store'
 import { paginationHook } from '@book-library-tool/http'
-import { BookReturnHandler } from '@reservations/commands/BookReturnHandler.js'
-import { CreateReservationHandler } from '@reservations/commands/CreateReservationHandler.js'
-import { CreateReservationController } from '@reservations/controllers/reservations/CreateReservationController.js'
-import { GetReservationHistoryController } from '@reservations/controllers/reservations/GetReservationHistoryController.js'
-import { ReturnReservationController } from '@reservations/controllers/reservations/ReturnReservationController.js'
-import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
-import type { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
-import type { IReservationReadRepository } from '@reservations/repositories/IReservationReadRepository.js'
-import type { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
+import {
+  CreateReservationController,
+  GetReservationHistoryController,
+  ReturnReservationController,
+} from '@reservations/api/controllers/reservations/index.js'
+import { BookReturnHandler } from '@reservations/application/use_cases/commands/BookReturnHandler.js'
+import { CreateReservationHandler } from '@reservations/application/use_cases/commands/CreateReservationHandler.js'
+import { GetReservationHistoryHandler } from '@reservations/application/use_cases/queries/GetReservationHistoryHandler.js'
 import { FastifyInstance, FastifyRequest } from 'fastify'
+import {
+  ReservationReadProjectionRepositoryPort,
+  ReservationReadRepositoryPort,
+  ReservationWriteRepositoryPort,
+} from 'src/domain/port/index.js'
 
 /**
  * Creates and configures routes for reservation-related operations.
@@ -21,10 +25,10 @@ import { FastifyInstance, FastifyRequest } from 'fastify'
  * @returns Fastify plugin function
  */
 export function createReservationRouter(
-  reservationReadRepository: IReservationReadRepository,
-  reservationWriteRepository: IReservationWriteRepository,
-  reservationReadProjectionRepository: IReservationReadProjectionRepository,
-  eventBus: IEventBus,
+  reservationReadRepository: ReservationReadRepositoryPort,
+  reservationWriteRepository: ReservationWriteRepositoryPort,
+  reservationReadProjectionRepository: ReservationReadProjectionRepositoryPort,
+  eventBus: EventBusPort,
 ) {
   return async function (app: FastifyInstance) {
     // Instantiate individual command handlers:

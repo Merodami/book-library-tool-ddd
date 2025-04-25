@@ -1,19 +1,16 @@
-import {
-  BOOK_CREATED,
-  type DomainEvent,
-  type IEventBus,
-} from '@book-library-tool/event-store'
+import { BOOK_CREATED, type EventBusPort } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import type { CreateBookCommand } from '@books/application/index.js'
 import { CreateBookHandler } from '@books/application/index.js'
-import type { IBookWriteRepository } from '@books/domain/index.js'
+import type { BookWriteRepositoryPort } from '@books/domain/index.js'
 import { Book as BookEntity } from '@books/domain/index.js'
 import { randomUUID } from 'crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('CreateBookHandler', () => {
-  let repository: IBookWriteRepository
-  let eventBus: IEventBus
+  let repository: BookWriteRepositoryPort
+  let eventBus: EventBusPort
   let handler: CreateBookHandler
 
   const cmd: CreateBookCommand = {
@@ -30,10 +27,10 @@ describe('CreateBookHandler', () => {
       save: vi.fn(),
       getEventsForAggregate: vi.fn(),
       saveEvents: vi.fn(),
-    } as unknown as IBookWriteRepository
+    } as unknown as BookWriteRepositoryPort
     eventBus = {
       publish: vi.fn(),
-    } as unknown as IEventBus
+    } as unknown as EventBusPort
 
     // Create a spy on BookEntity.create BEFORE creating the handler
     vi.spyOn(BookEntity, 'create')

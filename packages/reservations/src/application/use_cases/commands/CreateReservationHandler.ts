@@ -1,15 +1,17 @@
 import {
-  type DomainEvent,
-  type IEventBus,
+  type EventBusPort,
   RESERVATION_BOOK_VALIDATION,
 } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { Reservation } from '@reservations/entities/Reservation.js'
-import { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
-import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
-import { CreateReservationCommand } from '@reservations/use_cases/commands/CreateReservationCommand.js'
+import { CreateReservationCommand } from '@reservations/application/use_cases/commands/CreateReservationCommand.js'
+import { Reservation } from '@reservations/domain/entities/Reservation.js'
+import {
+  ReservationReadProjectionRepositoryPort,
+  ReservationWriteRepositoryPort,
+} from 'src/domain/port/index.js'
 
 /**
  * Handles the creation of new reservations.
@@ -17,9 +19,9 @@ import { CreateReservationCommand } from '@reservations/use_cases/commands/Creat
  */
 export class CreateReservationHandler {
   constructor(
-    private readonly reservationWriteRepository: IReservationWriteRepository,
-    private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
-    private readonly eventBus: IEventBus,
+    private readonly reservationWriteRepository: ReservationWriteRepositoryPort,
+    private readonly reservationReadProjectionRepository: ReservationReadProjectionRepositoryPort,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   /**

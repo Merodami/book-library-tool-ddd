@@ -1,7 +1,7 @@
 import { schemas } from '@book-library-tool/api'
 import { EventResponse } from '@book-library-tool/sdk'
-import { CreateReservationHandler } from '@reservations/commands/CreateReservationHandler.js'
-import { CreateReservationCommand } from '@reservations/use_cases/commands/CreateReservationCommand.js'
+import { CreateReservationCommand } from '@reservations/application/use_cases/commands/CreateReservationCommand.js'
+import { CreateReservationHandler } from '@reservations/application/use_cases/commands/CreateReservationHandler.js'
 import { FastifyRequest } from 'fastify'
 
 export class CreateReservationController {

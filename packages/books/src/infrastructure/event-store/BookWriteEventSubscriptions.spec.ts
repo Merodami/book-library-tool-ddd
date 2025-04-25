@@ -5,15 +5,15 @@ import {
   BOOK_UPDATED,
   createErrorEvent,
   createMockEventBus,
-  DomainEvent,
-  IEventBus,
 } from '@book-library-tool/event-store'
+import { type EventBusPort } from '@book-library-tool/event-store'
 import {
   createMockCacheService,
   httpRequestKeyGenerator,
   ICacheService,
   RedisService,
 } from '@book-library-tool/redis'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { BookWriteEventSubscriptions } from '@books/infrastructure/index.js'
 import { BookWriteProjectionHandler } from '@books/infrastructure/index.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -68,7 +68,7 @@ describe('BookWriteEventSubscriptions', () => {
   }
 
   // Create a properly typed mock for the event bus
-  let mockEventBus: IEventBus
+  let mockEventBus: EventBusPort
 
   // Create a mock for the Redis service
   const mockCacheService: ICacheService = createMockCacheService()

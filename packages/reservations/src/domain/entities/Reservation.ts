@@ -1,7 +1,6 @@
 import { schemas } from '@book-library-tool/api'
 import {
   AggregateRoot,
-  DomainEvent,
   RESERVATION_BOOK_BROUGHT,
   RESERVATION_BOOK_LIMIT_REACH,
   RESERVATION_BOOK_VALIDATION,
@@ -14,6 +13,7 @@ import {
   RESERVATION_RETURNED,
 } from '@book-library-tool/event-store'
 import { makeValidator } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { randomUUID } from 'crypto'

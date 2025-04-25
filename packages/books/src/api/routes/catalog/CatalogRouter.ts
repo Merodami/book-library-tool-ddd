@@ -2,7 +2,7 @@ import { schemas } from '@book-library-tool/api'
 import { paginationHook } from '@book-library-tool/http'
 import { CatalogController } from '@books/api/index.js'
 import { GetAllBooksHandler } from '@books/application/index.js'
-import { IBookReadProjectionRepository } from '@books/domain/index.js'
+import { BookReadProjectionRepositoryPort } from '@books/domain/index.js'
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 
 /**
@@ -13,7 +13,7 @@ import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
  * @returns {FastifyPluginAsync} Configured Fastify plugin with catalog endpoints
  */
 export function createCatalogRouter(
-  bookReadProjectionRepository: IBookReadProjectionRepository,
+  bookReadProjectionRepository: BookReadProjectionRepositoryPort,
 ): FastifyPluginAsync {
   return async (fastify: FastifyInstance) => {
     // Query handler for retrieving books

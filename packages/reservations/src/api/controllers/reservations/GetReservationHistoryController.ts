@@ -4,8 +4,8 @@ import { ReservationSortField } from '@book-library-tool/api/src/schemas/reserva
 import { parseAndValidate } from '@book-library-tool/http'
 import { Cache } from '@book-library-tool/redis'
 import { httpRequestKeyGenerator } from '@book-library-tool/redis'
-import { toApiReservation } from '@reservations/mappers/reservationMapper.js'
-import { GetReservationHistoryHandler } from '@reservations/queries/GetReservationHistoryHandler.js'
+import { toApiReservation } from '@reservations/application/mappers/reservationMapper.js'
+import { GetReservationHistoryHandler } from '@reservations/application/use_cases/queries/GetReservationHistoryHandler.js'
 import type { FastifyRequest } from 'fastify'
 
 export class GetReservationHistoryController {

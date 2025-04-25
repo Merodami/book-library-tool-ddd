@@ -1,12 +1,12 @@
 import { WalletDTO } from '@book-library-tool/api'
 import {
   AggregateRoot,
-  DomainEvent,
   WALLET_BALANCE_UPDATED,
   WALLET_CREATED,
   WALLET_LATE_FEE_APPLIED,
 } from '@book-library-tool/event-store'
-import { Money } from '@wallets/value_objects/Money.js'
+import type { DomainEvent } from '@book-library-tool/shared'
+import { Money } from '@wallets/domain/value_objects/Money.js'
 
 export interface WalletProps {
   userId: string

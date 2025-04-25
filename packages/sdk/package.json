@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@book-library-tool/api": "workspace:^"
+    "@book-library-tool/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.12",

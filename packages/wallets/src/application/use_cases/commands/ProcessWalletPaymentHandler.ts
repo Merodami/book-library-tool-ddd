@@ -1,14 +1,16 @@
 import {
-  DomainEvent,
-  IEventBus,
   WALLET_PAYMENT_DECLINED,
   WALLET_PAYMENT_SUCCESS,
 } from '@book-library-tool/event-store'
+import { type EventBusPort } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { ProcessWalletPaymentCommand } from '@wallets/commands/ProcessWalletPaymentCommand.js'
-import { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletReadProjectionRepository.js'
-import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
-import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'
+import { ProcessWalletPaymentCommand } from '@wallets/application/use_cases/commands/ProcessWalletPaymentCommand.js'
+import {
+  WalletReadProjectionRepositoryPort,
+  WalletReadRepositoryPort,
+  WalletWriteRepositoryPort,
+} from '@wallets/domain/port/index.js'
 
 const RESERVATION_FEE = parseInt(process.env.BOOK_RESERVATION_FEE ?? '3', 10)
 
@@ -20,10 +22,10 @@ const RESERVATION_FEE = parseInt(process.env.BOOK_RESERVATION_FEE ?? '3', 10)
  */
 export class ProcessWalletPaymentHandler {
   constructor(
-    private readonly walletWriteRepository: IWalletWriteRepository,
-    private readonly walletReadRepository: IWalletReadRepository,
-    private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
-    private readonly eventBus: IEventBus,
+    private readonly walletWriteRepository: WalletWriteRepositoryPort,
+    private readonly walletReadRepository: WalletReadRepositoryPort,
+    private readonly walletReadProjectionRepository: WalletReadProjectionRepositoryPort,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   /**

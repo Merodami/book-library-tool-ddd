@@ -1,8 +1,9 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { DomainEvent, RabbitMQEventBus } from '@book-library-tool/event-store'
+import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
 import { createBookRouter, createCatalogRouter } from '@books/api/index.js'
 import {
@@ -11,6 +12,9 @@ import {
   BookReadProjectionHandler,
   BookReadProjectionRepository,
   BookReadRepository,
+  BookWriteEventSubscriptions,
+  BookWriteProjectionHandler,
+  BookWriteProjectionRepository,
   BookWriteRepository,
 } from '@books/infrastructure/index.js'
 
@@ -84,12 +88,25 @@ async function startBookService() {
     bookProjectionCollection,
   )
 
+  const bookWriteProjectionRepository = new BookWriteProjectionRepository(
+    bookProjectionCollection,
+  )
+
   // Set up event subscriptions to update read models (via the projection handler)
   const bookReadProjectionHandler = new BookReadProjectionHandler(
     bookProjectionRepository,
   )
 
+  const bookWriteProjectionHandler = new BookWriteProjectionHandler(
+    bookWriteProjectionRepository,
+  )
+
   await BookReadEventSubscriptions(eventBus, bookReadProjectionHandler)
+  await BookWriteEventSubscriptions(
+    eventBus,
+    redisService,
+    bookWriteProjectionHandler,
+  )
 
   await eventBus.startConsuming()
 

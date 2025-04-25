@@ -1,19 +1,19 @@
 import {
-  BaseWriteEventSourcedRepository,
-  MongoDatabaseService,
+  MongoDatabaseServicePort,
+  MongoWriteRepository,
 } from '@book-library-tool/database'
-import { DomainEvent } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { Wallet } from '@wallets/entities/Wallet.js'
-import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'
+import { Wallet } from '@wallets/domain/entities/Wallet.js'
+import { WalletWriteRepositoryPort } from '@wallets/domain/port/WalletWriteRepositoryPort.js'
 import { Collection } from 'mongodb'
 
 /**
  * Repository implementation for wallet write operations following CQRS principles
  */
 export class WalletWriteRepository
-  extends BaseWriteEventSourcedRepository<Wallet>
-  implements IWalletWriteRepository
+  extends MongoWriteRepository<Wallet>
+  implements WalletWriteRepositoryPort
 {
   /**
    * Constructs a new WalletRepository
@@ -21,7 +21,7 @@ export class WalletWriteRepository
    */
   constructor(
     collection: Collection<DomainEvent>,
-    dbService: MongoDatabaseService,
+    dbService: MongoDatabaseServicePort,
   ) {
     super(collection, dbService)
   }

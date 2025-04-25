@@ -2,24 +2,26 @@ import {
   BOOK_CREATED,
   BOOK_DELETED,
   createMockEventBus,
-  type DomainEvent,
-  type IEventBus,
+  type EventBusPort,
 } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import type { DeleteBookCommand } from '@books/application/use_cases/commands/DeleteBookCommand.js'
 import { DeleteBookHandler } from '@books/application/use_cases/commands/DeleteBookHandler.js'
-import type { IBookReadProjectionRepository } from '@books/domain/index.js'
-import type { IBookWriteRepository } from '@books/domain/index.js'
-import { Book } from '@books/domain/index.js'
+import {
+  Book,
+  BookReadProjectionRepositoryPort,
+  BookWriteRepositoryPort,
+} from '@books/domain/index.js'
 import { createMockBookReadRepository } from '@books/tests/mocks/repositories/MockBookReadRepository.js'
 import { createMockBookWriteRepository } from '@books/tests/mocks/repositories/MockBookWriteRepository.js'
 import { randomUUID } from 'crypto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('DeleteBookHandler', () => {
-  let repository: IBookWriteRepository
-  let projectionRepository: IBookReadProjectionRepository
-  let eventBus: IEventBus
+  let repository: BookWriteRepositoryPort
+  let projectionRepository: BookReadProjectionRepositoryPort
+  let eventBus: EventBusPort
   let handler: DeleteBookHandler
 
   const bookId = randomUUID()

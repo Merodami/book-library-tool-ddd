@@ -1,4 +1,4 @@
-import { DomainEvent } from '@event-store/domain/index.js'
+import type { DomainEvent } from '@book-library-tool/shared'
 
 /**
  * Creates a standardized error response event when event processing fails.

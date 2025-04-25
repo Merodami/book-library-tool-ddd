@@ -10,10 +10,4 @@ export interface DomainBook {
   createdAt?: Date
   updatedAt?: Date
   deletedAt?: Date
-  metadata?: {
-    condition?: string
-    acquisitionDate?: Date
-    lastMaintenanceDate?: Date
-    notes?: string
-  }
 }

@@ -1,4 +1,4 @@
-import type { DomainEvent } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import type { IBookWriteProjectionRepository } from '@books/domain/index.js'
 import { BookWriteProjectionHandler } from '@books/infrastructure/event-store/BookWriteProjectionHandler.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

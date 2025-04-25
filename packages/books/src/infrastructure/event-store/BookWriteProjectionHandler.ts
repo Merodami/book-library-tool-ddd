@@ -1,5 +1,5 @@
-import type { DomainEvent } from '@book-library-tool/event-store'
-import type { IBookWriteProjectionRepository } from '@books/domain/index.js'
+import type { DomainEvent } from '@book-library-tool/shared'
+import type { BookWriteProjectionRepositoryPort } from '@books/domain/index.js'
 
 /**
  * Event handler that maintains the write model for books in MongoDB.
@@ -8,7 +8,7 @@ import type { IBookWriteProjectionRepository } from '@books/domain/index.js'
  */
 export class BookWriteProjectionHandler {
   constructor(
-    private readonly projectionWriteRepository: IBookWriteProjectionRepository,
+    private readonly projectionWriteRepository: BookWriteProjectionRepositoryPort,
   ) {}
 
   /**
@@ -26,6 +26,9 @@ export class BookWriteProjectionHandler {
       publicationYear: event.payload.publicationYear,
       publisher: event.payload.publisher,
       price: event.payload.price,
+      version: event.version,
+      createdAt: event.timestamp,
+      updatedAt: event.timestamp,
     })
   }
 

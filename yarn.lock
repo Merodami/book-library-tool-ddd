@@ -289,6 +289,7 @@ __metadata:
   resolution: "@book-library-tool/api@workspace:packages/api"
   dependencies:
     "@apidevtools/swagger-parser": "npm:^10.1.1"
+    "@book-library-tool/sdk": "workspace:^"
     "@book-library-tool/shared": "workspace:^"
     "@book-library-tool/types": "workspace:^"
     "@sinclair/typebox": "npm:^0.34.33"
@@ -437,7 +438,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@book-library-tool/sdk@workspace:packages/sdk"
   dependencies:
-    "@book-library-tool/api": "workspace:^"
+    "@book-library-tool/shared": "workspace:*"
     "@types/lodash-es": "npm:^4.17.12"
     openapi-typescript-codegen: "npm:^0.29.0"
     typescript: "npm:^5.8.3"

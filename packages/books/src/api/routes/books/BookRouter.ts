@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import type { IEventBus } from '@book-library-tool/event-store'
+import type { EventBusPort } from '@book-library-tool/event-store'
 import {
   CreateBookController,
   DeleteBookController,
@@ -13,11 +13,9 @@ import {
   UpdateBookCommand,
   UpdateBookHandler,
 } from '@books/application/index.js'
-import {
-  IBookReadProjectionRepository,
-  IBookReadRepository,
-  IBookWriteRepository,
-} from '@books/domain/index.js'
+import { BookReadProjectionRepositoryPort } from '@books/domain/index.js'
+import { BookReadRepositoryPort } from '@books/domain/index.js'
+import { BookWriteRepositoryPort } from '@books/domain/index.js'
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 
 /**
@@ -36,14 +34,18 @@ import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
  * app.register(plugin, { prefix: '/books' });
  */
 export function createBookRouter(
-  bookWriteRepository: IBookWriteRepository,
-  bookReadRepository: IBookReadRepository,
-  projectionReadRepository: IBookReadProjectionRepository,
-  eventBus: IEventBus,
+  bookWriteRepository: BookWriteRepositoryPort,
+  bookReadRepository: BookReadRepositoryPort,
+  projectionReadRepository: BookReadProjectionRepositoryPort,
+  eventBus: EventBusPort,
 ): FastifyPluginAsync {
   return async (fastify: FastifyInstance) => {
     // Instantiate individual handlers
-    const createHandler = new CreateBookHandler(bookWriteRepository, eventBus)
+    const createHandler = new CreateBookHandler(
+      bookWriteRepository,
+      projectionReadRepository,
+      eventBus,
+    )
     const updateHandler = new UpdateBookHandler(bookWriteRepository, eventBus)
     const deleteHandler = new DeleteBookHandler(
       bookReadRepository,

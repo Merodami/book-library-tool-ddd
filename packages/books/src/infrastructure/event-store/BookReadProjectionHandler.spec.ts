@@ -1,8 +1,5 @@
-import {
-  BOOK_VALIDATION_RESULT,
-  type DomainEvent,
-} from '@book-library-tool/event-store'
-import { ErrorCode } from '@book-library-tool/shared'
+import { BOOK_VALIDATION_RESULT } from '@book-library-tool/event-store'
+import { DomainEvent, ErrorCode } from '@book-library-tool/shared'
 import type { IBookReadProjectionRepository } from '@books/domain/index.js'
 import { BookReadProjectionHandler } from '@books/infrastructure/event-store/BookReadProjectionHandler.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -78,7 +75,7 @@ describe('BookReadProjectionHandler', () => {
     })
 
     it('should return invalid book validation result when book does not exist', async () => {
-      const event: DomainEvent = {
+      const event: EventStoreDomainEvent = {
         eventType: 'ReservationBookValidation',
         aggregateId: 'aa0e8b9b-e53a-429c-8022-c888d29b998c',
         payload: {

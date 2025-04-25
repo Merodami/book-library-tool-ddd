@@ -4,13 +4,13 @@ import {
   BOOK_DELETED,
   BOOK_UPDATED,
   createErrorEvent,
-  DomainEvent,
-  IEventBus,
+  type EventBusPort,
 } from '@book-library-tool/event-store'
 import {
   httpRequestKeyGenerator,
   ICacheService,
 } from '@book-library-tool/redis'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
 import type { BookWriteProjectionHandler } from '@books/infrastructure/index.js'
 
@@ -23,13 +23,17 @@ import type { BookWriteProjectionHandler } from '@books/infrastructure/index.js'
  * preventing unhandled promise rejections.
  */
 export function BookWriteEventSubscriptions(
-  eventBus: IEventBus,
+  eventBus: EventBusPort,
   cacheService: ICacheService,
   projectionWriteHandler: BookWriteProjectionHandler,
 ): void {
   // Subscribe to BOOK_CREATED events and handle them asynchronously.
   eventBus.subscribe(BOOK_CREATED, async (event: DomainEvent) => {
     try {
+      logger.info(
+        `Handling BOOK_CREATED event: ${JSON.stringify(event, null, 2)}`,
+      )
+
       await projectionWriteHandler.handleBookCreated(event)
 
       // Delete the cache for the catalog
@@ -46,6 +50,10 @@ export function BookWriteEventSubscriptions(
   // Subscribe to BOOK_UPDATED events and handle them asynchronously.
   eventBus.subscribe(BOOK_UPDATED, async (event: DomainEvent) => {
     try {
+      logger.info(
+        `Handling BOOK_UPDATED event: ${JSON.stringify(event, null, 2)}`,
+      )
+
       await projectionWriteHandler.handleBookUpdated(event)
 
       // Delete the cache for the book
@@ -70,6 +78,10 @@ export function BookWriteEventSubscriptions(
     ])
 
     try {
+      logger.info(
+        `Handling BOOK_DELETED event: ${JSON.stringify(event, null, 2)}`,
+      )
+
       await projectionWriteHandler.handleBookDeleted(event)
     } catch (error) {
       logger.error(`Error handling BOOK_DELETED event: ${error}`)

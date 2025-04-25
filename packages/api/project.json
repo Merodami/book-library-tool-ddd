@@ -3,14 +3,15 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "@book-library-tool/types",
-    "@book-library-tool/shared"
+    "@book-library-tool/shared",
+    "@book-library-tool/sdk"
   ],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "rm -rf dist && tsc -p tsconfig.json && node --import tsx ./src/scripts/compile.ts",
+        "command": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json && node --import tsx ./src/scripts/compile.ts",
         "outputs": ["{projectRoot}/dist"],
         "cwd": "{projectRoot}"
       }

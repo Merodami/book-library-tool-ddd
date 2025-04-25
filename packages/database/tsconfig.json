@@ -19,6 +19,12 @@
       // Infrastructure
       "@database/infrastructure/*": ["src/infrastructure/*"],
 
+      // Port
+      "@database/port/*": ["src/port/*"],
+
+      // Shared
+      "@database/shared/*": ["src/shared/*"],
+
       // Test utils
       "@database/testUtils/*": ["src/testUtils/*"]
     }
@@ -34,9 +40,6 @@
     },
     {
       "path": "../sdk"
-    },
-    {
-      "path": "../redis"
     }
   ]
 }

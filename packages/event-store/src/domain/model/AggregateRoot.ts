@@ -1,4 +1,4 @@
-import type { DomainEvent } from '@event-store/domain/index.js'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { v4 as uuidv4 } from 'uuid'
 
 /**

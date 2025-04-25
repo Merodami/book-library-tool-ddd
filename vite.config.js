@@ -9,7 +9,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['./**/*.integration.test.ts', './**/*.test.ts'],
+    include: [
+      './**/*.integration.test.ts',
+      './**/*.integration-spec.ts',
+      './**/*.test.ts',
+      './**/*.spec.ts',
+    ],
   },
   types: ['vitest/globals'],
   plugins: [
@@ -116,6 +121,15 @@ export default defineConfig({
       '@shared/infrastructure': resolve(
         __dirname,
         'packages/shared/src/infrastructure',
+      ),
+
+      // SDK
+      '@sdk/api': resolve(__dirname, 'packages/sdk/src/api'),
+      '@sdk/application': resolve(__dirname, 'packages/sdk/src/application'),
+      '@sdk/domain': resolve(__dirname, 'packages/sdk/src/domain'),
+      '@sdk/infrastructure': resolve(
+        __dirname,
+        'packages/sdk/src/infrastructure',
       ),
     },
   },

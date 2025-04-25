@@ -4,9 +4,9 @@ import {
   BOOK_CREATED,
   BOOK_DELETED,
   BOOK_UPDATED,
-  DomainEvent,
 } from '@book-library-tool/event-store'
 import { makeValidator } from '@book-library-tool/http'
+import type { DomainEvent } from '@book-library-tool/shared'
 import {
   ErrorCode,
   Errors,

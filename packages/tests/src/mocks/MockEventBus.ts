@@ -1,4 +1,6 @@
-import type { DomainEvent, IEventBus } from '@book-library-tool/event-store'
+import type { EventBusPort } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
+import { logger } from '@book-library-tool/shared'
 import { vi } from 'vitest'
 
 /**
@@ -48,7 +50,7 @@ export const sampleEvents: DomainEvent[] = [
  *
  * @returns A mock implementation of the EventBus interface
  */
-export function createMockEventBus(): IEventBus {
+export function createMockEventBus(): EventBusPort {
   // Store published events for assertions in tests
   const publishedEvents: DomainEvent[] = []
 
@@ -108,7 +110,7 @@ export function createMockEventBus(): IEventBus {
           try {
             await handler(event)
           } catch (error) {
-            console.error(`Error in event handler for ${eventType}:`, error)
+            logger.error(`Error in event handler for ${eventType}:`, error)
           }
         }
       }
@@ -220,7 +222,7 @@ export function createMockEventBus(): IEventBus {
               try {
                 await handler(event)
               } catch (error) {
-                console.error(`Error in event handler for ${eventType}:`, error)
+                logger.error(`Error in event handler for ${eventType}:`, error)
               }
             }
 
@@ -288,7 +290,7 @@ export function createMockEventBus(): IEventBus {
  * @param mockEventBus The mock event bus instance
  * @returns Array of published events
  */
-export function getPublishedEvents(mockEventBus: IEventBus): DomainEvent[] {
+export function getPublishedEvents(mockEventBus: EventBusPort): DomainEvent[] {
   // Access the stored events through the special mock property
   return (mockEventBus as any).__getPublishedEvents?.() || []
 }
@@ -299,7 +301,7 @@ export function getPublishedEvents(mockEventBus: IEventBus): DomainEvent[] {
  *
  * @param eventBus The mock event bus to reset
  */
-export function resetMockEventBus(eventBus: IEventBus): void {
+export function resetMockEventBus(eventBus: EventBusPort): void {
   for (const fn of [
     eventBus.init,
     eventBus.publish,
@@ -322,7 +324,7 @@ export function resetMockEventBus(eventBus: IEventBus): void {
  *
  * @returns A fresh mock event bus with no events
  */
-export function createEmptyMockEventBus(): IEventBus {
+export function createEmptyMockEventBus(): EventBusPort {
   const bus = createMockEventBus()
 
   return bus
@@ -337,7 +339,7 @@ export function createEmptyMockEventBus(): IEventBus {
  */
 export function createErrorMockEventBus(
   errorMessage = 'Mock event bus error',
-): IEventBus {
+): EventBusPort {
   const err = new Error(errorMessage)
 
   return {
@@ -360,7 +362,7 @@ export function createErrorMockEventBus(
  * Helper class to expose published events for testing.
  * Use this version if you need more detailed access to the mock's internals.
  */
-export class TestableEventBus implements IEventBus {
+export class TestableEventBus implements EventBusPort {
   /**
    * Store of all published events
    */
@@ -416,7 +418,7 @@ export class TestableEventBus implements IEventBus {
         try {
           await handler(event)
         } catch (error) {
-          console.error(`Error in event handler for ${eventType}:`, error)
+          logger.error(`Error in event handler for ${eventType}:`, error)
         }
       }
     }

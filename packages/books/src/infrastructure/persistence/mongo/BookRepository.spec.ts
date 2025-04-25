@@ -1,9 +1,6 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import {
-  BOOK_CREATED,
-  BOOK_DELETED,
-  type DomainEvent,
-} from '@book-library-tool/event-store'
+import { BOOK_CREATED, BOOK_DELETED } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { Book } from '@books/domain/index.js'
 import {
   BookReadRepository,

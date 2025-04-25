@@ -11,23 +11,16 @@
     "baseUrl": ".",
     "paths": {
       // API
-      "@auth/controllers/*": ["src/api/controllers/*"],
-      "@auth/routes/*": ["src/api/routes/*"],
+      "@auth/api/*": ["src/api/*"],
 
       // Application
-      "@auth/dto/*": ["src/application/dtos/*"],
-      "@auth/use_cases/*": ["src/application/use_cases/*"],
-      "@auth/commands/*": ["src/application/use_cases/commands/*"],
-      "@auth/queries/*": ["src/application/use_cases/queries/*"],
+      "@auth/application/*": ["src/application/*"],
 
       // Domain
-      "@auth/entities/*": ["src/domain/entities/*"],
-      "@auth/repositories/*": ["src/domain/repositories/*"],
-      "@auth/value_objects/*": ["src/domain/value_objects/*"],
+      "@auth/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@auth/database/*": ["src/infrastructure/database/*"],
-      "@auth/persistence/*": ["src/infrastructure/persistence/*"]
+      "@auth/infrastructure/*": ["src/infrastructure/*"]
     }
   },
   "include": ["src"],

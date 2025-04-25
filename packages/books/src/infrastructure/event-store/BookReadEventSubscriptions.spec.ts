@@ -2,11 +2,11 @@ import {
   BOOK_VALIDATION_RESULT,
   createErrorEvent,
   createMockEventBus,
-  DomainEvent,
-  IEventBus,
+  type EventBusPort,
   RESERVATION_BOOK_VALIDATION,
   RESERVATION_BOOK_VALIDATION_FAILED,
 } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { BookReadEventSubscriptions } from '@books/infrastructure/index.js'
 import { BookReadProjectionHandler } from '@books/infrastructure/index.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -54,7 +54,7 @@ describe('BookReadEventSubscriptions', () => {
   }
 
   // Create a properly typed mock for the event bus
-  const mockEventBus: IEventBus = createMockEventBus()
+  const mockEventBus: EventBusPort = createMockEventBus()
 
   const mockProjectionHandler = {
     handleValidateBook: vi

@@ -1,3 +1,4 @@
+import { logger } from '@book-library-tool/shared'
 import type { DomainBook } from '@books/domain/index.js'
 import type { BookDocument } from '@books/infrastructure/index.js'
 import { isLeft } from 'fp-ts/lib/Either.js'
@@ -85,16 +86,6 @@ const DateFromUnknown = new t.Type<Date, unknown, unknown>(
 const UUIDCodec = UUID
 
 /**
- * Metadata sub-document (all fields optional to handle partial data)
- */
-const RawMetadataCodec = t.partial({
-  condition: t.union([t.string, t.null]),
-  acquisitionDate: DateFromUnknown,
-  lastMaintenanceDate: DateFromUnknown,
-  notes: t.union([t.string, t.null]),
-})
-
-/**
  * Book: required fields (required for validation but GraphQL filtering requires all fields)
  */
 const BookRequired = t.partial({
@@ -115,7 +106,6 @@ const BookRequired = t.partial({
 const BookOptional = t.partial({
   updatedAt: t.union([DateFromUnknown, t.null]),
   deletedAt: t.union([DateFromUnknown, t.null]),
-  metadata: RawMetadataCodec,
 })
 
 export const BookDocCodec = t.intersection([BookRequired, BookOptional])
@@ -134,7 +124,7 @@ export function mapToDomain(raw: unknown): DomainBook {
   if (isLeft(decoded)) {
     const report = PathReporter.report(decoded).join('; ')
 
-    console.error('Failed raw data:', JSON.stringify(cleaned, null, 2))
+    logger.error('Failed raw data:', JSON.stringify(cleaned, null, 2))
 
     throw new Error(`BookDoc validation failed: ${report}`)
   }
@@ -153,14 +143,6 @@ export function mapToDomain(raw: unknown): DomainBook {
     createdAt: doc.createdAt ?? undefined,
     updatedAt: doc.updatedAt ?? undefined,
     deletedAt: doc.deletedAt ?? undefined,
-    metadata: doc.metadata
-      ? {
-          condition: doc.metadata.condition ?? undefined,
-          acquisitionDate: doc.metadata.acquisitionDate ?? undefined,
-          lastMaintenanceDate: doc.metadata.lastMaintenanceDate ?? undefined,
-          notes: doc.metadata.notes ?? undefined,
-        }
-      : undefined,
   }
 }
 

@@ -10,24 +10,16 @@
     "baseUrl": ".",
     "paths": {
       // API
-      "@graphql/controllers/*": ["src/api/controllers/*"],
-      "@graphql/routes/*": ["src/api/routes/*"],
+      "@graphql/api/*": ["src/api/*"],
 
       // Application
-      "@graphql/dto/*": ["src/application/dtos/*"],
-      "@graphql/use_cases/*": ["src/application/use_cases/*"],
-      "@graphql/commands/*": ["src/application/use_cases/commands/*"],
-      "@graphql/queries/*": ["src/application/use_cases/queries/*"],
+      "@graphql/application/*": ["src/application/*"],
 
       // Domain
-      "@graphql/entities/*": ["src/domain/entities/*"],
-      "@graphql/repositories/*": ["src/domain/repositories/*"],
-      "@graphql/value_objects/*": ["src/domain/value_objects/*"],
+      "@graphql/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@graphql/database/*": ["src/infrastructure/database/*"],
-      "@graphql/persistence/*": ["src/infrastructure/persistence/*"],
-      "@graphql/event-store/*": ["src/infrastructure/event-store/*"]
+      "@graphql/infrastructure/*": ["src/infrastructure/*"]
     }
   },
   "include": ["src/**/*"],

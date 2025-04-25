@@ -1,20 +1,17 @@
-import {
-  BOOK_CREATED,
-  BOOK_UPDATED,
-  type DomainEvent,
-  type IEventBus,
-} from '@book-library-tool/event-store'
+import type { EventBusPort } from '@book-library-tool/event-store'
+import { BOOK_CREATED, BOOK_UPDATED } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import type { UpdateBookCommand } from '@books/application/index.js'
 import { UpdateBookHandler } from '@books/application/index.js'
-import type { IBookWriteRepository } from '@books/domain/index.js'
+import type { BookWriteRepositoryPort } from '@books/domain/index.js'
 import { Book } from '@books/domain/index.js'
 import { randomUUID } from 'crypto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('UpdateBookHandler', () => {
-  let repository: IBookWriteRepository
-  let eventBus: IEventBus
+  let repository: BookWriteRepositoryPort
+  let eventBus: EventBusPort
   let handler: UpdateBookHandler
 
   const isbn = '978-3-16-148410-0'
@@ -57,7 +54,7 @@ describe('UpdateBookHandler', () => {
       getEventsForAggregate: vi.fn().mockResolvedValue(baseEvents),
       saveEvents: vi.fn().mockResolvedValue(undefined),
       appendBatch: vi.fn().mockResolvedValue(undefined),
-    } as unknown as IBookWriteRepository
+    } as unknown as BookWriteRepositoryPort
 
     eventBus = {
       publish: vi.fn().mockResolvedValue(undefined),
@@ -72,7 +69,7 @@ describe('UpdateBookHandler', () => {
       startConsuming: vi.fn(),
       bindEventTypes: vi.fn(),
       checkHealth: vi.fn(),
-    } as unknown as IEventBus
+    } as unknown as EventBusPort
 
     handler = new UpdateBookHandler(repository, eventBus)
   })

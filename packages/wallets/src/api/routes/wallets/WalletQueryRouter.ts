@@ -1,8 +1,8 @@
 import { schemas } from '@book-library-tool/api'
 import { paginationHook } from '@book-library-tool/http'
-import { GetWalletController } from '@wallets/controllers/wallets/GetWalletController.js'
-import { GetWalletHandler } from '@wallets/queries/GetWalletHandler.js'
-import type { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletReadProjectionRepository.js'
+import { GetWalletController } from '@wallets/api/controllers/wallets/GetWalletController.js'
+import { GetWalletHandler } from '@wallets/application/use_cases/queries/GetWalletHandler.js'
+import { WalletReadProjectionRepositoryPort } from '@wallets/domain/port/index.js'
 import { FastifyInstance } from 'fastify'
 
 /**
@@ -10,7 +10,7 @@ import { FastifyInstance } from 'fastify'
  * This router handles read operations (queries)
  */
 export function createWalletQueryRouter(
-  walletReadProjectionRepository: IWalletReadProjectionRepository,
+  walletReadProjectionRepository: WalletReadProjectionRepositoryPort,
 ): (fastify: FastifyInstance) => Promise<void> {
   return async (fastify: FastifyInstance) => {
     // Create handlers

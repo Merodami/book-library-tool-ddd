@@ -1,18 +1,18 @@
-import { IEventBus } from '@book-library-tool/event-store'
+import { type EventBusPort } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import type { DeleteBookCommand } from '@books/application/index.js'
 import type {
-  IBookReadRepository,
-  IBookWriteRepository,
+  BookReadRepositoryPort,
+  BookWriteRepositoryPort,
 } from '@books/domain/index.js'
 import { Book } from '@books/domain/index.js'
 
 export class DeleteBookHandler {
   constructor(
-    private readonly readRepository: IBookReadRepository,
-    private readonly writeRepository: IBookWriteRepository,
-    private readonly eventBus: IEventBus,
+    private readonly readRepository: BookReadRepositoryPort,
+    private readonly writeRepository: BookWriteRepositoryPort,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   /**

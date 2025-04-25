@@ -17,7 +17,6 @@ function formatDate(value?: Date | string | null): string | undefined {
  * dropping undefined but preserving null for nullable schema properties.
  */
 export function toApiBook(dto: DomainBook): schemas.Book {
-  const domainBook = dto as DomainBook
   const raw = {
     id: dto.id,
     isbn: dto.isbn,
@@ -34,14 +33,6 @@ export function toApiBook(dto: DomainBook): schemas.Book {
     // Optional dates
     updatedAt: formatDate((dto as any).updatedAt),
     deletedAt: formatDate((dto as any).deletedAt),
-
-    // Optional metadata
-    metadata: domainBook.metadata && {
-      condition: domainBook.metadata.condition,
-      acquisitionDate: formatDate(domainBook.metadata.acquisitionDate),
-      lastMaintenanceDate: formatDate(domainBook.metadata.lastMaintenanceDate),
-      notes: domainBook.metadata.notes,
-    },
   }
 
   // Only strip out the truly missing fields (undefined), keep nulls intact

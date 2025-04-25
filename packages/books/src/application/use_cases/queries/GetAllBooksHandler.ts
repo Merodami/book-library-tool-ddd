@@ -2,13 +2,13 @@ import { schemas } from '@book-library-tool/api'
 import { BookSortField } from '@book-library-tool/api/src/schemas/books.js'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import type {
+  BookReadProjectionRepositoryPort,
   DomainBook,
-  IBookReadProjectionRepository,
 } from '@books/domain/index.js'
 
 export class GetAllBooksHandler {
   constructor(
-    private readonly projectionReadRepository: IBookReadProjectionRepository,
+    private readonly projectionReadRepository: BookReadProjectionRepositoryPort,
   ) {}
 
   /**

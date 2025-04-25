@@ -1,5 +1,5 @@
 import { Cache } from '@book-library-tool/redis'
-import { GetWalletHandler } from '@wallets/queries/GetWalletHandler.js'
+import { GetWalletHandler } from '@wallets/application/use_cases/queries/GetWalletHandler.js'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 /**

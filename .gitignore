@@ -56,3 +56,4 @@ tsconfig.tsbuildinfo
 
 mongodata
 CODEOWNERS
+rabbitmqdata

@@ -1,6 +1,6 @@
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { DomainWallet } from '@wallets/entities/DomainWallet.js'
-import { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletReadProjectionRepository.js'
+import { DomainWallet } from '@wallets/domain/entities/DomainWallet.js'
+import { WalletReadProjectionRepositoryPort } from '@wallets/domain/port/index.js'
 
 /**
  * Query handler for retrieving wallet information.
@@ -15,7 +15,7 @@ import { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletRe
  */
 export class GetWalletHandler {
   constructor(
-    private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
+    private readonly walletReadProjectionRepository: WalletReadProjectionRepositoryPort,
   ) {}
 
   /**

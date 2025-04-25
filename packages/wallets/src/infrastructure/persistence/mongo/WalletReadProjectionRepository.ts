@@ -1,9 +1,9 @@
-import { BaseReadProjectionRepository } from '@book-library-tool/database'
+import { MongoReadProjectionRepository } from '@book-library-tool/database'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { DomainWallet } from '@wallets/entities/DomainWallet.js'
-import { WalletDocument } from '@wallets/persistence/mongo/documents/WalletDocument.js'
-import { mapToDomain } from '@wallets/persistence/mongo/mappers/WalletDocCodec.js'
-import { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletReadProjectionRepository.js'
+import { DomainWallet } from '@wallets/domain/entities/DomainWallet.js'
+import { WalletReadProjectionRepositoryPort } from '@wallets/domain/port/WalletReadProjectionRepositoryPort.js'
+import { WalletDocument } from '@wallets/infrastructure/persistence/mongo/documents/WalletDocument.js'
+import { mapToDomain } from '@wallets/infrastructure/persistence/mongo/mappers/WalletDocCodec.js'
 import { Collection, MongoError } from 'mongodb'
 
 /**
@@ -13,8 +13,8 @@ import { Collection, MongoError } from 'mongodb'
  * a denormalized view of wallet state optimized for read operations.
  */
 export class WalletReadProjectionRepository
-  extends BaseReadProjectionRepository<WalletDocument, DomainWallet>
-  implements IWalletReadProjectionRepository
+  extends MongoReadProjectionRepository<WalletDocument, DomainWallet>
+  implements WalletReadProjectionRepositoryPort
 {
   /**
    * Constructs the WalletProjectionRepository with a database service.

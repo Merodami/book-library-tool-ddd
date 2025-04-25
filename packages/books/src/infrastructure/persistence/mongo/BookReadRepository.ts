@@ -1,11 +1,8 @@
-import { BaseReadEventSourcedRepository } from '@book-library-tool/database'
-import {
-  BOOK_CREATED,
-  BOOK_DELETED,
-  type DomainEvent,
-} from '@book-library-tool/event-store'
+import { MongoReadRepository } from '@book-library-tool/database'
+import { BOOK_CREATED, BOOK_DELETED } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import type { IBookReadRepository } from '@books/domain/index.js'
+import type { BookReadRepositoryPort } from '@books/domain/index.js'
 import { Book } from '@books/domain/index.js'
 import { Collection } from 'mongodb'
 
@@ -20,8 +17,8 @@ import { Collection } from 'mongodb'
  * for Book aggregates.
  */
 export class BookReadRepository
-  extends BaseReadEventSourcedRepository<Book>
-  implements IBookReadRepository
+  extends MongoReadRepository<Book>
+  implements BookReadRepositoryPort
 {
   constructor(protected readonly collection: Collection<DomainEvent>) {
     super(collection)

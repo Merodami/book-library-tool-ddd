@@ -3,8 +3,8 @@ import { ErrorCode } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
 import { Errors } from '@book-library-tool/shared'
 import { PaginatedResult } from '@book-library-tool/types'
-import { DomainReservation } from '@reservations/entities/DomainReservation.js'
-import type { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
+import { DomainReservation } from '@reservations/domain/entities/DomainReservation.js'
+import { ReservationReadProjectionRepositoryPort } from 'src/domain/port/index.js'
 
 /**
  * Handles queries for a user's reservation history.
@@ -12,7 +12,7 @@ import type { IReservationReadProjectionRepository } from '@reservations/reposit
  */
 export class GetReservationHistoryHandler {
   constructor(
-    private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
+    private readonly reservationReadProjectionRepository: ReservationReadProjectionRepositoryPort,
   ) {}
 
   /**

@@ -1,18 +1,18 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { DomainEvent, RabbitMQEventBus } from '@book-library-tool/event-store'
+import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis/src/application/decorators/cache.js'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
-import { ProcessWalletPaymentHandler } from '@wallets/commands/ProcessWalletPaymentHandler.js'
-import { WalletEventSubscriptions } from '@wallets/event-store/WalletEventSubscriptions.js'
-import { WalletProjectionHandler } from '@wallets/event-store/WalletProjectionHandler.js'
-import { WalletReadRepository } from '@wallets/persistence/mongo/WalletReadRepository.js'
-import { WalletWriteRepository } from '@wallets/persistence/mongo/WalletWriteRepository.js'
-import { createWalletRouter } from '@wallets/routes/wallets/WalletRouter.js'
-
-import { BookReturnHandler } from '../application/use_cases/commands/BookReturnHandler.js'
-import { WalletReadProjectionRepository } from '../infrastructure/persistence/mongo/WalletReadProjectionRepository.js'
+import { createWalletRouter } from '@wallets/api/routes/wallets/WalletRouter.js'
+import { BookReturnHandler } from '@wallets/application/use_cases/commands/BookReturnHandler.js'
+import { ProcessWalletPaymentHandler } from '@wallets/application/use_cases/commands/ProcessWalletPaymentHandler.js'
+import { WalletEventSubscriptions } from '@wallets/infrastructure/event-store/WalletEventSubscriptions.js'
+import { WalletProjectionHandler } from '@wallets/infrastructure/event-store/WalletProjectionHandler.js'
+import { WalletReadProjectionRepository } from '@wallets/infrastructure/persistence/mongo/WalletReadProjectionRepository.js'
+import { WalletReadRepository } from '@wallets/infrastructure/persistence/mongo/WalletReadRepository.js'
+import { WalletWriteRepository } from '@wallets/infrastructure/persistence/mongo/WalletWriteRepository.js'
 
 async function startWalletService() {
   // Initialize the infrastructure service (database connection)
@@ -81,11 +81,7 @@ async function startWalletService() {
   )
 
   // Set up event subscriptions to update read models (via the projection handler)
-  const walletProjectionHandler = new WalletProjectionHandler(
-    dbService,
-    walletReadProjectionRepository,
-    eventBus,
-  )
+  const walletProjectionHandler = new WalletProjectionHandler(dbService)
 
   // Set up the payment handler for processing wallet payments
   const paymentHandler = new ProcessWalletPaymentHandler(

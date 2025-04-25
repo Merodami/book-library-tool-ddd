@@ -1,15 +1,15 @@
-import { BaseWriteProjectionRepository } from '@book-library-tool/database'
+import { MongoWriteProjectionRepository } from '@book-library-tool/database'
 import { ReservationField, ReservationFieldEnum } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { DomainReservation } from '@reservations/entities/DomainReservation.js'
-import type { ReservationDocument } from '@reservations/persistence/mongo/documents/ReservationDocument.js'
+import { DomainReservation } from '@reservations/domain/entities/DomainReservation.js'
+import type { ReservationDocument } from '@reservations/infrastructure/persistence/mongo/documents/ReservationDocument.js'
 import {
   mapToDocument,
   mapToDomain,
-} from '@reservations/persistence/mongo/mappers/ReservationDocCodec.js'
-import type { IReservationWriteProjectionRepository } from '@reservations/repositories/IReservationWriteProjectionRepository.js'
+} from '@reservations/infrastructure/persistence/mongo/mappers/ReservationDocCodec.js'
 import { Collection, Filter } from 'mongodb'
+import { ReservationWriteProjectionRepositoryPort } from 'src/domain/port/index.js'
 
 /**
  * MongoDB-based Reservation projection repository.
@@ -17,8 +17,8 @@ import { Collection, Filter } from 'mongodb'
  * and provides versioned or generic update methods.
  */
 export class ReservationWriteProjectionRepository
-  extends BaseWriteProjectionRepository<ReservationDocument, DomainReservation>
-  implements IReservationWriteProjectionRepository
+  extends MongoWriteProjectionRepository<ReservationDocument, DomainReservation>
+  implements ReservationWriteProjectionRepositoryPort
 {
   constructor(collection: Collection<ReservationDocument>) {
     super(collection, mapToDomain)

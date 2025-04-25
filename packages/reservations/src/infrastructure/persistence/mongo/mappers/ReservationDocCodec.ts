@@ -1,6 +1,7 @@
+import { logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { DomainReservation } from '@reservations/entities/DomainReservation.js'
-import { ReservationDocument } from '@reservations/persistence/mongo/documents/ReservationDocument.js'
+import { DomainReservation } from '@reservations/domain/entities/DomainReservation.js'
+import { ReservationDocument } from '@reservations/infrastructure/persistence/mongo/documents/ReservationDocument.js'
 import { isLeft } from 'fp-ts/lib/Either.js'
 import * as t from 'io-ts'
 import { PathReporter } from 'io-ts/lib/PathReporter.js'
@@ -154,7 +155,7 @@ export function mapToDomain(raw: unknown): DomainReservation {
   if (isLeft(decoded)) {
     const report = PathReporter.report(decoded).join('; ')
 
-    console.error('Failed raw data:', JSON.stringify(cleaned, null, 2))
+    logger.error('Failed raw data:', JSON.stringify(cleaned, null, 2))
 
     throw new Error(`ReservationDoc validation failed: ${report}`)
   }
