@@ -1,5 +1,5 @@
-import { DomainEvent } from '@book-library-tool/event-store'
-import { IBookWriteProjectionRepository } from '@books/repositories/IBookWriteProjectionRepository.js'
+import type { DomainEvent } from '@book-library-tool/event-store'
+import type { IBookWriteProjectionRepository } from '@books/domain/index.js'
 
 /**
  * Event handler that maintains the write model for books in MongoDB.

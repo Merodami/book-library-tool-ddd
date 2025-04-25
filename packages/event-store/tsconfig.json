@@ -10,26 +10,16 @@
     "baseUrl": ".",
     "paths": {
       // API
-      "@event-store/controllers/*": ["src/api/controllers/*"],
-      "@event-store/routes/*": ["src/api/routes/*"],
+      "@event-store/api/*": ["src/api/*"],
 
       // Application
-      "@event-store/dto/*": ["src/application/dtos/*"],
-      "@event-store/use_cases/*": ["src/application/use_cases/*"],
-      "@event-store/commands/*": ["src/application/use_cases/commands/*"],
-      "@event-store/queries/*": ["src/application/use_cases/queries/*"],
+      "@event-store/application/*": ["src/application/*"],
 
       // Domain
-      "@event-store/entities/*": ["src/domain/entities/*"],
-      "@event-store/repositories/*": ["src/domain/repositories/*"],
-      "@event-store/value_objects/*": ["src/domain/value_objects/*"],
-      "@event-store/model/*": ["src/domain/model/*"],
-      "@event-store/events/*": ["src/domain/events/*"],
+      "@event-store/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@event-store/database/*": ["src/infrastructure/database/*"],
-      "@event-store/persistence/*": ["src/infrastructure/persistence/*"],
-      "@event-store/messaging/*": ["src/infrastructure/messaging/*"],
+      "@event-store/infrastructure/*": ["src/infrastructure/*"],
 
       // Misc
       "@event-store/shared/*": ["src/shared/*"],

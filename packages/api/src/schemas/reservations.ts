@@ -1,43 +1,31 @@
+import {
+  ReservationFieldEnum,
+  ReservationSortFieldEnum,
+} from '@book-library-tool/sdk'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { Static, Type } from '@sinclair/typebox'
 
 import {
   createFieldsSelectionSchema,
-  createPaginationAndSortSchema,
+  createPaginationSchema,
+  createSortSchema,
 } from './helper/helper.js'
 
 // --------------------------------
 // Common Schema Components
 // --------------------------------
 
-export const ALLOWED_RESERVATION_FIELDS = [
-  'id',
-  'userId',
-  'bookId',
-  'reservedAt',
-  'dueDate',
-  'status',
-  'feeCharged',
-  'retailPrice',
-] as const
+export const ReservationFieldSchema = Type.Enum(ReservationFieldEnum, {
+  $id: '#/components/schemas/ReservationField',
+})
 
-export type ReservationField = (typeof ALLOWED_RESERVATION_FIELDS)[number]
+export type ReservationField = Static<typeof ReservationFieldSchema>
 
-export const ALLOWED_RESERVATION_SORT_FIELDS = [
-  'status',
-  'feeCharged',
-  'retailPrice',
-  'lateFee',
-  'reservedAt',
-  'dueDate',
-  'returnedAt',
-  'createdAt',
-  'updatedAt',
-  'deletedAt',
-] as const
+export const ReservationSortFieldSchema = Type.Enum(ReservationSortFieldEnum, {
+  $id: '#/components/schemas/ReservationSortField',
+})
 
-export type ReservationSortField =
-  (typeof ALLOWED_RESERVATION_SORT_FIELDS)[number]
+export type ReservationSortField = Static<typeof ReservationSortFieldSchema>
 
 // --------------------------------
 // Query Schemas
@@ -75,15 +63,19 @@ export const ReservationsHistoryQuerySchema = Type.Object(
     returnedAtMax: Type.Optional(Type.String({ format: 'date-time' })),
 
     // Pagination and sort
-    ...createPaginationAndSortSchema(ALLOWED_RESERVATION_SORT_FIELDS),
+    ...createPaginationSchema(),
+    ...createSortSchema(ReservationSortFieldSchema),
+
     // GraphQL fields selection
-    fields: createFieldsSelectionSchema(ALLOWED_RESERVATION_FIELDS),
+    fields: createFieldsSelectionSchema(ReservationFieldSchema),
   },
   { additionalProperties: false },
 )
+
 export type ReservationsHistoryQuery = Static<
   typeof ReservationsHistoryQuerySchema
 >
+
 export const ReservationsHistoryQueryRef = Type.Ref(
   '#/components/schemas/ReservationsHistoryQuery',
 )

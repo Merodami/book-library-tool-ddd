@@ -1,4 +1,4 @@
-import type { DomainEvent } from '@event-store/events/DomainEvent.js'
+import type { DomainEvent } from '@event-store/domain/index.js'
 import { v4 as uuidv4 } from 'uuid'
 
 /**

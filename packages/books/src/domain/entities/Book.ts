@@ -6,7 +6,7 @@ import {
   BOOK_UPDATED,
   DomainEvent,
 } from '@book-library-tool/event-store'
-import { makeValidator } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
+import { makeValidator } from '@book-library-tool/http'
 import {
   ErrorCode,
   Errors,

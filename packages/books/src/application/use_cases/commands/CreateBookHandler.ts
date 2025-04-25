@@ -1,10 +1,10 @@
-import type { EventBus } from '@book-library-tool/event-store'
+import { IEventBus } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
 import { Errors } from '@book-library-tool/shared'
 import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
-import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
-import { Book } from '@books/entities/Book.js'
-import type { IBookWriteRepository } from '@books/repositories/IBookWriteRepository.js'
+import type { CreateBookCommand } from '@books/application/index.js'
+import type { IBookWriteRepository } from '@books/domain/index.js'
+import { Book } from '@books/domain/index.js'
 
 /**
  * CreateBookHandler is responsible for processing a CreateBookCommand.
@@ -14,7 +14,7 @@ import type { IBookWriteRepository } from '@books/repositories/IBookWriteReposit
 export class CreateBookHandler {
   constructor(
     private readonly writeRepository: IBookWriteRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   async execute(

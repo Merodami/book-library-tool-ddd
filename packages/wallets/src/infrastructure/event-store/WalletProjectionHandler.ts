@@ -1,5 +1,5 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { DomainEvent, EventBus } from '@book-library-tool/event-store'
+import { DomainEvent, IEventBus } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 
 import { IWalletReadProjectionRepository } from '../../domain/repositories/IWalletReadProjectionRepository.js'
@@ -21,7 +21,7 @@ export class WalletProjectionHandler {
   constructor(
     private readonly db: MongoDatabaseService,
     private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**

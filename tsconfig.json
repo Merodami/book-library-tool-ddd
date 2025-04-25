@@ -20,10 +20,7 @@
     "sourceMap": true,
     "noEmit": false,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "paths": {
-      "@book-library-tool/*": ["./packages/*"]
-    }
+    "emitDecoratorMetadata": true
   },
   "exclude": ["**/dist", "node_modules"],
   "references": [

@@ -18,6 +18,20 @@
         "cwd": "{projectRoot}"
       }
     },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test:watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest",
+        "cwd": "{projectRoot}"
+      }
+    },
     "depcheck": {
       "executor": "nx:run-commands",
       "options": {

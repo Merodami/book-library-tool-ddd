@@ -3,7 +3,7 @@ import {
   BOOK_UPDATED,
   BOOK_VALIDATION_RESULT,
   DomainEvent,
-  EventBus,
+  IEventBus,
   RESERVATION_BOOK_BROUGHT,
   RESERVATION_CANCELLED,
   RESERVATION_CREATED,
@@ -40,7 +40,7 @@ import { PaymentHandler } from '@reservations/use_cases/commands/PaymentHandler.
  * @param bookBroughtHandler - Handler for processing book purchase scenarios
  */
 export function ReservationEventSubscriptions(
-  eventBus: EventBus,
+  eventBus: IEventBus,
   cacheService: RedisService,
   projectionHandler: ReservationProjectionHandler,
   validateReservationHandler: ValidateReservationHandler,

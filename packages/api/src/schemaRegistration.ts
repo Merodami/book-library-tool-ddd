@@ -1,21 +1,25 @@
+import { ErrorResponseSchema } from './responses/errors.js'
 import { registry } from './schemaRegistry.js'
 import {
   BookCreateRequestSchema,
+  BookFieldSchema,
   BookSchema,
+  BookSortFieldSchema,
   BookUpdateRequestSchema,
 } from './schemas/books.js'
 import { CatalogSearchQuerySchema } from './schemas/catalog.js'
-import { ErrorResponseSchema } from './schemas/errors.js'
 import { EventResponseSchema } from './schemas/events.js'
 import {
   PaginatedResultSchema,
   PaginationMetadataSchema,
 } from './schemas/pagination.js'
 import {
+  ReservationFieldSchema,
   ReservationRequestSchema,
   ReservationReturnResponseSchema,
   ReservationSchema,
   ReservationsHistoryQuerySchema,
+  ReservationSortFieldSchema,
 } from './schemas/reservations.js'
 import { IdParameterSchema } from './schemas/shared.js'
 import {
@@ -43,6 +47,8 @@ import {
 registry.register('Book', BookSchema)
 registry.register('BookCreateRequest', BookCreateRequestSchema)
 registry.register('BookUpdateRequest', BookUpdateRequestSchema)
+registry.register('BookSortField', BookSortFieldSchema)
+registry.register('BookField', BookFieldSchema)
 
 // Catalog schemas
 registry.register('CatalogSearchQuery', CatalogSearchQuerySchema)
@@ -59,6 +65,8 @@ registry.register('Reservation', ReservationSchema)
 registry.register('ReservationsHistoryQuery', ReservationsHistoryQuerySchema)
 registry.register('ReservationRequest', ReservationRequestSchema)
 registry.register('ReservationReturnResponse', ReservationReturnResponseSchema)
+registry.register('ReservationSortField', ReservationSortFieldSchema)
+registry.register('ReservationField', ReservationFieldSchema)
 
 // System schemas
 registry.register('HealthStatus', HealthStatusSchema)

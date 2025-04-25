@@ -1,4 +1,4 @@
-import { DomainEvent } from '@event-store/events/DomainEvent.js'
+import { DomainEvent } from '@event-store/domain/index.js'
 
 /**
  * Creates a standardized error response event when event processing fails.

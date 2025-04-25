@@ -1,9 +1,12 @@
 import { DomainEvent } from '@book-library-tool/event-store'
 import { AggregateRoot } from '@book-library-tool/event-store'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
+import { IBaseEventSourcedRepository } from '@database/domain/index.js'
 import { Collection } from 'mongodb'
 
-export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
+export abstract class BaseEventSourcedRepository<T extends AggregateRoot>
+  implements IBaseEventSourcedRepository<T>
+{
   constructor(protected readonly collection: Collection<DomainEvent>) {}
 
   /**
@@ -51,6 +54,7 @@ export abstract class BaseEventSourcedRepository<T extends AggregateRoot> {
       if (!grouped[event.aggregateId]) {
         grouped[event.aggregateId] = []
       }
+
       grouped[event.aggregateId].push(event)
     }
 

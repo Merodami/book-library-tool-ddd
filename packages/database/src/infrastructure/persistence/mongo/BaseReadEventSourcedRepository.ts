@@ -1,7 +1,7 @@
 import { DomainEvent } from '@book-library-tool/event-store'
 import { AggregateRoot } from '@book-library-tool/event-store'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { BaseEventSourcedRepository } from '@database/persistence/mongo/BaseEventSourcedRepository.js'
+import { BaseEventSourcedRepository } from '@database/infrastructure/index.js'
 import { Collection } from 'mongodb'
 
 export abstract class BaseReadEventSourcedRepository<

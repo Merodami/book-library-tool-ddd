@@ -1,4 +1,4 @@
-import { DomainEvent } from './DomainEvent.js'
+import { DomainEvent } from '@event-store/domain/index.js'
 
 // This file defines the EventStore interface, which is responsible for appending and loading domain events.
 export interface EventStore {

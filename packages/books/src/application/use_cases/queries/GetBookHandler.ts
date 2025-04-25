@@ -1,7 +1,10 @@
-import { schemas } from '@book-library-tool/api'
+import { BookSortField } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { IBookReadProjectionRepository } from '@books/repositories/IBookReadProjectionRepository.js'
-import { GetBookQuery } from '@books/use_cases/queries/GetBookQuery.js'
+import type { GetBookQuery } from '@books/application/index.js'
+import type {
+  DomainBook,
+  IBookReadProjectionRepository,
+} from '@books/domain/index.js'
 
 export class GetBookHandler {
   constructor(
@@ -17,8 +20,8 @@ export class GetBookHandler {
    */
   async execute(
     query: GetBookQuery,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.Book> {
+    fields?: BookSortField[],
+  ): Promise<DomainBook> {
     try {
       const book = await this.projectionReadRepository.getBookById(
         query,

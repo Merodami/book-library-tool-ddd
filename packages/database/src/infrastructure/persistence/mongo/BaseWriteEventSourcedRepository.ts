@@ -1,10 +1,11 @@
 import { AggregateRoot, DomainEvent } from '@book-library-tool/event-store'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { BaseEventSourcedRepository } from '@database/persistence/mongo/BaseEventSourcedRepository.js'
+import {
+  BaseEventSourcedRepository,
+  getNextGlobalVersion,
+  MongoDatabaseService,
+} from '@database/infrastructure/index.js'
 import { Collection } from 'mongodb'
-
-import { getNextGlobalVersion } from './getNextGlobalVersion.js'
-import { MongoDatabaseService } from './MongoDatabaseService.js'
 
 export abstract class BaseWriteEventSourcedRepository<
   T extends AggregateRoot,
@@ -159,5 +160,36 @@ export abstract class BaseWriteEventSourcedRepository<
     throw (
       lastError || new Error('Failed to append events after multiple attempts')
     )
+  }
+
+  /**
+   * Retrieves all events for a given aggregate.
+   *
+   * @param aggregateId Aggregate identifier.
+   * @returns Array of domain events, sorted by version.
+   */
+  async getEventsForAggregate(aggregateId: string): Promise<DomainEvent[]> {
+    if (!aggregateId) {
+      throw new Errors.ApplicationError(
+        400,
+        ErrorCode.INVALID_AGGREGATE_ID,
+        'Aggregate ID is required',
+      )
+    }
+
+    try {
+      return await this.collection
+        .find({ aggregateId })
+        .sort({ version: 1 })
+        .toArray()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+
+      throw new Errors.ApplicationError(
+        500,
+        ErrorCode.EVENT_LOOKUP_FAILED,
+        `Failed to retrieve events for aggregate ${aggregateId}: ${message}`,
+      )
+    }
   }
 }

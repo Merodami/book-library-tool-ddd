@@ -1,4 +1,4 @@
-import { DomainEvent, type EventBus } from '@book-library-tool/event-store'
+import { DomainEvent, type IEventBus } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { Reservation } from '@reservations/entities/Reservation.js'
 import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
@@ -13,7 +13,7 @@ export class PaymentHandler {
   constructor(
     private readonly reservationWriteRepository: IReservationWriteRepository,
     private readonly projectionHandler: ReservationProjectionHandler,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**

@@ -5,11 +5,14 @@ import {
   BOOK_UPDATED,
   createErrorEvent,
   DomainEvent,
-  EventBus,
+  IEventBus,
 } from '@book-library-tool/event-store'
-import { httpRequestKeyGenerator, RedisService } from '@book-library-tool/redis'
+import {
+  httpRequestKeyGenerator,
+  ICacheService,
+} from '@book-library-tool/redis'
 import { logger } from '@book-library-tool/shared'
-import { BookWriteProjectionHandler } from '@books/event-store/BookWriteProjectionHandler.js'
+import type { BookWriteProjectionHandler } from '@books/infrastructure/index.js'
 
 /**
  * Set up event subscriptions for book-related events.
@@ -20,8 +23,8 @@ import { BookWriteProjectionHandler } from '@books/event-store/BookWriteProjecti
  * preventing unhandled promise rejections.
  */
 export function BookWriteEventSubscriptions(
-  eventBus: EventBus,
-  cacheService: RedisService,
+  eventBus: IEventBus,
+  cacheService: ICacheService,
   projectionWriteHandler: BookWriteProjectionHandler,
 ): void {
   // Subscribe to BOOK_CREATED events and handle them asynchronously.

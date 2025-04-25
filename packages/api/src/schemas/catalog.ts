@@ -1,9 +1,10 @@
 import { Static, Type } from '@sinclair/typebox'
 
-import { ALLOWED_BOOK_FIELDS, ALLOWED_BOOK_SORT_FIELDS } from './books.js'
+import { BookFieldSchema, BookSortFieldSchema } from './books.js'
 import {
   createFieldsSelectionSchema,
-  createPaginationAndSortSchema,
+  createPaginationSchema,
+  createSortSchema,
 } from './helper/helper.js'
 
 /**
@@ -23,10 +24,11 @@ export const CatalogSearchQuerySchema = Type.Object(
     priceMax: Type.Optional(Type.Number()),
 
     // Pagination and sort
-    ...createPaginationAndSortSchema(ALLOWED_BOOK_SORT_FIELDS),
+    ...createPaginationSchema(),
+    ...createSortSchema(BookSortFieldSchema),
 
     // GraphQL fields selection
-    fields: createFieldsSelectionSchema(ALLOWED_BOOK_FIELDS),
+    fields: createFieldsSelectionSchema(BookFieldSchema),
   },
   { additionalProperties: false },
 )

@@ -8,8 +8,7 @@ import {
   type DomainEvent,
 } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { Book } from '@books/entities/Book.js'
-import { IBookWriteRepository } from '@books/repositories/IBookWriteRepository.js'
+import { Book, type IBookWriteRepository } from '@books/domain/index.js'
 import { Collection } from 'mongodb'
 
 /**

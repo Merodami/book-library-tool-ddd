@@ -1,4 +1,4 @@
-import { EventBus } from '@book-library-tool/event-store'
+import { IEventBus } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { UpdateWalletBalanceCommand } from '@wallets/commands/UpdateWalletBalanceCommand.js'
@@ -26,7 +26,7 @@ export class UpdateWalletBalanceHandler {
   constructor(
     private readonly walletReadRepository: IWalletReadRepository,
     private readonly walletWriteRepository: IWalletWriteRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**

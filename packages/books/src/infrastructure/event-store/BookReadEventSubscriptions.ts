@@ -1,12 +1,12 @@
 import {
   createErrorEvent,
   DomainEvent,
-  EventBus,
+  IEventBus,
   RESERVATION_BOOK_VALIDATION,
   RESERVATION_BOOK_VALIDATION_FAILED,
 } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
-import { BookReadProjectionHandler } from '@books/event-store/BookReadProjectionHandler.js'
+import type { BookReadProjectionHandler } from '@books/infrastructure/index.js'
 
 /**
  * Set up event subscriptions for book-related events.
@@ -15,7 +15,7 @@ import { BookReadProjectionHandler } from '@books/event-store/BookReadProjection
  * preventing unhandled promise rejections.
  */
 export function BookReadEventSubscriptions(
-  eventBus: EventBus,
+  eventBus: IEventBus,
   projectionReadHandler: BookReadProjectionHandler,
 ): void {
   eventBus.subscribe(

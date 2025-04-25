@@ -10,28 +10,27 @@
     "baseUrl": ".",
     "paths": {
       // API
-      "@books/controllers/*": ["src/api/controllers/*"],
-      "@books/routes/*": ["src/api/routes/*"],
+      "@books/api/*": ["src/api/*"],
 
       // Application
-      "@books/dto/*": ["src/application/dtos/*"],
-      "@books/use_cases/*": ["src/application/use_cases/*"],
-      "@books/commands/*": ["src/application/use_cases/commands/*"],
-      "@books/queries/*": ["src/application/use_cases/queries/*"],
-      "@books/mappers/*": ["src/application/mappers/*"],
+      "@books/application/*": ["src/application/*"],
+
       // Domain
-      "@books/entities/*": ["src/domain/entities/*"],
-      "@books/repositories/*": ["src/domain/repositories/*"],
-      "@books/value_objects/*": ["src/domain/value_objects/*"],
+      "@books/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@books/database/*": ["src/infrastructure/database/*"],
-      "@books/persistence/*": ["src/infrastructure/persistence/*"],
-      "@books/event-store/*": ["src/infrastructure/event-store/*"]
+      "@books/infrastructure/*": ["src/infrastructure/*"]
     }
   },
   "include": ["src", "scripts"],
-  "exclude": ["dist", "../../node_modules", "node_modules"],
+  "exclude": [
+    "dist",
+    "../../node_modules",
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/tests/**"
+  ],
   "references": [
     {
       "path": "../types"

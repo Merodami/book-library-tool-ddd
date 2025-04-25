@@ -1,8 +1,9 @@
 import { schemas } from '@book-library-tool/api'
+import { BookSortFieldSchema } from '@book-library-tool/api/src/schemas/books.js'
 import { parseAndValidate } from '@book-library-tool/http'
 import { Cache, httpRequestKeyGenerator } from '@book-library-tool/redis'
-import { Book as Book } from '@book-library-tool/sdk'
-import { GetBookHandler } from '@books/queries/GetBookHandler.js'
+import { BookSortField, CatalogSearchQuery } from '@book-library-tool/sdk'
+import { GetBookHandler, toApiBook } from '@books/application/index.js'
 import type { FastifyRequest } from 'fastify'
 
 export class GetBookController {
@@ -23,25 +24,28 @@ export class GetBookController {
   async getBook(
     request: FastifyRequest<{
       Params: schemas.IdParameter
-      Querystring: schemas.CatalogSearchQuery
+      Querystring: CatalogSearchQuery
     }>,
-  ): Promise<Book> {
+  ): Promise<schemas.Book> {
     const { id } = request.params
 
-    const query = request.query as schemas.CatalogSearchQuery
+    const query = request.query as CatalogSearchQuery
 
-    const validFields = parseAndValidate<schemas.BookSortField>(
-      query.fields,
-      schemas.ALLOWED_BOOK_FIELDS,
-    )
+    let validFields: BookSortField[] | null = null
+
+    if (query.fields && typeof query.fields === 'string') {
+      const allowed = BookSortFieldSchema.enum as BookSortField[]
+
+      validFields = parseAndValidate<BookSortField>(query.fields, allowed)
+    }
 
     const result = await this.getBookHandler.execute(
       {
         id,
       },
-      validFields || undefined,
+      validFields ?? undefined,
     )
 
-    return result
+    return toApiBook(result)
   }
 }

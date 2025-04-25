@@ -1,19 +1,24 @@
 import { schemas } from '@book-library-tool/api'
-import type { EventBus } from '@book-library-tool/event-store'
-import { CreateBookHandler } from '@books/commands/CreateBookHandler.js'
-import { DeleteBookHandler } from '@books/commands/DeleteBookHandler.js'
-import { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
-import { UpdateBookHandler } from '@books/commands/UpdateBookHandler.js'
-import { CreateBookController } from '@books/controllers/books/CreateBookController.js'
-import { DeleteBookController } from '@books/controllers/books/DeleteBookController.js'
-import { GetBookController } from '@books/controllers/books/GetBookController.js'
-import { UpdateBookController } from '@books/controllers/books/UpdateBookController.js'
-import { GetBookHandler } from '@books/queries/GetBookHandler.js'
+import type { IEventBus } from '@book-library-tool/event-store'
+import {
+  CreateBookController,
+  DeleteBookController,
+  GetBookController,
+  UpdateBookController,
+} from '@books/api/index.js'
+import {
+  CreateBookHandler,
+  DeleteBookHandler,
+  GetBookHandler,
+  UpdateBookCommand,
+  UpdateBookHandler,
+} from '@books/application/index.js'
+import {
+  IBookReadProjectionRepository,
+  IBookReadRepository,
+  IBookWriteRepository,
+} from '@books/domain/index.js'
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
-
-import { IBookReadProjectionRepository } from '../../../domain/repositories/IBookReadProjectionRepository.js'
-import { IBookReadRepository } from '../../../domain/repositories/IBookReadRepository.js'
-import { IBookWriteRepository } from '../../../domain/repositories/IBookWriteRepository.js'
 
 /**
  * Creates and configures a Fastify plugin for book-related endpoints.
@@ -34,7 +39,7 @@ export function createBookRouter(
   bookWriteRepository: IBookWriteRepository,
   bookReadRepository: IBookReadRepository,
   projectionReadRepository: IBookReadProjectionRepository,
-  eventBus: EventBus,
+  eventBus: IEventBus,
 ): FastifyPluginAsync {
   return async (fastify: FastifyInstance) => {
     // Instantiate individual handlers

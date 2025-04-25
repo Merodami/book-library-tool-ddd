@@ -1,7 +1,7 @@
 import {
   BOOK_VALIDATION_FAILED,
   DomainEvent,
-  type EventBus,
+  type IEventBus,
   RESERVATION_BOOK_LIMIT_REACH,
 } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
@@ -23,7 +23,7 @@ export class ValidateReservationHandler {
     private readonly reservationWriteRepository: IReservationWriteRepository,
     private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
     private readonly projectionHandler: ReservationProjectionHandler,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**

@@ -1,16 +1,19 @@
-import { schemas } from '@book-library-tool/api'
+import { IBaseWriteProjectionRepository } from '@book-library-tool/database'
+import type { DomainBook } from '@books/domain/index.js'
+import type { BookDocument } from '@books/infrastructure/index.js'
 
 /**
  * IBookWriteProjectionRepository abstracts the persistence and retrieval of book projections
  * for Book aggregates. It ensures optimistic concurrency via version checking.
  */
-export interface IBookWriteProjectionRepository {
+export interface IBookWriteProjectionRepository
+  extends IBaseWriteProjectionRepository<BookDocument, DomainBook> {
   /**
    * Save a new book projection.
    *
    * @param bookProjection - The book projection to save
    */
-  saveBookProjection(bookProjection: schemas.Book): Promise<void>
+  saveBookProjection(bookProjection: DomainBook): Promise<void>
 
   /**
    * Partially update the projection for a given book ID.
@@ -22,11 +25,11 @@ export interface IBookWriteProjectionRepository {
     id: string,
     changes: Partial<
       Pick<
-        schemas.Book,
+        DomainBook,
         'title' | 'author' | 'publicationYear' | 'publisher' | 'price' | 'isbn'
       >
     >,
-    updatedAt: Date | string,
+    updatedAt: Date,
   ): Promise<void>
 
   /**

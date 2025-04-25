@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import type { EventBus } from '@book-library-tool/event-store'
+import type { IEventBus } from '@book-library-tool/event-store'
 import { UpdateWalletBalanceHandler } from '@wallets/commands/UpdateWalletBalanceHandler.js'
 import { UpdateWalletBalanceController } from '@wallets/controllers/wallets/UpdateWalletBalanceController.js'
 import { FastifyInstance } from 'fastify'
@@ -14,7 +14,7 @@ import { IWalletWriteRepository } from '../../../domain/repositories/IWalletWrit
 export function createWalletCommandRouter(
   walletReadRepository: IWalletReadRepository,
   walletWriteRepository: IWalletWriteRepository,
-  eventBus: EventBus,
+  eventBus: IEventBus,
 ): (fastify: FastifyInstance) => Promise<void> {
   return async (fastify: FastifyInstance) => {
     // Create command handlers

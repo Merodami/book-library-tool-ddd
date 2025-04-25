@@ -1,8 +1,8 @@
 import { schemas } from '@book-library-tool/api'
 import { paginationHook } from '@book-library-tool/http'
-import { CatalogController } from '@books/controllers/catalog/CatalogController.js'
-import { GetAllBooksHandler } from '@books/queries/GetAllBooksHandler.js'
-import { IBookReadProjectionRepository } from '@books/repositories/IBookReadProjectionRepository.js'
+import { CatalogController } from '@books/api/index.js'
+import { GetAllBooksHandler } from '@books/application/index.js'
+import { IBookReadProjectionRepository } from '@books/domain/index.js'
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 
 /**

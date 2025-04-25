@@ -1,5 +1,5 @@
 import {
-  EventBus,
+  IEventBus,
   RESERVATION_PENDING_PAYMENT,
   RESERVATION_RETURNED,
   WALLET_BALANCE_UPDATED,
@@ -24,7 +24,7 @@ import { BookReturnHandler } from '@wallets/use_cases/commands/BookReturnHandler
  * - Managing error scenarios and logging
  */
 export function WalletEventSubscriptions(
-  eventBus: EventBus,
+  eventBus: IEventBus,
   projectionHandler: WalletProjectionHandler,
   paymentHandler: ProcessWalletPaymentHandler,
   bookReturnHandler: BookReturnHandler,

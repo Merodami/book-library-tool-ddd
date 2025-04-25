@@ -1,11 +1,16 @@
 import { schemas } from '@book-library-tool/api'
-import { GetBookQuery } from '@books/use_cases/queries/GetBookQuery.js'
+import { IBaseReadProjectionRepository } from '@book-library-tool/database'
+import { BookSortField } from '@book-library-tool/sdk'
+import type { GetBookQuery } from '@books/application/index.js'
+import type { DomainBook } from '@books/domain/index.js'
+import type { BookDocument } from '@books/infrastructure/index.js'
 
 /**
  * IBookReadProjectionRepository abstracts the persistence and retrieval of book projections
  * for Book aggregates. It ensures optimistic concurrency via version checking.
  */
-export interface IBookReadProjectionRepository {
+export interface IBookReadProjectionRepository
+  extends IBaseReadProjectionRepository<BookDocument, DomainBook> {
   /**
    * Retrieve all book projections with optional field selection.
    *
@@ -15,8 +20,8 @@ export interface IBookReadProjectionRepository {
    */
   getAllBooks(
     query: schemas.CatalogSearchQuery,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.Book>>
+    fields?: BookSortField[],
+  ): Promise<schemas.PaginatedResult<DomainBook>>
 
   /**
    * Retrieve a single book projection by its ID with optional field selection.
@@ -27,8 +32,8 @@ export interface IBookReadProjectionRepository {
    */
   getBookById(
     query: GetBookQuery,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.Book | null>
+    fields?: BookSortField[],
+  ): Promise<DomainBook | null>
 
   /**
    * Retrieve a single book projection by its ISBN with optional field selection.
@@ -39,6 +44,6 @@ export interface IBookReadProjectionRepository {
    */
   getBookByIsbn(
     isbn: string,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.Book | null>
+    fields?: BookSortField[],
+  ): Promise<DomainBook | null>
 }

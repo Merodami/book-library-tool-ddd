@@ -7,14 +7,12 @@ import {
   paramPaginationLimit,
   paramPaginationPage,
 } from './parameters/pagination.js'
-// Import API specs
+import { ErrorResponses } from './responses/errors.js'
 import { BooksAPISpec } from './routes/books.js'
 import { ReservationsAPISpec } from './routes/reservations.js'
 import { SystemAPISpec } from './routes/system.js'
 import { WalletsAPISpec } from './routes/wallets.js'
-// Import registry and error responses
 import { registry } from './schemaRegistry.js'
-import { ErrorResponses } from './schemas/index.js' // Make sure this exports ErrorResponses
 
 /**
  * Combined OpenAPI Specification with API Gateway

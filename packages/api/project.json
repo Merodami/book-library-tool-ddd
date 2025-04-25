@@ -19,7 +19,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "rm -rf dist && tsc -p tsconfig.json",
+        "command": "tsc -p tsconfig.json --noEmit",
         "cwd": "{projectRoot}"
       }
     },

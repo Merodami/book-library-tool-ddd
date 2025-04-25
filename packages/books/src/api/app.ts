@@ -4,15 +4,15 @@ import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
 import { logger } from '@book-library-tool/shared'
-
-import { BookReadEventSubscriptions } from '../infrastructure/event-store/BookReadEventSubscriptions.js'
-import { BookReadProjectionHandler } from '../infrastructure/event-store/BookReadProjectionHandler.js'
-import { BookReadProjectionRepository } from '../infrastructure/persistence/mongo/BookReadProjectionRepository.js'
-import { BookReadRepository } from '../infrastructure/persistence/mongo/BookReadRepository.js'
-import { BookWriteRepository } from '../infrastructure/persistence/mongo/BookWriteRepository.js'
-import { BookDocument } from '../infrastructure/persistence/mongo/documents/BookDocument.js'
-import { createBookRouter } from './routes/books/BookRouter.js'
-import { createCatalogRouter } from './routes/catalog/CatalogRouter.js'
+import { createBookRouter, createCatalogRouter } from '@books/api/index.js'
+import {
+  BookDocument,
+  BookReadEventSubscriptions,
+  BookReadProjectionHandler,
+  BookReadProjectionRepository,
+  BookReadRepository,
+  BookWriteRepository,
+} from '@books/infrastructure/index.js'
 
 async function startBookService() {
   // Create and connect the database service (write and projection share the same DB context)

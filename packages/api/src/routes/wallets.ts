@@ -1,4 +1,5 @@
 import { paramUserId } from '../parameters/user.js'
+import { registry } from '../schemaRegistry.js'
 import {
   LateReturnRequestSchema,
   UserSchema,
@@ -22,7 +23,7 @@ export const WalletsAPISpec: any = {
             description: 'User wallet details',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/Wallet' },
+                schema: registry.ref('Wallet'),
                 examples: {
                   userWallet: {
                     summary: 'User wallet information',
@@ -35,9 +36,9 @@ export const WalletsAPISpec: any = {
               },
             },
           },
-          '400': { $ref: '#/components/responses/UnauthorizedError' },
-          '401': { $ref: '#/components/responses/UnauthorizedError' },
-          '404': { $ref: '#/components/responses/NotFoundError' },
+          '400': registry.refResponse('BadRequestError'),
+          '401': registry.refResponse('UnauthorizedError'),
+          '404': registry.refResponse('NotFoundError'),
         },
         security: [{ ApiTokenAuth: [] }],
       },
@@ -52,7 +53,7 @@ export const WalletsAPISpec: any = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/BalanceWalletRequest' },
+              schema: registry.ref('BalanceWalletRequest'),
               examples: {
                 addFunds: {
                   summary: 'Add funds to wallet',
@@ -75,7 +76,7 @@ export const WalletsAPISpec: any = {
             description: 'Wallet updated successfully',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/Wallet' },
+                schema: registry.ref('Wallet'),
                 examples: {
                   updatedWallet: {
                     summary: 'Updated wallet balance',
@@ -88,9 +89,9 @@ export const WalletsAPISpec: any = {
               },
             },
           },
-          '400': { $ref: '#/components/responses/UnauthorizedError' },
-          '401': { $ref: '#/components/responses/UnauthorizedError' },
-          '404': { $ref: '#/components/responses/NotFoundError' },
+          '400': registry.refResponse('BadRequestError'),
+          '401': registry.refResponse('UnauthorizedError'),
+          '404': registry.refResponse('NotFoundError'),
         },
         security: [{ ApiTokenAuth: [] }],
       },
@@ -105,7 +106,7 @@ export const WalletsAPISpec: any = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/LateReturnRequest' },
+              schema: registry.ref('LateReturnRequest'),
               examples: {
                 lateFee: {
                   summary: 'Late return fee calculation',
@@ -135,7 +136,7 @@ export const WalletsAPISpec: any = {
                   type: 'object',
                   properties: {
                     message: { type: 'string' },
-                    wallet: { $ref: '#/components/schemas/Wallet' },
+                    wallet: registry.ref('Wallet'),
                   },
                 },
                 examples: {
@@ -169,9 +170,9 @@ export const WalletsAPISpec: any = {
               },
             },
           },
-          '400': { $ref: '#/components/responses/UnauthorizedError' },
-          '401': { $ref: '#/components/responses/UnauthorizedError' },
-          '404': { $ref: '#/components/responses/NotFoundError' },
+          '400': registry.refResponse('BadRequestError'),
+          '401': registry.refResponse('UnauthorizedError'),
+          '404': registry.refResponse('NotFoundError'),
         },
         security: [{ ApiTokenAuth: [] }],
       },

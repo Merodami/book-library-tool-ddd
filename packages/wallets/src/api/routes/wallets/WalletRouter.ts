@@ -1,4 +1,4 @@
-import type { EventBus } from '@book-library-tool/event-store'
+import type { IEventBus } from '@book-library-tool/event-store'
 import { FastifyInstance } from 'fastify'
 
 import { IWalletReadProjectionRepository } from '../../../domain/repositories/IWalletReadProjectionRepository.js'
@@ -15,7 +15,7 @@ export function createWalletRouter(
   walletReadRepository: IWalletReadRepository,
   walletWriteRepository: IWalletWriteRepository,
   walletReadProjectionRepository: IWalletReadProjectionRepository,
-  eventBus: EventBus,
+  eventBus: IEventBus,
 ): (fastify: FastifyInstance) => Promise<void> {
   return async (fastify: FastifyInstance) => {
     // Register query router (read operations)

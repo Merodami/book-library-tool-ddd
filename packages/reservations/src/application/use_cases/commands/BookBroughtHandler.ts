@@ -1,4 +1,4 @@
-import { EventBus } from '@book-library-tool/event-store'
+import { IEventBus } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
 import { Reservation } from '@reservations/entities/Reservation.js'
 import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
@@ -18,7 +18,7 @@ import { BookBroughtCommand } from '@reservations/use_cases/commands/BookBrought
 export class BookBroughtHandler {
   constructor(
     private readonly reservationWriteRepository: IReservationWriteRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**

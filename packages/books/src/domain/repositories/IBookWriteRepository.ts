@@ -1,10 +1,13 @@
+import { IBaseWriteEventSourcedRepository } from '@book-library-tool/database'
 import type { DomainEvent } from '@book-library-tool/event-store'
+import type { Book } from '@books/domain/index.js'
 
 /**
  * IBookWriteRepository abstracts the persistence and retrieval of domain events
  * for Book aggregates. It ensures optimistic concurrency via version checking.
  */
-export interface IBookWriteRepository {
+export interface IBookWriteRepository
+  extends IBaseWriteEventSourcedRepository<Book> {
   /**
    * Save a list of domain events for a given aggregate using a single operation.
    * An optimistic concurrency check on the expected version ensures that no

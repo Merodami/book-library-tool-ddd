@@ -1,6 +1,6 @@
 import {
   DomainEvent,
-  EventBus,
+  IEventBus,
   WALLET_PAYMENT_DECLINED,
   WALLET_PAYMENT_SUCCESS,
 } from '@book-library-tool/event-store'
@@ -23,7 +23,7 @@ export class ProcessWalletPaymentHandler {
     private readonly walletWriteRepository: IWalletWriteRepository,
     private readonly walletReadRepository: IWalletReadRepository,
     private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**

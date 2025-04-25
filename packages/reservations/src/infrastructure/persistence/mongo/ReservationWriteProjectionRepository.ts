@@ -1,5 +1,5 @@
-import { schemas } from '@book-library-tool/api'
 import { BaseWriteProjectionRepository } from '@book-library-tool/database'
+import { ReservationField, ReservationFieldEnum } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { DomainReservation } from '@reservations/entities/DomainReservation.js'
@@ -125,14 +125,14 @@ export class ReservationWriteProjectionRepository
     >,
     updatedAt: Date | string,
   ): Promise<void> {
-    const allowedFields = [...schemas.ALLOWED_RESERVATION_FIELDS] as Array<
-      keyof DomainReservation
-    >
+    const allowedFields = Object.values(
+      ReservationFieldEnum,
+    ) as ReservationField[]
 
     await super.updateProjection(
       id,
       changes as Partial<DomainReservation>,
-      allowedFields,
+      allowedFields as Array<keyof DomainReservation>,
       updatedAt,
       ErrorCode.RESERVATION_NOT_FOUND,
       `Reservation with id "${id}" not found or deleted`,

@@ -1,9 +1,11 @@
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { PaginatedResult } from '@book-library-tool/types'
+import {
+  BaseProjectionRepository,
+  buildProjection,
+  DocumentMapper,
+} from '@database/infrastructure/index.js'
 import { Collection, Document, Filter } from 'mongodb'
-
-import { BaseProjectionRepository, DocumentMapper } from './BaseProjection.js'
-import { buildProjection } from './projectionUtils.js'
 
 /**
  * Base repository for MongoDB projection operations
@@ -32,7 +34,7 @@ export abstract class BaseReadProjectionRepository<
    * @param errorContext - Context for error messages
    * @returns Mapped DTO or null if not found
    */
-  protected async findOne(
+  async findOne(
     filter: Filter<TDocument>,
     fields?: string[] | unknown,
     errorContext?: string,
@@ -73,7 +75,7 @@ export abstract class BaseReadProjectionRepository<
    * @param options - Query options (pagination, sorting, projection)
    * @returns Array of mapped DTOs
    */
-  protected async findMany(
+  async findMany(
     filter: Filter<TDocument>,
     options: {
       skip?: number
@@ -115,7 +117,7 @@ export abstract class BaseReadProjectionRepository<
    * @param filter - MongoDB filter
    * @returns Count of matching documents
    */
-  protected async count(filter: Filter<TDocument>): Promise<number> {
+  async count(filter: Filter<TDocument>): Promise<number> {
     const completeFilter = this.buildCompleteFilter(filter)
 
     return this.collection.countDocuments(completeFilter)
@@ -128,7 +130,7 @@ export abstract class BaseReadProjectionRepository<
    * @param fields - Optional fields to include in the projection
    * @returns Paginated result with data and metadata
    */
-  protected async executePaginatedQuery<
+  async executePaginatedQuery<
     T extends {
       page?: number
       limit?: number

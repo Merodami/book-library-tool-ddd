@@ -1,6 +1,5 @@
 import { logger } from '@book-library-tool/shared'
-import type { DomainEvent } from '@event-store/events/DomainEvent.js'
-import type { EventBus } from '@event-store/messaging/EventBus.js'
+import type { DomainEvent, IEventBus } from '@event-store/domain/index.js'
 import amqplib from 'amqplib'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -9,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
  * Provides reliable message publishing, consumption, error handling,
  * and support for un-routable message processing.
  */
-export class RabbitMQEventBus implements EventBus {
+export class RabbitMQEventBus implements IEventBus {
   private connection!: any
   private channel!: any
   private readonly exchangeName =

@@ -1,4 +1,4 @@
-import type { EventBus } from '@book-library-tool/event-store'
+import type { IEventBus } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import { IReservationReadRepository } from '@reservations/repositories/IReservationReadRepository.js'
@@ -13,7 +13,7 @@ export class BookReturnHandler {
   constructor(
     private readonly reservationReadRepository: IReservationReadRepository,
     private readonly reservationWriteRepository: IReservationWriteRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**

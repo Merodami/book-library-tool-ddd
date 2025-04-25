@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import type { EventBus } from '@book-library-tool/event-store'
+import type { IEventBus } from '@book-library-tool/event-store'
 import { paginationHook } from '@book-library-tool/http'
 import { BookReturnHandler } from '@reservations/commands/BookReturnHandler.js'
 import { CreateReservationHandler } from '@reservations/commands/CreateReservationHandler.js'
@@ -24,7 +24,7 @@ export function createReservationRouter(
   reservationReadRepository: IReservationReadRepository,
   reservationWriteRepository: IReservationWriteRepository,
   reservationReadProjectionRepository: IReservationReadProjectionRepository,
-  eventBus: EventBus,
+  eventBus: IEventBus,
 ) {
   return async function (app: FastifyInstance) {
     // Instantiate individual command handlers:

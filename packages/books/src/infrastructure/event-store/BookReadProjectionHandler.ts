@@ -3,7 +3,7 @@ import {
   DomainEvent,
 } from '@book-library-tool/event-store'
 import { ErrorCode } from '@book-library-tool/shared'
-import { IBookReadProjectionRepository } from '@books/repositories/IBookReadProjectionRepository.js'
+import type { IBookReadProjectionRepository } from '@books/domain/index.js'
 
 /**
  * Event handler that maintains the read model for books in MongoDB.

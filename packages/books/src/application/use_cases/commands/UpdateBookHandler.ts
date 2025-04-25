@@ -1,14 +1,14 @@
 import { EventResponse } from '@book-library-tool/api/src/schemas/events.js'
-import { EventBus } from '@book-library-tool/event-store'
+import { IEventBus } from '@book-library-tool/event-store'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
-import { Book } from '@books/entities/Book.js'
-import { IBookWriteRepository } from '@books/repositories/IBookWriteRepository.js'
+import type { UpdateBookCommand } from '@books/application/index.js'
+import type { IBookWriteRepository } from '@books/domain/index.js'
+import { Book } from '@books/domain/index.js'
 
 export class UpdateBookHandler {
   constructor(
     private readonly writeRepository: IBookWriteRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**

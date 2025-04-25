@@ -5,9 +5,10 @@ import {
   type DomainEvent,
 } from '@book-library-tool/event-store'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { Book } from '@books/entities/Book.js'
-import { IBookReadRepository } from '@books/repositories/IBookReadRepository.js'
+import type { IBookReadRepository } from '@books/domain/index.js'
+import { Book } from '@books/domain/index.js'
 import { Collection } from 'mongodb'
+
 /**
  * Event-sourced repository implementation for the Book aggregate.
  * This repository is responsible for persisting and retrieving Book aggregates

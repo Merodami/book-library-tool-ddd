@@ -1,4 +1,9 @@
 import { Errors } from '@book-library-tool/shared'
+import { IBaseWriteProjectionRepository } from '@database/domain/index.js'
+import {
+  BaseProjectionRepository,
+  DocumentMapper,
+} from '@database/infrastructure/index.js'
 import { pick } from 'lodash-es'
 import {
   Collection,
@@ -8,16 +13,17 @@ import {
   OptionalUnlessRequiredId,
 } from 'mongodb'
 
-import { BaseProjectionRepository, DocumentMapper } from './BaseProjection.js'
-
 /**
  * Base repository for MongoDB projection operations
  * Provides common CRUD functionality with projections support
  */
 export abstract class BaseWriteProjectionRepository<
-  TDocument extends Document,
-  TDto,
-> extends BaseProjectionRepository<TDocument, TDto> {
+    TDocument extends Document,
+    TDto,
+  >
+  extends BaseProjectionRepository<TDocument, TDto>
+  implements IBaseWriteProjectionRepository<TDocument, TDto>
+{
   /**
    * Constructs a new base projection repository
    * @param collection - MongoDB collection
@@ -35,7 +41,7 @@ export abstract class BaseWriteProjectionRepository<
    * @param dtoData - DTO to save
    * @param mapToDocument - Function to map DTO to document
    */
-  protected async saveProjection(
+  async saveProjection(
     dtoData: TDto,
     mapToDocument: (dto: TDto) => Omit<TDocument, '_id'>,
   ): Promise<void> {
@@ -56,7 +62,7 @@ export abstract class BaseWriteProjectionRepository<
    * @param errorCode - Error code to use if document not found
    * @param errorMessage - Error message to use if document not found
    */
-  protected async updateProjection<T extends TDto>(
+  async updateProjection<T extends TDto>(
     id: string,
     changes: Partial<T>,
     allowedFields: Array<keyof T>,

@@ -1,6 +1,6 @@
 import {
   type DomainEvent,
-  type EventBus,
+  type IEventBus,
   RESERVATION_BOOK_VALIDATION,
 } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
@@ -19,7 +19,7 @@ export class CreateReservationHandler {
   constructor(
     private readonly reservationWriteRepository: IReservationWriteRepository,
     private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**
