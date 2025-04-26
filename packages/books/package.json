@@ -16,13 +16,16 @@
     "@book-library-tool/tests": "workspace:^",
     "@book-library-tool/types": "workspace:^",
     "fastify": "^5.3.2",
+    "fp-ts": "^2.16.10",
+    "io-ts": "^2.2.22",
     "lodash-es": "^4.17.21"
   },
   "devDependencies": {
-    "@types/node": "^22.14.1",
+    "@types/node": "^22.15.2",
     "fast-csv": "^5.0.2",
     "he": "^1.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "io-ts-types": "^0.5.19"
   },
   "depcheck": {
     "ignore": [
