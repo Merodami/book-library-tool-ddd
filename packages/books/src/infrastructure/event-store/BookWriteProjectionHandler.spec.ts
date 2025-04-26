@@ -1,5 +1,5 @@
 import type { DomainEvent } from '@book-library-tool/shared'
-import type { IBookWriteProjectionRepository } from '@books/domain/index.js'
+import type { BookWriteProjectionRepositoryPort } from '@books/domain/index.js'
 import { BookWriteProjectionHandler } from '@books/infrastructure/event-store/BookWriteProjectionHandler.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -23,7 +23,7 @@ describe('BookWriteProjectionHandler', () => {
 
     // Initialize the handler with the mock repository
     handler = new BookWriteProjectionHandler(
-      mockRepository as unknown as IBookWriteProjectionRepository,
+      mockRepository as unknown as BookWriteProjectionRepositoryPort,
     )
   })
 
@@ -57,6 +57,9 @@ describe('BookWriteProjectionHandler', () => {
         publicationYear: 2023,
         publisher: 'Test Publisher',
         price: 29.99,
+        version: 1,
+        createdAt: event.timestamp,
+        updatedAt: event.timestamp,
       })
     })
   })

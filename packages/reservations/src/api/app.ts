@@ -5,7 +5,8 @@ import { setCacheService } from '@book-library-tool/redis/src/application/decora
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
 import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
-import { createReservationRouter } from '@reservations/api/routes/reservations/ReservationRouter.js'
+import { createReservationReadRouter } from '@reservations/api/routes/reservations/ReservationReadRouter.js'
+import { createReservationWriteRouter } from '@reservations/api/routes/reservations/ReservationWriteRouter.js'
 import { BookBroughtHandler } from '@reservations/application/use_cases/commands/BookBroughtHandler.js'
 import { PaymentHandler } from '@reservations/application/use_cases/commands/PaymentHandler.js'
 import { ValidateReservationHandler } from '@reservations/application/use_cases/commands/ValidateReservationHandler.js'
@@ -171,25 +172,26 @@ async function startReservationService() {
     ],
   })
 
-  /**
-   * Set up reservation routes:
-   *
-   * The createReservationRouter function accepts:
-   *  - The reservation repository (for commands)
-   *  - The projection repository (for queries)
-   *  - The EventBus (for publishing events)
-   */
+  // Mount write (command) routes under /reservations
   app.register(
-    async (instance) => {
-      return instance.register(
-        createReservationRouter(
+    async (instance) =>
+      instance.register(
+        createReservationWriteRouter(
           reservationReadRepository,
           reservationWriteRepository,
           reservationReadProjectionRepository,
           eventBus,
         ),
-      )
-    },
+      ),
+    { prefix: '/reservations' },
+  )
+
+  // Mount read (query) routes under /reservations
+  app.register(
+    async (instance) =>
+      instance.register(
+        createReservationReadRouter(reservationReadProjectionRepository),
+      ),
     { prefix: '/reservations' },
   )
 

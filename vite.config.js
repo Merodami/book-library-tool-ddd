@@ -74,6 +74,7 @@ export default defineConfig({
         __dirname,
         'packages/books/src/infrastructure',
       ),
+      '@books/tests': resolve(__dirname, 'packages/books/src/tests'),
 
       // Reservations
       '@reservations/api': resolve(__dirname, 'packages/reservations/src/api'),

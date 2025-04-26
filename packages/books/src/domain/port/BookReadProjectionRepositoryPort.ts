@@ -33,6 +33,7 @@ export interface BookReadProjectionRepositoryPort
   getBookById(
     query: GetBookQuery,
     fields?: BookSortField[],
+    includeDeleted?: boolean,
   ): Promise<DomainBook | null>
 
   /**

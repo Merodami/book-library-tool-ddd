@@ -23,6 +23,21 @@ export class BookReadRepository
   constructor(protected readonly collection: Collection<DomainEvent>) {
     super(collection)
   }
+
+  /**
+   * Retrieves a Book by its unique identifier.
+   *
+   * @param aggregateId - The unique identifier of the Book aggregate.
+   * @returns A promise that resolves to a Book object or null if not found.
+   */
+  async getById(aggregateId: string): Promise<Book | null> {
+    const events = await this.getEventsForAggregate(aggregateId)
+
+    if (events.length === 0) return null
+
+    return this.rehydrateFromEvents(events)
+  }
+
   /**
    * Rehydrates a Book aggregate from its event stream.
    * This method is called by the base repository to reconstruct the aggregate's

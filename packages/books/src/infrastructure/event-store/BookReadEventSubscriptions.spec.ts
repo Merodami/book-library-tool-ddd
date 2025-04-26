@@ -1,7 +1,6 @@
 import {
   BOOK_VALIDATION_RESULT,
   createErrorEvent,
-  createMockEventBus,
   type EventBusPort,
   RESERVATION_BOOK_VALIDATION,
   RESERVATION_BOOK_VALIDATION_FAILED,
@@ -23,26 +22,32 @@ vi.mock('@book-library-tool/shared', () => ({
 
 // Import mocked modules
 import { logger } from '@book-library-tool/shared'
+import { createMockEventBus } from '@book-library-tool/tests'
 
-vi.mock('@book-library-tool/event-store', () => ({
-  BOOK_VALIDATION_RESULT: 'BOOK_VALIDATION_RESULT',
-  RESERVATION_BOOK_VALIDATION: 'RESERVATION_BOOK_VALIDATION',
-  RESERVATION_BOOK_VALIDATION_FAILED: 'RESERVATION_BOOK_VALIDATION_FAILED',
-  createErrorEvent: vi.fn(() => ({
-    eventType: 'ErrorEvent',
-    aggregateId: 'test-id',
-    payload: {
-      originalEventType: 'test-event',
-      errorMessage: 'Test error message',
-      errorType: 'test-error-type',
-      reservationId: 'test-reservation-id',
-      isbn: 'test-isbn',
-    },
-    timestamp: new Date(),
-    version: 1,
-    schemaVersion: 1,
-  })),
-}))
+vi.mock('@book-library-tool/event-store', async (importOriginal) => {
+  const actual = await importOriginal<{}>() // pull in everything
+
+  return {
+    ...actual,
+    BOOK_VALIDATION_RESULT: 'BOOK_VALIDATION_RESULT',
+    RESERVATION_BOOK_VALIDATION: 'RESERVATION_BOOK_VALIDATION',
+    RESERVATION_BOOK_VALIDATION_FAILED: 'RESERVATION_BOOK_VALIDATION_FAILED',
+    createErrorEvent: vi.fn(() => ({
+      eventType: 'ErrorEvent',
+      aggregateId: 'test-id',
+      payload: {
+        originalEventType: 'test-event',
+        errorMessage: 'Test error message',
+        errorType: 'test-error-type',
+        reservationId: 'test-reservation-id',
+        isbn: 'test-isbn',
+      },
+      timestamp: new Date(),
+      version: 1,
+      schemaVersion: 1,
+    })),
+  }
+})
 
 describe('BookReadEventSubscriptions', () => {
   // Create proper mocks with TypeScript-friendly types using MockedFunction
@@ -55,6 +60,8 @@ describe('BookReadEventSubscriptions', () => {
 
   // Create a properly typed mock for the event bus
   const mockEventBus: EventBusPort = createMockEventBus()
+
+  mockEventBus.init()
 
   const mockProjectionHandler = {
     handleValidateBook: vi

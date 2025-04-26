@@ -11,11 +11,16 @@ let getContext = (): Context => ({})
 
 // Determine environment.
 const isDevelopment = process.env.NODE_ENV === 'development'
+const isTest = process.env.NODE_ENV === 'test'
 
 // Configure pino options.
 // In development, use pino-pretty for colorized, human-friendly logs.
+// In test, silence logs completely.
 const pinoOptions: pino.LoggerOptions = {
-  level: process.env.LOG_LEVEL || 'info',
+  // Use silent level for tests or respect the LOG_LEVEL env var
+  level: isTest ? 'silent' : process.env.LOG_LEVEL || 'info',
+
+  // Only use pretty formatting in development
   ...(isDevelopment && {
     transport: {
       target: 'pino-pretty',
@@ -36,6 +41,17 @@ const baseLogger = pino(pinoOptions)
  * and merges in dynamic context from getContext() on every log call.
  */
 const createLogger = (baseData: Record<string, unknown> = {}) => {
+  // In test environment, return no-op functions to avoid any logging
+  if (isTest) {
+    return {
+      debug: () => {},
+      info: () => {},
+      warn: () => {},
+      error: () => {},
+    }
+  }
+
+  // Normal logging for non-test environments
   return {
     debug: (...args: unknown[]): void => log('debug', baseData, ...args),
     info: (...args: unknown[]): void => log('info', baseData, ...args),
@@ -53,6 +69,9 @@ function log(
   baseData: Record<string, unknown>,
   ...args: unknown[]
 ): void {
+  // Skip logging completely in test environment
+  if (isTest) return
+
   const context = getContext()
   const data: Record<string, unknown> = { ...baseData, ...context }
   const messageParts: string[] = []

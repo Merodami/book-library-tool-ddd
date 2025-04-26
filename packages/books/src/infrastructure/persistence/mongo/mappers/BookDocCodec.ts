@@ -132,7 +132,7 @@ export function mapToDomain(raw: unknown): DomainBook {
   const doc = decoded.right
 
   return {
-    id: doc.id ?? undefined,
+    id: doc.id,
     isbn: doc.isbn ?? undefined,
     title: doc.title ?? undefined,
     author: doc.author ?? undefined,
@@ -150,17 +150,22 @@ export function mapToDomain(raw: unknown): DomainBook {
  * Map a DomainBook back into the shape of the MongoDB document.
  */
 export function mapToDocument(book: DomainBook): BookDocument {
+  // First drop any undefined or null fields so we never write them to Mongo
+  const cleaned = omitUndefinedDeep(book) as Partial<DomainBook>
+
   return {
-    id: book.id,
-    isbn: book.isbn,
-    title: book.title,
-    author: book.author,
-    publicationYear: book.publicationYear,
-    publisher: book.publisher,
-    price: book.price,
-    version: book.version,
-    createdAt: book.createdAt ?? new Date(),
-    updatedAt: book.updatedAt,
-    deletedAt: book.deletedAt,
+    id: cleaned.id!,
+    isbn: cleaned.isbn!,
+    title: cleaned.title!,
+    author: cleaned.author!,
+    publicationYear: cleaned.publicationYear!,
+    publisher: cleaned.publisher!,
+    price: cleaned.price!,
+    version: cleaned.version,
+    // Ensure createdAt is always set
+    createdAt: cleaned.createdAt ?? new Date(),
+    // Only include updatedAt/deletedAt if present in the domain object
+    ...(cleaned.updatedAt != null ? { updatedAt: cleaned.updatedAt } : {}),
+    ...(cleaned.deletedAt != null ? { deletedAt: cleaned.deletedAt } : {}),
   }
 }

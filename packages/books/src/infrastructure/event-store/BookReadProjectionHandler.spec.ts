@@ -1,6 +1,6 @@
 import { BOOK_VALIDATION_RESULT } from '@book-library-tool/event-store'
-import { DomainEvent, ErrorCode } from '@book-library-tool/shared'
-import type { IBookReadProjectionRepository } from '@books/domain/index.js'
+import { type DomainEvent, ErrorCode } from '@book-library-tool/shared'
+import type { BookReadProjectionRepositoryPort } from '@books/domain/index.js'
 import { BookReadProjectionHandler } from '@books/infrastructure/event-store/BookReadProjectionHandler.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -24,7 +24,7 @@ describe('BookReadProjectionHandler', () => {
 
     // Initialize the handler with the mock repository
     handler = new BookReadProjectionHandler(
-      mockRepository as unknown as IBookReadProjectionRepository,
+      mockRepository as unknown as BookReadProjectionRepositoryPort,
     )
   })
 
@@ -75,8 +75,8 @@ describe('BookReadProjectionHandler', () => {
     })
 
     it('should return invalid book validation result when book does not exist', async () => {
-      const event: EventStoreDomainEvent = {
-        eventType: 'ReservationBookValidation',
+      const event: DomainEvent = {
+        eventType: BOOK_VALIDATION_RESULT,
         aggregateId: 'aa0e8b9b-e53a-429c-8022-c888d29b998c',
         payload: {
           bookId: '46decb22-c152-482b-909e-693c20e416a6',

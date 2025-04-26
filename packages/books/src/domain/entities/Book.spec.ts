@@ -150,7 +150,7 @@ describe('Book', () => {
       const { book: deletedBook } = currentBook.delete()
 
       expect(() => deletedBook.delete()).toThrow(
-        `Book with id ${currentBook.id} is already deleted.`,
+        `Book with ID ${currentBook.id} is already deleted.`,
       )
     })
   })

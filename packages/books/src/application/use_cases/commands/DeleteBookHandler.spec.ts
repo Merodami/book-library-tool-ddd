@@ -1,122 +1,72 @@
-import {
-  BOOK_CREATED,
-  BOOK_DELETED,
-  createMockEventBus,
-  type EventBusPort,
-} from '@book-library-tool/event-store'
+// packages/books/src/application/use_cases/commands/DeleteBookHandler.spec.ts
+import { BOOK_DELETED, type EventBusPort } from '@book-library-tool/event-store'
 import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import type { DeleteBookCommand } from '@books/application/use_cases/commands/DeleteBookCommand.js'
-import { DeleteBookHandler } from '@books/application/use_cases/commands/DeleteBookHandler.js'
-import {
-  Book,
-  BookReadProjectionRepositoryPort,
-  BookWriteRepositoryPort,
-} from '@books/domain/index.js'
-import { createMockBookReadRepository } from '@books/tests/mocks/repositories/MockBookReadRepository.js'
-import { createMockBookWriteRepository } from '@books/tests/mocks/repositories/MockBookWriteRepository.js'
-import { randomUUID } from 'crypto'
+import { createMockEventBus } from '@book-library-tool/tests'
+import type { BookWriteRepositoryPort } from '@books/domain/index.js'
+import { Book } from '@books/domain/index.js'
+import { createMockBookWriteRepository } from '@books/tests/mocks/repositories/index.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { DeleteBookHandler } from './DeleteBookHandler.js'
+
 describe('DeleteBookHandler', () => {
-  let repository: BookWriteRepositoryPort
-  let projectionRepository: BookReadProjectionRepositoryPort
+  let writeRepo: BookWriteRepositoryPort
   let eventBus: EventBusPort
   let handler: DeleteBookHandler
 
-  const bookId = randomUUID()
-  const aggregateId = bookId // Now the ID is the same
-
-  const baseEvents: DomainEvent[] = [
-    {
-      aggregateId,
-      eventType: BOOK_CREATED,
-      payload: {
-        isbn: '978-3-16-148410-0',
-        title: 'Orig',
-        author: 'Auth',
-        publicationYear: 2023,
-        publisher: 'Pub',
-        price: 15,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      timestamp: new Date(),
-      version: 1,
-      schemaVersion: 1,
-    },
-  ]
+  const bookId = 'agg-id-123'
 
   beforeEach(() => {
-    repository = {
-      findAggregateIdById: vi.fn().mockResolvedValue(aggregateId),
-      getEventsForAggregate: vi.fn().mockResolvedValue(baseEvents),
-      saveEvents: vi.fn().mockResolvedValue(undefined),
-      appendBatch: vi.fn().mockResolvedValue(undefined),
-    } as unknown as IBookWriteRepository
+    writeRepo = createMockBookWriteRepository()
+    eventBus = createMockEventBus()
+    eventBus.init()
 
-    projectionRepository = {
-      getBookById: vi.fn().mockResolvedValue({
-        id: bookId,
-        isbn: '978-3-16-148410-0',
-        title: 'Orig',
-        author: 'Auth',
-        publicationYear: 2023,
-        publisher: 'Pub',
-        price: 15,
-      }),
-      getAllBooks: vi.fn(),
-      getBookByIsbn: vi.fn(),
-      findOne: vi.fn(),
-      findMany: vi.fn(),
-      count: vi.fn(),
-      executePaginatedQuery: vi.fn(),
-    } as unknown as IBookReadProjectionRepository
+    handler = new DeleteBookHandler(writeRepo, eventBus)
 
-    handler = new DeleteBookHandler(
-      createMockBookReadRepository(),
-      createMockBookWriteRepository(),
-      (eventBus = createMockEventBus()),
-    )
+    // override concurrency check so saveEvents always resolves
+    vi.spyOn(writeRepo, 'saveEvents').mockResolvedValue(undefined)
   })
 
   it('successfully deletes an existing book', async () => {
+    // arrange: fake aggregate returned by getById
     const fakeBook = Object.assign(Object.create(Book.prototype), {
-      id: aggregateId,
-      version: 1,
-      deletedAt: undefined,
-      clearDomainEvents: vi.fn(),
+      id: bookId,
+      version: 2,
       isDeleted: vi.fn().mockReturnValue(false),
+      clearDomainEvents: vi.fn(),
     }) as Book
 
     const deleteEvt: DomainEvent = {
-      aggregateId,
+      aggregateId: bookId,
       eventType: BOOK_DELETED,
       payload: { deletedAt: expect.any(String as any) },
       timestamp: expect.any(Date as any),
-      version: 2,
+      version: 3,
       schemaVersion: 1,
     }
 
-    vi.spyOn(Book, 'rehydrate').mockReturnValue(fakeBook)
+    // stub getById and domain delete()
+    vi.spyOn(writeRepo, 'getById').mockResolvedValue(fakeBook)
     fakeBook.delete = vi
       .fn()
       .mockReturnValue({ book: fakeBook, event: deleteEvt })
 
-    const command: DeleteBookCommand = { id: bookId }
-    const result = await handler.execute(command)
+    // act
+    const result = await handler.execute({ id: bookId })
 
+    // assert return value
     expect(result).toEqual({
       success: true,
-      bookId: aggregateId,
+      bookId,
       version: fakeBook.version,
     })
-    expect(projectionRepository.getBookById).toHaveBeenCalledWith(bookId)
-    expect(repository.getEventsForAggregate).toHaveBeenCalledWith(aggregateId)
-    expect(Book.rehydrate).toHaveBeenCalledWith(baseEvents)
+
+    // assert all interactions
+    expect(writeRepo.getById).toHaveBeenCalledWith(bookId)
     expect(fakeBook.delete).toHaveBeenCalled()
-    expect(repository.saveEvents).toHaveBeenCalledWith(
-      aggregateId,
+    expect(writeRepo.saveEvents).toHaveBeenCalledWith(
+      bookId,
       [deleteEvt],
       fakeBook.version,
     )
@@ -124,55 +74,38 @@ describe('DeleteBookHandler', () => {
     expect(fakeBook.clearDomainEvents).toHaveBeenCalled()
   })
 
-  it('throws ApplicationError if book not found in projection', async () => {
-    vi.spyOn(projectionRepository, 'getBookById').mockResolvedValue(null)
+  it('throws 404 if the book aggregate does not exist', async () => {
+    vi.spyOn(writeRepo, 'getById').mockResolvedValue(null)
 
-    const command: DeleteBookCommand = { id: bookId }
-
-    await expect(handler.execute(command)).rejects.toEqual(
+    await expect(handler.execute({ id: bookId })).rejects.toEqual(
       new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book with ID ${bookId} not found`,
+        `Book with ID ${bookId} not found.`,
       ),
     )
 
-    expect(repository.getEventsForAggregate).not.toHaveBeenCalled()
+    expect(writeRepo.getById).toHaveBeenCalledWith(bookId)
   })
 
-  it('throws ApplicationError if no events found', async () => {
-    vi.spyOn(repository, 'getEventsForAggregate').mockResolvedValue([])
-
-    const command: DeleteBookCommand = { id: bookId }
-
-    await expect(handler.execute(command)).rejects.toEqual(
-      new Errors.ApplicationError(
-        404,
-        ErrorCode.BOOK_NOT_FOUND,
-        `Book with id ${bookId} not found.`,
-      ),
-    )
-  })
-
-  it('throws ApplicationError if book is already deleted', async () => {
-    const fakeBook = Object.assign(Object.create(Book.prototype), {
-      id: aggregateId,
-      version: 1,
-      deletedAt: new Date(),
-      clearDomainEvents: vi.fn(),
+  it('throws 410 if the book is already deleted', async () => {
+    const deletedBook = Object.assign(Object.create(Book.prototype), {
+      id: bookId,
+      version: 5,
       isDeleted: vi.fn().mockReturnValue(true),
+      clearDomainEvents: vi.fn(),
     }) as Book
 
-    vi.spyOn(Book, 'rehydrate').mockReturnValue(fakeBook)
+    vi.spyOn(writeRepo, 'getById').mockResolvedValue(deletedBook)
 
-    const command: DeleteBookCommand = { id: bookId }
-
-    await expect(handler.execute(command)).rejects.toEqual(
+    await expect(handler.execute({ id: bookId })).rejects.toEqual(
       new Errors.ApplicationError(
         410,
         ErrorCode.BOOK_ALREADY_DELETED,
-        `Book with id ${bookId} already deleted.`,
+        `Book with ID ${bookId} already deleted.`,
       ),
     )
+
+    expect(writeRepo.getById).toHaveBeenCalledWith(bookId)
   })
 })

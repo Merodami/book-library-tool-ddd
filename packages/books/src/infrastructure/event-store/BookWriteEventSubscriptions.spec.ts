@@ -4,11 +4,9 @@ import {
   BOOK_DELETED,
   BOOK_UPDATED,
   createErrorEvent,
-  createMockEventBus,
 } from '@book-library-tool/event-store'
 import { type EventBusPort } from '@book-library-tool/event-store'
 import {
-  createMockCacheService,
   httpRequestKeyGenerator,
   ICacheService,
   RedisService,
@@ -36,27 +34,35 @@ vi.mock('@book-library-tool/redis', () => ({
   RedisService: vi.fn(),
 }))
 
-vi.mock('@book-library-tool/event-store', () => ({
-  BOOK_CREATED: 'BOOK_CREATED',
-  BOOK_CREATION_FAILED: 'BOOK_CREATION_FAILED',
-  BOOK_DELETED: 'BOOK_DELETED',
-  BOOK_UPDATED: 'BOOK_UPDATED',
-  createErrorEvent: vi.fn(() => ({
-    eventType: 'ErrorEvent',
-    aggregateId: 'test-id',
-    payload: {
-      originalEventType: 'test-event',
-      errorMessage: 'Test error message',
-      errorType: 'test-error-type',
-    },
-    timestamp: new Date(),
-    version: 1,
-    schemaVersion: 1,
-  })),
-}))
+vi.mock('@book-library-tool/event-store', async (importOriginal) => {
+  const actual = await importOriginal<{}>() // pull in everything
+
+  return {
+    ...actual,
+    BOOK_VALIDATION_RESULT: 'BOOK_VALIDATION_RESULT',
+    RESERVATION_BOOK_VALIDATION: 'RESERVATION_BOOK_VALIDATION',
+    RESERVATION_BOOK_VALIDATION_FAILED: 'RESERVATION_BOOK_VALIDATION_FAILED',
+    createErrorEvent: vi.fn(() => ({
+      eventType: 'ErrorEvent',
+      aggregateId: 'test-id',
+      payload: {
+        originalEventType: 'test-event',
+        errorMessage: 'Test error message',
+        errorType: 'test-error-type',
+        reservationId: 'test-reservation-id',
+        isbn: 'test-isbn',
+      },
+      timestamp: new Date(),
+      version: 1,
+      schemaVersion: 1,
+    })),
+  }
+})
 
 // Import mocked modules
 import { logger } from '@book-library-tool/shared'
+import { createMockEventBus } from '@book-library-tool/tests'
+import { createMockCacheService } from '@book-library-tool/tests'
 
 describe('BookWriteEventSubscriptions', () => {
   // Create proper mocks with TypeScript-friendly types using MockedFunction
@@ -160,6 +166,8 @@ describe('BookWriteEventSubscriptions', () => {
       mockProjectionHandler,
     )
 
+    mockEventBus.init()
+
     // Extract the handler function that was registered
     const subscribeFunction = mockEventBus.subscribe as MockedFn<
       typeof mockEventBus.subscribe
@@ -254,7 +262,7 @@ describe('BookWriteEventSubscriptions', () => {
       mockEvent,
     )
     expect(httpRequestKeyGenerator).toHaveBeenCalledWith('book', 'getBook', [
-      { params: { id: 'book-123' }, query: {} },
+      { params: { id: 'book-123' } },
     ])
     expect(mockCacheService.del).toHaveBeenCalled()
     expect(mockCacheService.delPattern).toHaveBeenCalledWith(
@@ -354,7 +362,7 @@ describe('BookWriteEventSubscriptions', () => {
       mockEvent,
     )
     expect(httpRequestKeyGenerator).toHaveBeenCalledWith('book', 'getBook', [
-      { params: { id: 'book-123' }, query: {} },
+      { params: { id: 'book-123' } },
     ])
     expect(mockCacheService.del).toHaveBeenCalled()
     expect(mockCacheService.delPattern).toHaveBeenCalledWith(

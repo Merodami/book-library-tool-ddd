@@ -83,11 +83,13 @@ export class BookReadProjectionRepository
   async getBookById(
     query: GetBookQuery,
     fields?: BookSortField[],
+    includeDeleted?: boolean,
   ): Promise<DomainBook | null> {
     return this.findOne(
       { id: query.id } as Filter<BookDocument>,
       fields,
       `book doc for ID ${query.id}`,
+      includeDeleted,
     )
   }
 

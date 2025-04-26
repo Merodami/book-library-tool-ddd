@@ -19,7 +19,10 @@
       "@books/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@books/infrastructure/*": ["src/infrastructure/*"]
+      "@books/infrastructure/*": ["src/infrastructure/*"],
+
+      // Tests
+      "@books/tests/*": ["src/tests/*"]
     }
   },
   "include": ["src", "scripts"],

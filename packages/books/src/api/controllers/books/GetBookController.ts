@@ -43,9 +43,7 @@ export class GetBookController {
     }
 
     const result = await this.getBookHandler.execute(
-      {
-        id,
-      },
+      { id },
       validFields ?? undefined,
     )
 

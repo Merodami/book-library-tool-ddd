@@ -24,7 +24,6 @@ export class CreateBookHandler {
     command: CreateBookCommand,
   ): Promise<EventResponse & { bookId: string }> {
     // Check if the book already exists in the projection.
-
     const existing = await this.readProjectionRepository.getBookByIsbn(
       command.isbn,
       undefined,

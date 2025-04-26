@@ -135,7 +135,7 @@ export class ReservationWriteProjectionRepository
       allowedFields as Array<keyof DomainReservation>,
       updatedAt,
       ErrorCode.RESERVATION_NOT_FOUND,
-      `Reservation with id "${id}" not found or deleted`,
+      `Reservation with ID "${id}" not found or deleted`,
     )
   }
 
@@ -159,7 +159,7 @@ export class ReservationWriteProjectionRepository
       throw new Errors.ApplicationError(
         404,
         ErrorCode.RESERVATION_NOT_FOUND,
-        `Reservation with id "${id}" not found or deleted`,
+        `Reservation with ID "${id}" not found or deleted`,
       )
     }
   }

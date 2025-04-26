@@ -21,6 +21,16 @@ describe('CreateBookController', () => {
   // Sample book ID for tests
   const bookId = 'test-id-123'
 
+  // Sample book ID for tests
+  const book: CreateBookCommand = {
+    isbn: '1234567890',
+    title: 'Test Book',
+    author: 'Test Author',
+    publicationYear: 2023,
+    publisher: 'Test Publisher',
+    price: 19.99,
+  }
+
   // Sample response from the handler
   const handlerResponse: EventResponse & { bookId: string } = {
     success: true,
@@ -43,13 +53,14 @@ describe('CreateBookController', () => {
       // Create mock Fastify request
       const mockRequest = {
         params: { id: bookId },
+        body: book,
       } as MockRequest<{ id: string }>
 
       // Call the controller method
       const result = await controller.createBook(mockRequest)
 
       // Verify the handler was called with the correct command
-      expect(createBookHandler.execute).toHaveBeenCalledWith({ id: bookId })
+      expect(createBookHandler.execute).toHaveBeenCalledWith(book)
 
       // Verify the controller returns the handler's response
       expect(result).toEqual(handlerResponse)
@@ -64,6 +75,7 @@ describe('CreateBookController', () => {
       // Create mock request
       const mockRequest = {
         params: { id: bookId },
+        body: book,
       } as MockRequest<{ id: string }>
 
       // Expect the controller to propagate the error

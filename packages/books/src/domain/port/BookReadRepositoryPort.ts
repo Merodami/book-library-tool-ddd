@@ -19,4 +19,12 @@ export interface BookReadRepositoryPort extends MongoReadRepositoryPort<Book> {
    * Finds the aggregate ID associated with an ID
    */
   findAggregateIdById(id: string): Promise<string | null>
+
+  /**
+   * Retrieves a Book by its unique identifier.
+   *
+   * @param aggregateId - The unique identifier of the Book aggregate.
+   * @returns A promise that resolves to a Book object or null if not found.
+   */
+  getById(aggregateId: string): Promise<Book | null>
 }

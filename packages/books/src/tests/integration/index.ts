@@ -1,0 +1,5 @@
+export * from './api/controllers/books/index.js'
+export * from './api/controllers/catalog/index.js'
+export * from './api/routes/books/index.js'
+export * from './api/routes/catalog/index.js'
+export * from './infrastructure/repositories/index.js'

@@ -26,7 +26,10 @@
       "@database/shared/*": ["src/shared/*"],
 
       // Test utils
-      "@database/testUtils/*": ["src/testUtils/*"]
+      "@database/testUtils/*": ["src/testUtils/*"],
+
+      // Mocks
+      "@database/mocks/*": ["src/mocks/*"]
     }
   },
   "include": ["src/**/*.ts"],

@@ -30,6 +30,7 @@ export class BookWriteProjectionRepository
 
   /**
    * Saves a new book projection to MongoDB.
+   * Validates required fields before persisting.
    * @param book - Domain Book object to persist
    */
   async saveBookProjection(book: DomainBook): Promise<void> {
@@ -61,7 +62,7 @@ export class BookWriteProjectionRepository
       allowedFields,
       updatedAt,
       ErrorCode.BOOK_NOT_FOUND,
-      `Book with id "${id}" not found or deleted`,
+      `Book with ID "${id}" not found or deleted`,
     )
   }
 
@@ -80,7 +81,7 @@ export class BookWriteProjectionRepository
       throw new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book projection with id "${id}" not found or already deleted.`,
+        `Book projection with ID "${id}" not found or already deleted.`,
       )
     }
   }

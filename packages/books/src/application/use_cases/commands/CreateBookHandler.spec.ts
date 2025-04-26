@@ -1,19 +1,28 @@
 import { BOOK_CREATED, type EventBusPort } from '@book-library-tool/event-store'
 import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
+import { createMockEventBus } from '@book-library-tool/tests'
 import type { CreateBookCommand } from '@books/application/index.js'
 import { CreateBookHandler } from '@books/application/index.js'
-import type { BookWriteRepositoryPort } from '@books/domain/index.js'
+import type {
+  BookReadProjectionRepositoryPort,
+  BookWriteRepositoryPort,
+} from '@books/domain/index.js'
 import { Book as BookEntity } from '@books/domain/index.js'
+import {
+  createMockBookReadProjectionRepository,
+  createMockBookWriteRepository,
+} from '@books/tests/mocks/index.js'
 import { randomUUID } from 'crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('CreateBookHandler', () => {
-  let repository: BookWriteRepositoryPort
+  let writeRepo: BookWriteRepositoryPort
+  let readProjRepo: BookReadProjectionRepositoryPort
   let eventBus: EventBusPort
   let handler: CreateBookHandler
 
-  const cmd: CreateBookCommand = {
+  const command: CreateBookCommand = {
     isbn: '978-3-16-148410-0',
     title: 'New Book',
     author: 'Author',
@@ -23,19 +32,19 @@ describe('CreateBookHandler', () => {
   }
 
   beforeEach(() => {
-    repository = {
-      save: vi.fn(),
-      getEventsForAggregate: vi.fn(),
-      saveEvents: vi.fn(),
-    } as unknown as BookWriteRepositoryPort
-    eventBus = {
-      publish: vi.fn(),
-    } as unknown as EventBusPort
+    // 1) Create clean mocks
+    writeRepo = createMockBookWriteRepository()
+    readProjRepo = createMockBookReadProjectionRepository()
+    eventBus = createMockEventBus()
+    eventBus.init()
 
-    // Create a spy on BookEntity.create BEFORE creating the handler
+    // 2) Force “no existing book” by default
+    vi.spyOn(readProjRepo, 'getBookByIsbn').mockResolvedValue(null)
+
+    // 3) Spy on the domain factory
     vi.spyOn(BookEntity, 'create')
 
-    handler = new CreateBookHandler(repository, eventBus)
+    handler = new CreateBookHandler(writeRepo, readProjRepo, eventBus)
   })
 
   afterEach(() => {
@@ -43,6 +52,7 @@ describe('CreateBookHandler', () => {
   })
 
   it('returns success, bookId and version when ISBN is new', async () => {
+    // --- arrange ---
     const fakeId = randomUUID()
     const fakeBook = Object.assign(Object.create(BookEntity.prototype), {
       id: fakeId,
@@ -54,7 +64,7 @@ describe('CreateBookHandler', () => {
       aggregateId: fakeId,
       eventType: BOOK_CREATED,
       payload: {
-        ...cmd,
+        ...command,
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       },
@@ -63,50 +73,58 @@ describe('CreateBookHandler', () => {
       schemaVersion: 1,
     }
 
+    // stub the factory
     vi.mocked(BookEntity.create).mockReturnValue({
       book: fakeBook,
       event: fakeEvent,
     })
 
-    const res = await handler.execute(cmd)
+    // --- act ---
+    const result = await handler.execute(command)
 
-    expect(res).toEqual({ success: true, bookId: fakeId, version: 1 })
-    expect(repository.getEventsForAggregate).toHaveBeenCalledWith(cmd.isbn)
-    expect(BookEntity.create).toHaveBeenCalledWith(cmd)
-    expect(repository.saveEvents).toHaveBeenCalledWith(fakeId, [fakeEvent], 0)
+    // --- assert ---
+    expect(result).toEqual({
+      success: true,
+      bookId: fakeId,
+      version: 1,
+    })
+
+    // uniqueness check
+    expect(readProjRepo.getBookByIsbn).toHaveBeenCalledWith(
+      command.isbn,
+      undefined,
+      true,
+    )
+
+    // domain creation
+    expect(BookEntity.create).toHaveBeenCalledWith(command)
+
+    // persistence
+    expect(writeRepo.saveEvents).toHaveBeenCalledWith(fakeId, [fakeEvent], 0)
+
+    // publication
     expect(eventBus.publish).toHaveBeenCalledWith(fakeEvent)
+
+    // cleanup
     expect(fakeBook.clearDomainEvents).toHaveBeenCalled()
   })
 
   it('throws ApplicationError 409 if ISBN already exists', async () => {
-    // Reset the mock to ensure it's clean
-    vi.mocked(BookEntity.create).mockReset()
+    // arrange: projection already has that ISBN
+    vi.spyOn(readProjRepo, 'getBookByIsbn').mockResolvedValue({} as any)
 
-    vi.spyOn(repository, 'getEventsForAggregate').mockResolvedValue([
-      {
-        aggregateId: randomUUID(),
-        eventType: BOOK_CREATED,
-        payload: {
-          ...cmd,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        timestamp: new Date(),
-        version: 1,
-        schemaVersion: 1,
-      },
-    ])
-
-    await expect(handler.execute(cmd)).rejects.toEqual(
+    // act + assert
+    await expect(handler.execute(command)).rejects.toEqual(
       new Errors.ApplicationError(
         409,
         ErrorCode.BOOK_ALREADY_EXISTS,
-        `Book with ISBN ${cmd.isbn} already exists`,
+        `Book with ISBN ${command.isbn} already exists`,
       ),
     )
 
+    // domain factory & write side should never be called
     expect(BookEntity.create).not.toHaveBeenCalled()
-    expect(repository.saveEvents).not.toHaveBeenCalled()
+    expect(writeRepo.saveEvents).not.toHaveBeenCalled()
     expect(eventBus.publish).not.toHaveBeenCalled()
   })
 })
