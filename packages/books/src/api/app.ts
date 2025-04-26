@@ -11,6 +11,7 @@ import {
   BookReadEventSubscriptions,
   BookReadProjectionHandler,
   BookReadProjectionRepository,
+  BookReadRepository,
   BookWriteEventSubscriptions,
   BookWriteProjectionHandler,
   BookWriteProjectionRepository,
@@ -102,6 +103,10 @@ async function startBookService() {
     bookWriteProjectionRepository,
   )
 
+  const bookReadRepository = new BookReadRepository(
+    dbService.getCollection<DomainEvent>('event_store'),
+  )
+
   await BookReadEventSubscriptions(eventBus, bookReadProjectionHandler)
   await BookWriteEventSubscriptions(
     eventBus,
@@ -164,6 +169,7 @@ async function startBookService() {
       return instance.register(
         createBookWriteRouter(
           bookWriteRepository,
+          bookReadRepository,
           bookReadProjectionRepository,
           eventBus,
         ),

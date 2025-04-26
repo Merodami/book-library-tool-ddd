@@ -11,7 +11,10 @@ import {
   UpdateBookCommand,
   UpdateBookHandler,
 } from '@books/application/index.js'
-import { BookReadProjectionRepositoryPort } from '@books/domain/index.js'
+import {
+  BookReadProjectionRepositoryPort,
+  BookReadRepositoryPort,
+} from '@books/domain/index.js'
 import { BookWriteRepositoryPort } from '@books/domain/index.js'
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 
@@ -31,6 +34,7 @@ import { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
  */
 export function createBookWriteRouter(
   bookWriteRepository: BookWriteRepositoryPort,
+  bookReadRepository: BookReadRepositoryPort,
   bookProjectionReadyRepository: BookReadProjectionRepositoryPort,
   eventBus: EventBusPort,
 ): FastifyPluginAsync {
@@ -42,7 +46,11 @@ export function createBookWriteRouter(
       eventBus,
     )
     const updateHandler = new UpdateBookHandler(bookWriteRepository, eventBus)
-    const deleteHandler = new DeleteBookHandler(bookWriteRepository, eventBus)
+    const deleteHandler = new DeleteBookHandler(
+      bookReadRepository,
+      bookWriteRepository,
+      eventBus,
+    )
 
     // Create specialized controllers
     const createBookController = new CreateBookController(createHandler)

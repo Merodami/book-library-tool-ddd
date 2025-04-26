@@ -132,13 +132,13 @@ export function mapToDomain(raw: unknown): DomainBook {
   const doc = decoded.right
 
   return {
-    id: doc.id,
-    isbn: doc.isbn ?? undefined,
-    title: doc.title ?? undefined,
-    author: doc.author ?? undefined,
-    publicationYear: doc.publicationYear ?? undefined,
-    publisher: doc.publisher ?? undefined,
-    price: doc.price ?? undefined,
+    id: doc.id!,
+    isbn: doc.isbn!,
+    title: doc.title!,
+    author: doc.author!,
+    publicationYear: doc.publicationYear!,
+    publisher: doc.publisher!,
+    price: doc.price!,
     version: doc.version ?? undefined,
     createdAt: doc.createdAt ?? undefined,
     updatedAt: doc.updatedAt ?? undefined,

@@ -2,10 +2,14 @@ import { type EventBusPort } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
 import type { DeleteBookCommand } from '@books/application/index.js'
-import type { BookWriteRepositoryPort } from '@books/domain/index.js'
+import type {
+  BookReadRepositoryPort,
+  BookWriteRepositoryPort,
+} from '@books/domain/index.js'
 
 export class DeleteBookHandler {
   constructor(
+    private readonly readRepository: BookReadRepositoryPort,
     private readonly writeRepository: BookWriteRepositoryPort,
     private readonly eventBus: EventBusPort,
   ) {}
@@ -21,7 +25,7 @@ export class DeleteBookHandler {
     command: DeleteBookCommand,
   ): Promise<EventResponse & { bookId: string }> {
     // Load the aggregate's events and rehydrate its current state.
-    const currentBook = await this.writeRepository.getById(command.id)
+    const currentBook = await this.readRepository.getById(command.id)
 
     if (!currentBook) {
       throw new Errors.ApplicationError(
