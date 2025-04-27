@@ -1,20 +1,18 @@
-import { BaseReadEventSourcedRepository } from '@book-library-tool/database'
-import {
-  type DomainEvent,
-  RESERVATION_CONFIRMED,
-} from '@book-library-tool/event-store'
+import { MongoReadRepository } from '@book-library-tool/database'
+import { RESERVATION_CONFIRMED } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { Reservation } from '@reservations/entities/Reservation.js'
-import type { IReservationReadRepository } from '@reservations/repositories/IReservationReadRepository.js'
+import { Reservation } from '@reservations/domain/entities/Reservation.js'
+import { ReservationReadRepositoryPort } from 'src/domain/port/index.js'
 
 /**
  * Event-sourced repository implementation for Reservation aggregates.
  * Handles persisting and retrieving domain events for the reservation bounded context.
  */
 export class ReservationReadRepository
-  extends BaseReadEventSourcedRepository<Reservation>
-  implements IReservationReadRepository
+  extends MongoReadRepository<Reservation>
+  implements ReservationReadRepositoryPort
 {
   /**
    * Create reservation-specific indexes

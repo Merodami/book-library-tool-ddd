@@ -13,28 +13,27 @@
       "@wallets/*": ["src/*"],
 
       // API
-      "@wallets/controllers/*": ["src/api/controllers/*"],
-      "@wallets/routes/*": ["src/api/routes/*"],
+      "@wallets/api/*": ["src/api/*"],
 
       // Application
-      "@wallets/dto/*": ["src/application/dtos/*"],
-      "@wallets/use_cases/*": ["src/application/use_cases/*"],
-      "@wallets/commands/*": ["src/application/use_cases/commands/*"],
-      "@wallets/queries/*": ["src/application/use_cases/queries/*"],
+      "@wallets/application/*": ["src/application/*"],
 
       // Domain
-      "@wallets/entities/*": ["src/domain/entities/*"],
-      "@wallets/repositories/*": ["src/domain/repositories/*"],
-      "@wallets/value_objects/*": ["src/domain/value_objects/*"],
+      "@wallets/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@wallets/database/*": ["src/infrastructure/database/*"],
-      "@wallets/persistence/*": ["src/infrastructure/persistence/*"],
-      "@wallets/event-store/*": ["src/infrastructure/event-store/*"]
+      "@wallets/infrastructure/*": ["src/infrastructure/*"]
     }
   },
   "include": ["src"],
-  "exclude": ["dist", "../../node_modules", "node_modules"],
+  "exclude": [
+    "dist",
+    "../../node_modules",
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/tests/**"
+  ],
   "references": [
     {
       "path": "../api"

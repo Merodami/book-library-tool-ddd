@@ -1,19 +1,25 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { DomainEvent, RabbitMQEventBus } from '@book-library-tool/event-store'
+import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
+import { createCatalogReadRouter } from '@books/api/routes/catalog/CatalogReadRouter.js'
+import {
+  BookDocument,
+  BookReadEventSubscriptions,
+  BookReadProjectionHandler,
+  BookReadProjectionRepository,
+  BookReadRepository,
+  BookWriteEventSubscriptions,
+  BookWriteProjectionHandler,
+  BookWriteProjectionRepository,
+  BookWriteRepository,
+} from '@books/infrastructure/index.js'
 
-import { BookReadEventSubscriptions } from '../infrastructure/event-store/BookReadEventSubscriptions.js'
-import { BookReadProjectionHandler } from '../infrastructure/event-store/BookReadProjectionHandler.js'
-import { BookReadProjectionRepository } from '../infrastructure/persistence/mongo/BookReadProjectionRepository.js'
-import { BookReadRepository } from '../infrastructure/persistence/mongo/BookReadRepository.js'
-import { BookWriteRepository } from '../infrastructure/persistence/mongo/BookWriteRepository.js'
-import { BookDocument } from '../infrastructure/persistence/mongo/documents/BookDocument.js'
-import { createBookRouter } from './routes/books/BookRouter.js'
-import { createCatalogRouter } from './routes/catalog/CatalogRouter.js'
-
+import { createBookReadRouter } from './routes/books/BookReadRouter.js'
+import { createBookWriteRouter } from './routes/books/BookWriteRouter.js'
 async function startBookService() {
   // Create and connect the database service (write and projection share the same DB context)
   const dbService = new MongoDatabaseService(
@@ -72,8 +78,8 @@ async function startBookService() {
     dbService,
   )
 
-  const bookReadRepository = new BookReadRepository(
-    dbService.getCollection<DomainEvent>('event_store'),
+  const bookReadProjectionRepository = new BookReadProjectionRepository(
+    dbService.getCollection<BookDocument>('book_projection'),
   )
 
   const bookProjectionCollection =
@@ -84,12 +90,29 @@ async function startBookService() {
     bookProjectionCollection,
   )
 
+  const bookWriteProjectionRepository = new BookWriteProjectionRepository(
+    bookProjectionCollection,
+  )
+
   // Set up event subscriptions to update read models (via the projection handler)
   const bookReadProjectionHandler = new BookReadProjectionHandler(
     bookProjectionRepository,
   )
 
+  const bookWriteProjectionHandler = new BookWriteProjectionHandler(
+    bookWriteProjectionRepository,
+  )
+
+  const bookReadRepository = new BookReadRepository(
+    dbService.getCollection<DomainEvent>('event_store'),
+  )
+
   await BookReadEventSubscriptions(eventBus, bookReadProjectionHandler)
+  await BookWriteEventSubscriptions(
+    eventBus,
+    redisService,
+    bookWriteProjectionHandler,
+  )
 
   await eventBus.startConsuming()
 
@@ -134,22 +157,37 @@ async function startBookService() {
   })
 
   /**
-   * Set up book routes:
+   * Set up book write routes (commands):
    *
-   * The createBookRouter function should accept:
-   *  - The event store repository (for commands)
-   *  - The projection repository (for queries)
+   * The createBookWriteRouter function accepts:
+   *  - The write repository (for commands)
+   *  - The projection repository (for validation during writes)
    *  - The EventBus (for publishing events)
    */
   app.register(
     async (instance) => {
       return instance.register(
-        createBookRouter(
+        createBookWriteRouter(
           bookWriteRepository,
           bookReadRepository,
-          bookProjectionRepository,
+          bookReadProjectionRepository,
           eventBus,
         ),
+      )
+    },
+    { prefix: '/books' },
+  )
+
+  /**
+   * Set up book read routes (queries):
+   *
+   * The createBookReadRouter function only needs:
+   *  - The projection repository (for queries)
+   */
+  app.register(
+    async (instance) => {
+      return instance.register(
+        createBookReadRouter(bookReadProjectionRepository),
       )
     },
     { prefix: '/books' },
@@ -162,7 +200,9 @@ async function startBookService() {
    */
   app.register(
     async (instance) => {
-      return instance.register(createCatalogRouter(bookProjectionRepository))
+      return instance.register(
+        createCatalogReadRouter(bookProjectionRepository),
+      )
     },
     { prefix: '/catalog' },
   )

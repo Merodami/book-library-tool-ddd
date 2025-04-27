@@ -1,20 +1,20 @@
 import {
-  BaseWriteEventSourcedRepository,
   MongoDatabaseService,
+  MongoWriteRepository,
 } from '@book-library-tool/database'
-import { DomainEvent } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
-import { Reservation } from '@reservations/entities/Reservation.js'
-import type { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
+import { Reservation } from '@reservations/domain/entities/Reservation.js'
 import { Collection } from 'mongodb'
+import { ReservationWriteRepositoryPort } from 'src/domain/port/index.js'
 
 /**
  * Event-sourced repository implementation for Reservation aggregates.
  * Handles persisting and retrieving domain events for the reservation bounded context.
  */
 export class ReservationWriteRepository
-  extends BaseWriteEventSourcedRepository<Reservation>
-  implements IReservationWriteRepository
+  extends MongoWriteRepository<Reservation>
+  implements ReservationWriteRepositoryPort
 {
   constructor(
     protected readonly collection: Collection<DomainEvent>,

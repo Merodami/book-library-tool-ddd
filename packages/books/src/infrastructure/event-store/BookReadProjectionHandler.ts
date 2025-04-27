@@ -1,9 +1,7 @@
-import {
-  BOOK_VALIDATION_RESULT,
-  DomainEvent,
-} from '@book-library-tool/event-store'
+import { BOOK_VALIDATION_RESULT } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode } from '@book-library-tool/shared'
-import { IBookReadProjectionRepository } from '@books/repositories/IBookReadProjectionRepository.js'
+import type { BookReadProjectionRepositoryPort } from '@books/domain/index.js'
 
 /**
  * Event handler that maintains the read model for books in MongoDB.
@@ -12,7 +10,7 @@ import { IBookReadProjectionRepository } from '@books/repositories/IBookReadProj
  */
 export class BookReadProjectionHandler {
   constructor(
-    private readonly projectionReadRepository: IBookReadProjectionRepository,
+    private readonly projectionReadRepository: BookReadProjectionRepositoryPort,
   ) {}
 
   /**

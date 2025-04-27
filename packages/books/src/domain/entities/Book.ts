@@ -4,9 +4,9 @@ import {
   BOOK_CREATED,
   BOOK_DELETED,
   BOOK_UPDATED,
-  DomainEvent,
 } from '@book-library-tool/event-store'
-import { makeValidator } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
+import { makeValidator } from '@book-library-tool/http'
+import type { DomainEvent } from '@book-library-tool/shared'
 import {
   ErrorCode,
   Errors,
@@ -114,7 +114,7 @@ export class Book extends AggregateRoot {
       throw new Errors.ApplicationError(
         422,
         ErrorCode.BOOK_ALREADY_DELETED,
-        `Book with id ${this.id} has been deleted and cannot be updated.`,
+        `Book with ID ${this.id} has been deleted and cannot be updated.`,
       )
     }
 
@@ -188,7 +188,7 @@ export class Book extends AggregateRoot {
   public delete(): { book: Book; event: DomainEvent } {
     // Check if already deleted
     if (this.deletedAt) {
-      throw new Error(`Book with id ${this.id} is already deleted.`)
+      throw new Error(`Book with ID ${this.id} is already deleted.`)
     }
 
     const timestamp = new Date()

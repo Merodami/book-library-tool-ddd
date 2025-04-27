@@ -1,6 +1,14 @@
+import { schemas } from '@book-library-tool/api'
+import {
+  WalletSearchQuery,
+  WalletSortField,
+} from '@book-library-tool/api/src/schemas/wallets.js'
+import { parseAndValidate } from '@book-library-tool/http'
 import { Cache } from '@book-library-tool/redis'
-import { GetWalletHandler } from '@wallets/queries/GetWalletHandler.js'
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import { WalletSortFieldEnum } from '@book-library-tool/sdk'
+import { toApiWallet } from '@wallets/application/mappers/walletMapper.js'
+import { GetWalletHandler } from '@wallets/application/use_cases/queries/GetWalletHandler.js'
+import type { FastifyRequest } from 'fastify'
 
 /**
  * Controller responsible for handling wallet retrieval operations.
@@ -31,18 +39,24 @@ export class GetWalletController {
   })
   async getWallet(
     request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply,
-  ): Promise<void> {
+  ): Promise<schemas.WalletDTO> {
     const { id } = request.params
 
-    const wallet = await this.getWalletHandler.execute({ id })
+    const query = request.query as WalletSearchQuery
 
-    if (!wallet) {
-      await reply.status(404).send({ message: 'Wallet not found' })
+    let validFields: WalletSortField[] | null = null
 
-      return
+    if (query.fields && typeof query.fields === 'string') {
+      const allowed = Object.values(WalletSortFieldEnum)
+
+      validFields = parseAndValidate<WalletSortField>(query.fields, allowed)
     }
 
-    await reply.status(200).send(wallet)
+    const result = await this.getWalletHandler.execute(
+      { id },
+      validFields ?? undefined,
+    )
+
+    return toApiWallet(result)
   }
 }

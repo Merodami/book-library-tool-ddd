@@ -6,6 +6,7 @@ export { fastifyAuth } from './infrastructure/fastify/middleware/auth.js'
 export { fastifyErrorMiddleware } from './infrastructure/fastify/middleware/errorHandler.js'
 export { paginationHook } from './infrastructure/fastify/middleware/pagination.js'
 export {
+  makeValidator,
   parseAndValidate,
   validateBody,
   validateParams,

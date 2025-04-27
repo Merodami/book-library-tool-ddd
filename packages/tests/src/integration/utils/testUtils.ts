@@ -1,3 +1,4 @@
+import { logger } from '@book-library-tool/shared'
 import Fastify, { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, vi } from 'vitest'
 
@@ -31,7 +32,7 @@ export function createTestServer(
       }
 
       // Log the error for debugging test failures
-      console.error('Test server error:', error)
+      logger.error('Test server error:', error)
 
       return reply.status(500).send({
         error: 'Internal Server Error',

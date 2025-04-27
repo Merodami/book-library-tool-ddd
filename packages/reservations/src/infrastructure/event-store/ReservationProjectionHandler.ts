@@ -1,13 +1,13 @@
 import {
   BOOK_RETAIL_PRICE_UPDATED,
-  DomainEvent,
   RESERVATION_BOOK_BROUGHT,
   RESERVATION_PAYMENT_SUCCESS,
   RESERVATION_RETURNED,
 } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { IReservationWriteProjectionRepository } from '@reservations/repositories/IReservationWriteProjectionRepository.js'
+import { ReservationWriteProjectionRepositoryPort } from 'src/domain/port/index.js'
 
 /**
  * Projection handler for reservation events.
@@ -21,7 +21,7 @@ import { IReservationWriteProjectionRepository } from '@reservations/repositorie
  */
 export class ReservationProjectionHandler {
   constructor(
-    private readonly writeProjectionRepository: IReservationWriteProjectionRepository,
+    private readonly writeProjectionRepository: ReservationWriteProjectionRepositoryPort,
   ) {}
 
   /**

@@ -1,6 +1,6 @@
 import { schemas } from '@book-library-tool/api'
 import { EventResponse } from '@book-library-tool/sdk'
-import { BookReturnHandler } from '@reservations/commands/BookReturnHandler.js'
+import { BookReturnHandler } from '@reservations/application/use_cases/commands/BookReturnHandler.js'
 import { FastifyRequest } from 'fastify'
 
 export class ReturnReservationController {

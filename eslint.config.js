@@ -192,8 +192,10 @@ export default [
     files: [
       '**/*.test.js',
       '**/*.test.ts',
-      '**/*.spec.js',
       '**/*.spec.ts',
+      '**/*.spec.js',
+      '**/*.integration-spec.ts',
+      '**/*.integration-spec.js',
       '**/tests/**/*',
       '**/__mocks__/**/*',
     ],

@@ -10,5 +10,20 @@
     "baseUrl": "."
   },
   "include": ["src", "scripts"],
-  "exclude": ["dist", "../../node_modules", "node_modules"]
+  "exclude": [
+    "dist",
+    "../../node_modules",
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/tests/**"
+  ],
+  "references": [
+    {
+      "path": "../redis"
+    },
+    {
+      "path": "../event-store"
+    }
+  ]
 }

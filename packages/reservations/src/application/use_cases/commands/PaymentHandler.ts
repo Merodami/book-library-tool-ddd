@@ -1,8 +1,9 @@
-import { DomainEvent, type EventBus } from '@book-library-tool/event-store'
+import { type EventBusPort } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { Reservation } from '@reservations/entities/Reservation.js'
-import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
-import { IReservationWriteRepository } from '@reservations/repositories/IReservationWriteRepository.js'
+import { Reservation } from '@reservations/domain/entities/Reservation.js'
+import { ReservationWriteRepositoryPort } from '@reservations/domain/port/index.js'
+import { ReservationProjectionHandler } from '@reservations/infrastructure/event-store/ReservationProjectionHandler.js'
 
 /**
  * Handler responsible for processing payment events from the Wallet service.
@@ -11,9 +12,9 @@ import { IReservationWriteRepository } from '@reservations/repositories/IReserva
  */
 export class PaymentHandler {
   constructor(
-    private readonly reservationWriteRepository: IReservationWriteRepository,
+    private readonly reservationWriteRepository: ReservationWriteRepositoryPort,
     private readonly projectionHandler: ReservationProjectionHandler,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   /**

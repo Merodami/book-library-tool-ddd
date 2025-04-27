@@ -1,17 +1,18 @@
 import {
   BOOK_VALIDATION_FAILED,
-  DomainEvent,
-  type EventBus,
+  type EventBusPort,
   RESERVATION_BOOK_LIMIT_REACH,
 } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
-import { ValidateReservationCommand } from '@reservations/commands/ValidateReservationCommand.js'
-import { Reservation } from '@reservations/entities/Reservation.js'
-import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
-
-import { IReservationReadProjectionRepository } from '../../../domain/repositories/IReservationReadProjectionRepository.js'
-import { IReservationWriteRepository } from '../../../domain/repositories/IReservationWriteRepository.js'
+import { ValidateReservationCommand } from '@reservations/application/use_cases/commands/ValidateReservationCommand.js'
+import { Reservation } from '@reservations/domain/entities/Reservation.js'
+import { ReservationProjectionHandler } from '@reservations/infrastructure/event-store/ReservationProjectionHandler.js'
+import {
+  ReservationReadProjectionRepositoryPort,
+  ReservationWriteRepositoryPort,
+} from 'src/domain/port/index.js'
 
 /**
  * Handler responsible for validating reservations based on book availability
@@ -20,10 +21,10 @@ import { IReservationWriteRepository } from '../../../domain/repositories/IReser
  */
 export class ValidateReservationHandler {
   constructor(
-    private readonly reservationWriteRepository: IReservationWriteRepository,
-    private readonly reservationReadProjectionRepository: IReservationReadProjectionRepository,
+    private readonly reservationWriteRepository: ReservationWriteRepositoryPort,
+    private readonly reservationReadProjectionRepository: ReservationReadProjectionRepositoryPort,
     private readonly projectionHandler: ReservationProjectionHandler,
-    private readonly eventBus: EventBus,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   /**

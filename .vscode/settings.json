@@ -19,6 +19,7 @@
     "rabbitmqadmin",
     "rabbitmqctl",
     "supergraph",
+    "ttls",
     "typebox",
     "uuidv",
     "vitest"
@@ -27,8 +28,6 @@
   "editor.codeActionsOnSave": ["source.fixAll.eslint"],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.preferences.importModuleSpecifier": "relative",
   "files.exclude": {
     "**/.DS_Store": true,
     "**/.git": true,
@@ -54,5 +53,14 @@
   },
   "[toml]": {
     "editor.defaultFormatter": "tamasfe.even-better-toml"
-  }
+  },
+  // When auto-importing, prefer your TS paths over relative
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  // Use the .js extension at the end of imports (since your build emits .js)
+  "typescript.preferences.importModuleSpecifierEnding": "js",
+  // (Optional) same for JS files if you ever edit them
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifierEnding": "js",
+  // Point to your workspace TS, so VSCode uses the right TS version
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

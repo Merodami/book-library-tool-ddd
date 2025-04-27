@@ -9,7 +9,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['./**/*.integration.test.ts', './**/*.test.ts'],
+    include: [
+      './**/*.integration.test.ts',
+      './**/*.integration-spec.ts',
+      './**/*.test.ts',
+      './**/*.spec.ts',
+    ],
   },
   types: ['vitest/globals'],
   plugins: [
@@ -31,75 +36,102 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      // Database
+      '@database/api': resolve(__dirname, 'packages/database/src/api'),
+      '@database/application': resolve(
+        __dirname,
+        'packages/database/src/application',
+      ),
+      '@database/domain': resolve(__dirname, 'packages/database/src/domain'),
+      '@database/infrastructure': resolve(
+        __dirname,
+        'packages/database/src/infrastructure',
+      ),
+
       // Event-store service
-      '@event-store/error': resolve(
+      '@event-store/api': resolve(__dirname, 'packages/event-store/src/api'),
+      '@event-store/application': resolve(
         __dirname,
-        'packages/event-store/src/error',
+        'packages/event-store/src/application',
       ),
-      '@event-store/events': resolve(
+      '@event-store/domain': resolve(
         __dirname,
-        'packages/event-store/src/domain/events',
+        'packages/event-store/src/domain',
       ),
-      '@event-store/messaging': resolve(
+      '@event-store/infrastructure': resolve(
         __dirname,
-        'packages/event-store/src/infrastructure/messaging',
-      ),
-      '@event-store/model': resolve(
-        __dirname,
-        'packages/event-store/src/domain/model',
-      ),
-      '@event-store/persistence': resolve(
-        __dirname,
-        'packages/event-store/src/infrastructure/persistence',
-      ),
-      '@event-store/repositories': resolve(
-        __dirname,
-        'packages/event-store/src/domain/repositories',
-      ),
-      '@event-store/shared': resolve(
-        __dirname,
-        'packages/event-store/src/shared',
+        'packages/event-store/src/infrastructure',
       ),
 
       // Books service
-      '@books/entities': resolve(
+      '@books/api': resolve(__dirname, 'packages/books/src/api'),
+      '@books/application': resolve(
         __dirname,
-        'packages/books/src/domain/entities',
+        'packages/books/src/application',
       ),
-      '@books/repositories': resolve(
+      '@books/domain': resolve(__dirname, 'packages/books/src/domain'),
+      '@books/infrastructure': resolve(
         __dirname,
-        'packages/books/src/domain/repositories',
+        'packages/books/src/infrastructure',
       ),
-      '@books/queries': resolve(
-        __dirname,
-        'packages/books/src/application/use_cases/queries',
-      ),
-      '@books/commands': resolve(
-        __dirname,
-        'packages/books/src/application/use_cases/commands',
-      ),
-      '@books/controllers': resolve(
-        __dirname,
-        'packages/books/src/api/controllers',
-      ),
-      '@books/routes': resolve(__dirname, 'packages/books/src/api/routes'),
+      '@books/tests': resolve(__dirname, 'packages/books/src/tests'),
 
-      // Database
-      '@database/repositories': resolve(
+      // Reservations
+      '@reservations/api': resolve(__dirname, 'packages/reservations/src/api'),
+      '@reservations/application': resolve(
         __dirname,
-        'packages/database/src/domain/repositories',
+        'packages/reservations/src/application',
       ),
-      '@database/persistence': resolve(
+      '@reservations/domain': resolve(
         __dirname,
-        'packages/database/src/infrastructure/persistence',
+        'packages/reservations/src/domain',
       ),
-      '@database/testUtils': resolve(
+      '@reservations/infrastructure': resolve(
         __dirname,
-        'packages/database/src/testUtils',
+        'packages/reservations/src/infrastructure',
+      ),
+
+      // Wallets
+      '@wallets/api': resolve(__dirname, 'packages/wallets/src/api'),
+      '@wallets/application': resolve(
+        __dirname,
+        'packages/wallets/src/application',
+      ),
+      '@wallets/domain': resolve(__dirname, 'packages/wallets/src/domain'),
+      '@wallets/infrastructure': resolve(
+        __dirname,
+        'packages/wallets/src/infrastructure',
+      ),
+
+      // API
+      '@api/api': resolve(__dirname, 'packages/api/src/api'),
+      '@api/application': resolve(__dirname, 'packages/api/src/application'),
+      '@api/domain': resolve(__dirname, 'packages/api/src/domain'),
+      '@api/infrastructure': resolve(
+        __dirname,
+        'packages/api/src/infrastructure',
+      ),
+
+      // Shared
+      '@shared/api': resolve(__dirname, 'packages/shared/src/api'),
+      '@shared/application': resolve(
+        __dirname,
+        'packages/shared/src/application',
+      ),
+      '@shared/domain': resolve(__dirname, 'packages/shared/src/domain'),
+      '@shared/infrastructure': resolve(
+        __dirname,
+        'packages/shared/src/infrastructure',
+      ),
+
+      // SDK
+      '@sdk/api': resolve(__dirname, 'packages/sdk/src/api'),
+      '@sdk/application': resolve(__dirname, 'packages/sdk/src/application'),
+      '@sdk/domain': resolve(__dirname, 'packages/sdk/src/domain'),
+      '@sdk/infrastructure': resolve(
+        __dirname,
+        'packages/sdk/src/infrastructure',
       ),
     },
   },
 })
-//export * from '@persistence/repositories/BaseEventSourcedRepository.js'
-//packages/event-store/src/index.ts
-//packages/event-store/src/infrastructure/persistence/repositories/BaseEventSourcedRepository.ts

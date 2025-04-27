@@ -1,0 +1,7 @@
+export * from './controllers/books/CreateBookController.js'
+export * from './controllers/books/DeleteBookController.js'
+export * from './controllers/books/GetBookController.js'
+export * from './controllers/books/UpdateBookController.js'
+export * from './controllers/catalog/CatalogController.js'
+export * from './routes/books/BookReadRouter.js'
+export * from './routes/books/BookWriteRouter.js'

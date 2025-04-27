@@ -1,47 +1,9 @@
-import { Type } from '@sinclair/typebox'
+// packages/api/src/schemas/helper/helper.ts
 
-// --------------------------------
-// Reusable Schema Components
-// --------------------------------
+import { TSchema, Type } from '@sinclair/typebox'
 
 /**
- * Creates a schema for fields selection (both array and comma-separated string)
- * @param allowedFields - Array of field names that can be selected
- * @returns TypeBox schema for fields selection
- */
-export function createFieldsSelectionSchema<T extends readonly string[]>(
-  allowedFields: T,
-) {
-  return Type.Optional(
-    Type.String({
-      pattern: `^(${allowedFields.join('|')})(,(${allowedFields.join('|')}))*$`,
-    }),
-  )
-}
-
-/**
- * Creates a schema for sorting options
- * @param allowedSortFields - Array of field names that can be used for sorting
- * @returns TypeBox schema for sort options
- */
-export function createSortSchema<T extends readonly string[]>(
-  allowedSortFields: T,
-) {
-  return {
-    sortBy: Type.Optional(
-      Type.Union(allowedSortFields.map((field) => Type.Literal(field))),
-    ),
-    sortOrder: Type.Optional(
-      Type.Union([Type.Literal('asc'), Type.Literal('desc')]),
-    ),
-  }
-}
-
-/**
- * Creates pagination schema with configurable limits
- * @param maxLimit - Maximum number of items per page
- * @param defaultLimit - Default number of items per page
- * @returns TypeBox schema for pagination
+ * Creates a plain pagination schema.
  */
 export function createPaginationSchema(
   maxLimit = parseInt(process.env.PAGINATION_MAX_LIMIT ?? '100', 10),
@@ -49,7 +11,6 @@ export function createPaginationSchema(
 ) {
   return {
     page: Type.Optional(Type.Number({ minimum: 1, default: 1 })),
-    skip: Type.Optional(Type.Number({ minimum: 0 })),
     limit: Type.Optional(
       Type.Number({
         minimum: 1,
@@ -61,19 +22,50 @@ export function createPaginationSchema(
 }
 
 /**
- * Creates a complete pagination and sorting schema
- * @param allowedSortFields - Fields that can be used for sorting
- * @param maxLimit - Maximum items per page
- * @param defaultLimit - Default items per page
- * @returns Combined pagination and sorting schema
+ * Creates a sort schema around any string‐union TSchema.
+ * @param fieldSchema – a Type.Union literal schema (e.g. BookSortFieldSchema)
  */
-export function createPaginationAndSortSchema<T extends readonly string[]>(
-  allowedSortFields: T,
-  maxLimit?: number,
-  defaultLimit?: number,
-) {
+export function createSortSchema<T extends TSchema>(fieldSchema: T) {
   return {
-    ...createPaginationSchema(maxLimit, defaultLimit),
-    ...createSortSchema(allowedSortFields),
+    sortBy: Type.Optional(fieldSchema),
+    sortOrder: Type.Optional(
+      Type.Union([Type.Literal('asc'), Type.Literal('desc')]),
+    ),
   }
+}
+
+/**
+ * Creates a fields‐selection query schema:
+ * - either a comma-delimited string ("id,title,author")
+ * - or an array of literals (["id","title","author"])
+ *
+ * @param fieldSchema – a Type.Union of Type.Literal(...) branches
+ */
+export function createFieldsSelectionSchema<T extends TSchema>(fieldSchema: T) {
+  // grab the literal values out of the union's `anyOf`
+  const raw: any = fieldSchema as any
+  const allowed: string[] = Array.isArray(raw.anyOf)
+    ? raw.anyOf
+        .map((branch: any) => branch.const)
+        .filter((v: any) => typeof v === 'string')
+    : []
+
+  const pattern = `^(${allowed.join('|')})(,(${allowed.join('|')}))*$`
+
+  // CSV branch
+  const csv = Type.String({
+    pattern,
+    description: 'Comma-separated list of fields to include',
+  })
+
+  // Array branch
+  const arr = Type.Array(fieldSchema, {
+    minItems: 1,
+    description: 'Array of fields to include',
+  })
+
+  return Type.Optional(
+    // oneOf lets OpenAPI clients send either form
+    Type.Union([csv, arr], { description: 'Fields selection: CSV or array' }),
+  )
 }

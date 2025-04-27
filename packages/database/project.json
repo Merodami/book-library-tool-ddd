@@ -1,7 +1,11 @@
 {
   "name": "@book-library-tool/database",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": ["@book-library-tool/sdk"],
+  "implicitDependencies": [
+    "@book-library-tool/sdk",
+    "@book-library-tool/shared",
+    "@book-library-tool/types"
+  ],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

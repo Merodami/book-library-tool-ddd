@@ -1,5 +1,5 @@
-import logger from '../../shared/src/logger.js'
-import { createRetryApiClient, RetryConfig } from './libs/RetryApiClient.js'
+import { logger } from '@book-library-tool/shared'
+import { createRetryApiClient, RetryConfig } from '@sdk/libs/RetryApiClient.js'
 
 /**
  * A type representing potential API errors.

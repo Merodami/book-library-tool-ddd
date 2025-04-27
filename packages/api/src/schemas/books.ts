@@ -1,39 +1,21 @@
+import { BookFieldEnum, BookSortFieldEnum } from '@book-library-tool/sdk'
 import { Static, Type } from '@sinclair/typebox'
 
 // --------------------------------
 // Query Schemas
 // --------------------------------
 
-export const ALLOWED_BOOK_FIELDS = [
-  'id',
-  'title',
-  'author',
-  'isbn',
-  'publicationYear',
-  'publisher',
-  'price',
-] as const
+export const BookFieldSchema = Type.Enum(BookFieldEnum, {
+  $id: '#/components/schemas/BookField',
+})
 
-export type BookField = (typeof ALLOWED_BOOK_FIELDS)[number]
+export type BookField = Static<typeof BookFieldSchema>
 
-export const ALLOWED_BOOK_SORT_FIELDS = [
-  'id',
-  'title',
-  'author',
-  'isbn',
-  'publicationYear',
-  'publisher',
-  'price',
-  'createdAt',
-  'updatedAt',
-  'deletedAt',
-] as const
+export const BookSortFieldSchema = Type.Enum(BookSortFieldEnum, {
+  $id: '#/components/schemas/BookSortField',
+})
 
-export type BookSortField = (typeof ALLOWED_BOOK_SORT_FIELDS)[number]
-
-// --------------------------------
-// Parameter Schemas
-// --------------------------------
+export type BookSortField = Static<typeof BookSortFieldSchema>
 
 // --------------------------------
 // Request Schemas

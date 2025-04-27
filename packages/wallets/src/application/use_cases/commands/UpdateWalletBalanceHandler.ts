@@ -1,10 +1,12 @@
-import { EventBus } from '@book-library-tool/event-store'
+import { type EventBusPort } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { UpdateWalletBalanceCommand } from '@wallets/commands/UpdateWalletBalanceCommand.js'
-import { Wallet } from '@wallets/entities/Wallet.js'
-import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
-import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'
+import { UpdateWalletBalanceCommand } from '@wallets/application/use_cases/commands/UpdateWalletBalanceCommand.js'
+import { Wallet } from '@wallets/domain/entities/Wallet.js'
+import {
+  WalletReadRepositoryPort,
+  WalletWriteRepositoryPort,
+} from '@wallets/domain/port/index.js'
 
 /**
  * Command handler for updating wallet balance.
@@ -24,9 +26,9 @@ import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteReposi
  */
 export class UpdateWalletBalanceHandler {
   constructor(
-    private readonly walletReadRepository: IWalletReadRepository,
-    private readonly walletWriteRepository: IWalletWriteRepository,
-    private readonly eventBus: EventBus,
+    private readonly walletReadRepository: WalletReadRepositoryPort,
+    private readonly walletWriteRepository: WalletWriteRepositoryPort,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   /**

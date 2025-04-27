@@ -21,8 +21,23 @@
     "noEmit": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "baseUrl": ".",
     "paths": {
-      "@book-library-tool/*": ["./packages/*"]
+      "@shared/*": ["packages/shared/src/*"],
+      "@api/*": ["packages/api/src/*"],
+      "@types/*": ["packages/types/src/*"],
+      "@sdk/*": ["packages/sdk/src/*"],
+      "@api-gateway/*": ["packages/api-gateway/src/*"],
+      "@graphql/*": ["packages/graphql/src/*"],
+      "@database/*": ["packages/database/src/*"],
+      "@event-store/*": ["packages/event-store/src/*"],
+      "@redis/*": ["packages/redis/src/*"],
+      "@http/*": ["packages/http/src/*"],
+      "@auth/*": ["packages/auth/src/*"],
+      "@wallets/*": ["packages/wallets/src/*"],
+      "@books/*": ["packages/books/src/*"],
+      "@reservations/*": ["packages/reservations/src/*"],
+      "@tests/*": ["packages/tests/src/*"]
     }
   },
   "exclude": ["**/dist", "node_modules"],
@@ -35,7 +50,6 @@
     { "path": "packages/shared" },
     { "path": "packages/database" },
     { "path": "packages/event-store" },
-    // { "path": "packages/orchestrator" },
     { "path": "packages/auth" },
     { "path": "packages/books" },
     { "path": "packages/reservations" },

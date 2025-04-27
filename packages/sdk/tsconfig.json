@@ -11,30 +11,25 @@
     "baseUrl": ".",
     "paths": {
       // API
-      "@sdk/controllers/*": ["src/api/controllers/*"],
-      "@sdk/routes/*": ["src/api/routes/*"],
+      "@sdk/api/*": ["src/api/*"],
 
       // Application
-      "@sdk/dto/*": ["src/application/dtos/*"],
-      "@sdk/use_cases/*": ["src/application/use_cases/*"],
-      "@sdk/commands/*": ["src/application/use_cases/commands/*"],
-      "@sdk/queries/*": ["src/application/use_cases/queries/*"],
+      "@sdk/application/*": ["src/application/*"],
 
       // Domain
-      "@sdk/entities/*": ["src/domain/entities/*"],
-      "@sdk/repositories/*": ["src/domain/repositories/*"],
-      "@sdk/value_objects/*": ["src/domain/value_objects/*"],
+      "@sdk/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@sdk/database/*": ["src/infrastructure/database/*"],
-      "@sdk/persistence/*": ["src/infrastructure/persistence/*"]
+      "@sdk/infrastructure/*": ["src/infrastructure/*"],
+
+      // OpenAPI
+      "@sdk/openapi/*": ["src/openapi/*"],
+
+      // Library
+      "@sdk/libs/*": ["src/libs/*"]
     }
   },
   "include": ["src"],
   "exclude": ["dist", "../../node_modules", "node_modules"],
-  "references": [
-    {
-      "path": "../api"
-    }
-  ]
+  "references": [{ "path": "../../packages/shared" }]
 }

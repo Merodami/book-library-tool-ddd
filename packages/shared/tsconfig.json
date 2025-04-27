@@ -8,23 +8,19 @@
     "baseUrl": ".",
     "paths": {
       // API
-      "@shared/controllers/*": ["src/api/controllers/*"],
-      "@shared/routes/*": ["src/api/routes/*"],
+      "@shared/api/*": ["src/api/*"],
 
-      // Application
-      "@shared/dto/*": ["src/application/dtos/*"],
-      "@shared/use_cases/*": ["src/application/use_cases/*"],
-      "@shared/commands/*": ["src/application/use_cases/commands/*"],
-      "@shared/queries/*": ["src/application/use_cases/queries/*"],
+      // Errors
+      "@shared/errors/*": ["src/errors/*"],
 
       // Domain
-      "@shared/entities/*": ["src/domain/entities/*"],
-      "@shared/repositories/*": ["src/domain/repositories/*"],
-      "@shared/value_objects/*": ["src/domain/value_objects/*"],
+      "@shared/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@shared/database/*": ["src/infrastructure/database/*"],
-      "@shared/persistence/*": ["src/infrastructure/persistence/*"]
+      "@shared/infrastructure/*": ["src/infrastructure/*"],
+
+      // Utils
+      "@shared/utils/*": ["src/utils/*"]
     }
   },
   "include": ["src/**/*.ts"],

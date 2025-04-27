@@ -1,21 +1,24 @@
-import { schemas } from '@book-library-tool/api'
-import {
-  BaseWriteProjectionRepository,
-  convertDateStrings,
-} from '@book-library-tool/database'
+import { MongoWriteProjectionRepository } from '@book-library-tool/database'
+import { BookField, BookFieldEnum } from '@book-library-tool/sdk'
 import { ErrorCode, Errors } from '@book-library-tool/shared'
-import { IBookWriteProjectionRepository } from '@books/repositories/IBookWriteProjectionRepository.js'
+import type {
+  BookWriteProjectionRepositoryPort,
+  DomainBook,
+} from '@books/domain/index.js'
+import {
+  type BookDocument,
+  mapToDocument,
+  mapToDomain,
+} from '@books/infrastructure/index.js'
 import { Collection, Filter } from 'mongodb'
-
-import type { BookDocument } from './documents/BookDocument.js'
 
 /**
  * Repository for performing write operations on Book projections in MongoDB.
  * Implements saving and updating book projections.
  */
 export class BookWriteProjectionRepository
-  extends BaseWriteProjectionRepository<BookDocument, schemas.Book>
-  implements IBookWriteProjectionRepository
+  extends MongoWriteProjectionRepository<BookDocument, DomainBook>
+  implements BookWriteProjectionRepositoryPort
 {
   /**
    * Constructs a new BookProjectionRepository.
@@ -27,9 +30,10 @@ export class BookWriteProjectionRepository
 
   /**
    * Saves a new book projection to MongoDB.
+   * Validates required fields before persisting.
    * @param book - Domain Book object to persist
    */
-  async saveBookProjection(book: schemas.Book): Promise<void> {
+  async saveBookProjection(book: DomainBook): Promise<void> {
     await this.saveProjection(book, mapToDocument)
   }
 
@@ -44,23 +48,21 @@ export class BookWriteProjectionRepository
     id: string,
     changes: Partial<
       Pick<
-        schemas.Book,
+        DomainBook,
         'title' | 'author' | 'publicationYear' | 'publisher' | 'price' | 'isbn'
       >
     >,
     updatedAt: Date | string,
   ): Promise<void> {
-    const allowedFields = [...schemas.ALLOWED_BOOK_FIELDS] as Array<
-      keyof schemas.Book
-    >
+    const allowedFields = Object.values(BookFieldEnum) as BookField[]
 
-    await super.updateProjection(
+    await this.updateProjection(
       id,
-      changes as Partial<schemas.Book>,
+      changes as Partial<DomainBook>,
       allowedFields,
       updatedAt,
       ErrorCode.BOOK_NOT_FOUND,
-      `Book with id "${id}" not found or deleted`,
+      `Book with ID "${id}" not found or deleted`,
     )
   }
 
@@ -79,82 +81,8 @@ export class BookWriteProjectionRepository
       throw new Errors.ApplicationError(
         404,
         ErrorCode.BOOK_NOT_FOUND,
-        `Book projection with id "${id}" not found or already deleted.`,
+        `Book projection with ID "${id}" not found or already deleted.`,
       )
     }
   }
-}
-
-/**
- * Helper: map MongoDB document to domain Book.
- */
-function mapToDomain(doc: Partial<BookDocument>): schemas.Book {
-  const result: schemas.Book = {}
-
-  // Map fields only if they exist in the document
-  if ('id' in doc) result.id = doc.id
-  if ('isbn' in doc) result.isbn = doc.isbn
-  if ('title' in doc) result.title = doc.title
-  if ('author' in doc) result.author = doc.author
-  if ('publicationYear' in doc) result.publicationYear = doc.publicationYear
-  if ('publisher' in doc) result.publisher = doc.publisher
-  if ('price' in doc) result.price = doc.price
-  if ('version' in doc) result.version = doc.version
-  if ('createdAt' in doc) result.createdAt = doc.createdAt?.toISOString()
-  if ('updatedAt' in doc) result.updatedAt = doc.updatedAt?.toISOString()
-  if ('deletedAt' in doc) result.deletedAt = doc.deletedAt?.toISOString()
-
-  return result
-}
-
-/**
- * Helper: map domain Book to MongoDB document (no _id).
- */
-function mapToDocument(book: schemas.Book): Omit<BookDocument, '_id'> {
-  // Validate required fields
-  if (
-    !book.isbn ||
-    !book.title ||
-    !book.author ||
-    !book.publicationYear ||
-    !book.publisher ||
-    book.price === undefined
-  ) {
-    throw new Errors.ApplicationError(
-      400,
-      ErrorCode.VALIDATION_ERROR,
-      'Missing required book fields: all book properties except dates are required',
-    )
-  }
-
-  // Use shared util to convert ISO date strings to Date objects
-  const dates = convertDateStrings({
-    createdAt: book.createdAt,
-    updatedAt: book.updatedAt,
-    deletedAt: book.deletedAt,
-  } as Record<string, unknown>) as Record<string, Date | undefined>
-
-  // Create document with required fields
-  const result: Omit<BookDocument, '_id'> = {
-    id: book.id || '', // Empty string as placeholder (will be filled by business logic)
-    isbn: book.isbn,
-    title: book.title,
-    author: book.author,
-    publicationYear: book.publicationYear,
-    publisher: book.publisher,
-    price: book.price,
-    version: book.version ?? 0,
-    createdAt: dates.createdAt ?? new Date(),
-  }
-
-  // Add optional date fields
-  if (dates.updatedAt) {
-    result.updatedAt = dates.updatedAt
-  }
-
-  if (dates.deletedAt) {
-    result.deletedAt = dates.deletedAt
-  }
-
-  return result
 }

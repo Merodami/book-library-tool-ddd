@@ -11,23 +11,16 @@
     "baseUrl": ".",
     "paths": {
       // API
-      "@http/controllers/*": ["src/api/controllers/*"],
-      "@http/routes/*": ["src/api/routes/*"],
+      "@http/api/*": ["src/api/*"],
 
       // Application
-      "@http/dto/*": ["src/application/dtos/*"],
-      "@http/use_cases/*": ["src/application/use_cases/*"],
-      "@http/commands/*": ["src/application/use_cases/commands/*"],
-      "@http/queries/*": ["src/application/use_cases/queries/*"],
+      "@http/application/*": ["src/application/*"],
 
       // Domain
-      "@http/entities/*": ["src/domain/entities/*"],
-      "@http/repositories/*": ["src/domain/repositories/*"],
-      "@http/value_objects/*": ["src/domain/value_objects/*"],
+      "@http/domain/*": ["src/domain/*"],
 
       // Infrastructure
-      "@http/database/*": ["src/infrastructure/database/*"],
-      "@http/persistence/*": ["src/infrastructure/persistence/*"]
+      "@http/infrastructure/*": ["src/infrastructure/*"]
     }
   },
   "include": ["src"],

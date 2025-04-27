@@ -1,15 +1,15 @@
 import {
-  EventBus,
   RESERVATION_PENDING_PAYMENT,
   RESERVATION_RETURNED,
   WALLET_BALANCE_UPDATED,
   WALLET_CREATED,
   WALLET_LATE_FEE_APPLIED,
 } from '@book-library-tool/event-store'
+import { type EventBusPort } from '@book-library-tool/event-store'
 import { logger } from '@book-library-tool/shared'
-import { ProcessWalletPaymentHandler } from '@wallets/commands/ProcessWalletPaymentHandler.js'
-import { WalletProjectionHandler } from '@wallets/event-store/WalletProjectionHandler.js'
-import { BookReturnHandler } from '@wallets/use_cases/commands/BookReturnHandler.js'
+import { BookReturnHandler } from '@wallets/application/use_cases/commands/BookReturnHandler.js'
+import { ProcessWalletPaymentHandler } from '@wallets/application/use_cases/commands/ProcessWalletPaymentHandler.js'
+import { WalletProjectionHandler } from '@wallets/infrastructure/event-store/WalletProjectionHandler.js'
 
 /**
  * Sets up event subscriptions for wallet-related events.
@@ -24,7 +24,7 @@ import { BookReturnHandler } from '@wallets/use_cases/commands/BookReturnHandler
  * - Managing error scenarios and logging
  */
 export function WalletEventSubscriptions(
-  eventBus: EventBus,
+  eventBus: EventBusPort,
   projectionHandler: WalletProjectionHandler,
   paymentHandler: ProcessWalletPaymentHandler,
   bookReturnHandler: BookReturnHandler,
@@ -32,6 +32,10 @@ export function WalletEventSubscriptions(
   // Subscribe to WALLET_CREATED events
   eventBus.subscribe(WALLET_CREATED, async (event) => {
     try {
+      logger.info(
+        `Handling WALLET_CREATED event: ${JSON.stringify(event, null, 2)}`,
+      )
+
       await projectionHandler.handleWalletCreated(event)
     } catch (error) {
       logger.error(`Error handling WALLET_CREATED event: ${error}`)
@@ -41,6 +45,10 @@ export function WalletEventSubscriptions(
   // Subscribe to WALLET_BALANCE_UPDATED events
   eventBus.subscribe(WALLET_BALANCE_UPDATED, async (event) => {
     try {
+      logger.info(
+        `Handling WALLET_BALANCE_UPDATED event: ${JSON.stringify(event, null, 2)}`,
+      )
+
       await projectionHandler.handleWalletBalanceUpdated(event)
     } catch (error) {
       logger.error(`Error handling WALLET_BALANCE_UPDATED event: ${error}`)
@@ -50,6 +58,10 @@ export function WalletEventSubscriptions(
   // Subscribe to RESERVATION_RETURNED events
   eventBus.subscribe(RESERVATION_RETURNED, async (event) => {
     try {
+      logger.info(
+        `Handling RESERVATION_RETURNED event: ${JSON.stringify(event, null, 2)}`,
+      )
+
       await bookReturnHandler.execute({
         reservationId: event.payload.reservationId,
         userId: event.payload.userId,
@@ -84,6 +96,10 @@ export function WalletEventSubscriptions(
   // Subscribe to WALLET_LATE_FEE_APPLIED events
   eventBus.subscribe(WALLET_LATE_FEE_APPLIED, async (event) => {
     try {
+      logger.info(
+        `Handling WALLET_LATE_FEE_APPLIED event: ${JSON.stringify(event, null, 2)}`,
+      )
+
       await projectionHandler.handleWalletLateFeeApplied(event)
     } catch (error) {
       logger.error(`Error handling WALLET_LATE_FEE_APPLIED event: ${error}`)

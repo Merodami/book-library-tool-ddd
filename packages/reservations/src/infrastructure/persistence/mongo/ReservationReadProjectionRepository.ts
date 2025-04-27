@@ -1,15 +1,15 @@
 import { schemas } from '@book-library-tool/api'
 import {
-  BaseReadProjectionRepository,
   buildRangeFilter,
   buildTextFilter,
+  MongoReadProjectionRepository,
 } from '@book-library-tool/database'
 import { PaginatedResult, RESERVATION_STATUS } from '@book-library-tool/types'
-import { DomainReservation } from '@reservations/entities/DomainReservation.js'
-import type { ReservationDocument } from '@reservations/persistence/mongo/documents/ReservationDocument.js'
-import { mapToDomain } from '@reservations/persistence/mongo/mappers/ReservationDocCodec.js'
-import type { IReservationReadProjectionRepository } from '@reservations/repositories/IReservationReadProjectionRepository.js'
+import { DomainReservation } from '@reservations/domain/entities/DomainReservation.js'
+import type { ReservationDocument } from '@reservations/infrastructure/persistence/mongo/documents/ReservationDocument.js'
+import { mapToDomain } from '@reservations/infrastructure/persistence/mongo/mappers/ReservationDocCodec.js'
 import { Collection, Filter } from 'mongodb'
+import { ReservationReadProjectionRepositoryPort } from 'src/domain/port/index.js'
 
 /**
  * MongoDB-based Reservation projection repository.
@@ -17,8 +17,8 @@ import { Collection, Filter } from 'mongodb'
  * and provides versioned or generic update methods.
  */
 export class ReservationReadProjectionRepository
-  extends BaseReadProjectionRepository<ReservationDocument, DomainReservation>
-  implements IReservationReadProjectionRepository
+  extends MongoReadProjectionRepository<ReservationDocument, DomainReservation>
+  implements ReservationReadProjectionRepositoryPort
 {
   constructor(collection: Collection<ReservationDocument>) {
     super(collection, mapToDomain)

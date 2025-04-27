@@ -1,7 +1,6 @@
 import { schemas } from '@book-library-tool/api'
 import {
   AggregateRoot,
-  DomainEvent,
   RESERVATION_BOOK_BROUGHT,
   RESERVATION_BOOK_LIMIT_REACH,
   RESERVATION_BOOK_VALIDATION,
@@ -14,6 +13,7 @@ import {
   RESERVATION_RETURNED,
 } from '@book-library-tool/event-store'
 import { makeValidator } from '@book-library-tool/http/src/infrastructure/fastify/validation/validation.js'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
 import { RESERVATION_STATUS } from '@book-library-tool/types'
 import { randomUUID } from 'crypto'
@@ -338,7 +338,7 @@ export class Reservation extends AggregateRoot {
   ): void {
     if (!allowedStates.includes(this.status)) {
       const errorCode = `RESERVATION_CANNOT_BE_${actionName.toUpperCase()}`
-      const errorMessage = `Reservation with id ${this.id} cannot be ${actionName.toLowerCase()} in its current status.`
+      const errorMessage = `Reservation with ID ${this.id} cannot be ${actionName.toLowerCase()} in its current status.`
 
       throw new Errors.ApplicationError(
         400,

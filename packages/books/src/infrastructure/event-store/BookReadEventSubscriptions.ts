@@ -1,12 +1,12 @@
 import {
   createErrorEvent,
-  DomainEvent,
-  EventBus,
+  type EventBusPort,
   RESERVATION_BOOK_VALIDATION,
   RESERVATION_BOOK_VALIDATION_FAILED,
 } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
-import { BookReadProjectionHandler } from '@books/event-store/BookReadProjectionHandler.js'
+import type { BookReadProjectionHandler } from '@books/infrastructure/index.js'
 
 /**
  * Set up event subscriptions for book-related events.
@@ -15,13 +15,17 @@ import { BookReadProjectionHandler } from '@books/event-store/BookReadProjection
  * preventing unhandled promise rejections.
  */
 export function BookReadEventSubscriptions(
-  eventBus: EventBus,
+  eventBus: EventBusPort,
   projectionReadHandler: BookReadProjectionHandler,
 ): void {
   eventBus.subscribe(
     RESERVATION_BOOK_VALIDATION,
     async (event: DomainEvent) => {
       try {
+        logger.info(
+          `Handling RESERVATION_BOOK_VALIDATION event: ${JSON.stringify(event, null, 2)}`,
+        )
+
         // Process the validation request and get the result event
         const validationResultEvent =
           await projectionReadHandler.handleValidateBook(event)

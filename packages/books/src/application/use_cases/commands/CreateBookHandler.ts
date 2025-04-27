@@ -1,10 +1,12 @@
-import type { EventBus } from '@book-library-tool/event-store'
+import { type EventBusPort } from '@book-library-tool/event-store'
 import { EventResponse } from '@book-library-tool/sdk'
-import { Errors } from '@book-library-tool/shared'
-import { ErrorCode } from '@book-library-tool/shared/src/errorCodes.js'
-import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
-import { Book } from '@books/entities/Book.js'
-import type { IBookWriteRepository } from '@books/repositories/IBookWriteRepository.js'
+import { ErrorCode, Errors } from '@book-library-tool/shared'
+import type { CreateBookCommand } from '@books/application/index.js'
+import type {
+  BookReadProjectionRepositoryPort,
+  BookWriteRepositoryPort,
+} from '@books/domain/index.js'
+import { Book } from '@books/domain/index.js'
 
 /**
  * CreateBookHandler is responsible for processing a CreateBookCommand.
@@ -13,16 +15,19 @@ import type { IBookWriteRepository } from '@books/repositories/IBookWriteReposit
  */
 export class CreateBookHandler {
   constructor(
-    private readonly writeRepository: IBookWriteRepository,
-    private readonly eventBus: EventBus,
+    private readonly writeRepository: BookWriteRepositoryPort,
+    private readonly readProjectionRepository: BookReadProjectionRepositoryPort,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   async execute(
     command: CreateBookCommand,
   ): Promise<EventResponse & { bookId: string }> {
     // Check if the book already exists in the projection.
-    const existing = await this.writeRepository.getEventsForAggregate(
+    const existing = await this.readProjectionRepository.getBookByIsbn(
       command.isbn,
+      undefined,
+      true,
     )
 
     if (existing) {

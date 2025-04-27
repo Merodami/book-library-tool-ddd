@@ -1,14 +1,12 @@
-import { EventBus } from '@book-library-tool/event-store'
-import { logger } from '@book-library-tool/shared'
+import { type EventBusPort } from '@book-library-tool/event-store'
+import { Errors, logger } from '@book-library-tool/shared'
+import { ErrorCode, getDefaultMessageForError } from '@book-library-tool/shared'
+import { BookReturnCommand } from '@wallets/application/use_cases/commands/BookReturnCommand.js'
 import {
-  ErrorCode,
-  getDefaultMessageForError,
-} from '@book-library-tool/shared/src/errorCodes.js'
-import { ApplicationError } from '@book-library-tool/shared/src/errors.js'
-import { BookReturnCommand } from '@wallets/commands/BookReturnCommand.js'
-import { IWalletReadProjectionRepository } from '@wallets/repositories/IWalletReadProjectionRepository.js'
-import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
-import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteRepository.js'
+  WalletReadProjectionRepositoryPort,
+  WalletReadRepositoryPort,
+  WalletWriteRepositoryPort,
+} from '@wallets/domain/port/index.js'
 
 /**
  * Command handler for applying late fees to a wallet.
@@ -18,10 +16,10 @@ import { IWalletWriteRepository } from '@wallets/repositories/IWalletWriteReposi
  */
 export class BookReturnHandler {
   constructor(
-    private readonly walletWriteRepository: IWalletWriteRepository,
-    private readonly walletReadRepository: IWalletReadRepository,
-    private readonly walletReadProjectionRepository: IWalletReadProjectionRepository,
-    private readonly eventBus: EventBus,
+    private readonly walletWriteRepository: WalletWriteRepositoryPort,
+    private readonly walletReadRepository: WalletReadRepositoryPort,
+    private readonly walletReadProjectionRepository: WalletReadProjectionRepositoryPort,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   /**
@@ -59,7 +57,7 @@ export class BookReturnHandler {
           `No existing wallet found for user ${userId}. Cannot apply late fee.`,
         )
 
-        throw new ApplicationError(
+        throw new Errors.ApplicationError(
           404,
           ErrorCode.WALLET_NOT_FOUND,
           getDefaultMessageForError(ErrorCode.WALLET_NOT_FOUND),
@@ -75,7 +73,7 @@ export class BookReturnHandler {
           `No existing wallet events found for user ${userId}. Cannot apply late fee.`,
         )
 
-        throw new ApplicationError(
+        throw new Errors.ApplicationError(
           404,
           ErrorCode.WALLET_NOT_FOUND,
           getDefaultMessageForError(ErrorCode.WALLET_NOT_FOUND),
@@ -89,9 +87,9 @@ export class BookReturnHandler {
 
       // Apply late fee to existing wallet
       const result = existingWallet.applyLateFee(
-        command.reservationId,
-        command.daysLate,
-        command.retailPrice,
+        reservationId,
+        daysLate,
+        retailPrice,
         feePerDay,
       )
 

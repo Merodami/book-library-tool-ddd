@@ -1,7 +1,9 @@
 import { schemas } from '@book-library-tool/api'
 import { EventResponse } from '@book-library-tool/sdk'
-import type { UpdateBookCommand } from '@books/commands/UpdateBookCommand.js'
-import { UpdateBookHandler } from '@books/commands/UpdateBookHandler.js'
+import {
+  UpdateBookCommand,
+  UpdateBookHandler,
+} from '@books/application/index.js'
 import { FastifyRequest } from 'fastify'
 
 export class UpdateBookController {

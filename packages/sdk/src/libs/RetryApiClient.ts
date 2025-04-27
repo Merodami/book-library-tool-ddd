@@ -1,9 +1,9 @@
-import logger from '../../../shared/src/logger.js'
-import type { ApiRequestOptions } from '../openapi/core/ApiRequestOptions.js'
-import { CancelablePromise } from '../openapi/core/CancelablePromise.js'
-import type { OpenAPIConfig } from '../openapi/core/OpenAPI.js'
-import { API } from '../openapi/index.js'
-import { ApiError } from '../openapi/index.js'
+import { logger } from '@book-library-tool/shared'
+import type { ApiRequestOptions } from '@sdk/openapi/core/ApiRequestOptions.js'
+import { CancelablePromise } from '@sdk/openapi/core/CancelablePromise.js'
+import type { OpenAPIConfig } from '@sdk/openapi/core/OpenAPI.js'
+import { API } from '@sdk/openapi/index.js'
+import { ApiError } from '@sdk/openapi/index.js'
 
 /**
  * RetryHttpRequest configuration options

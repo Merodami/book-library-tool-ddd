@@ -1,21 +1,25 @@
+import { ErrorResponseSchema } from './responses/errors.js'
 import { registry } from './schemaRegistry.js'
 import {
   BookCreateRequestSchema,
+  BookFieldSchema,
   BookSchema,
+  BookSortFieldSchema,
   BookUpdateRequestSchema,
 } from './schemas/books.js'
 import { CatalogSearchQuerySchema } from './schemas/catalog.js'
-import { ErrorResponseSchema } from './schemas/errors.js'
 import { EventResponseSchema } from './schemas/events.js'
 import {
   PaginatedResultSchema,
   PaginationMetadataSchema,
 } from './schemas/pagination.js'
 import {
+  ReservationFieldSchema,
   ReservationRequestSchema,
   ReservationReturnResponseSchema,
   ReservationSchema,
   ReservationsHistoryQuerySchema,
+  ReservationSortFieldSchema,
 } from './schemas/reservations.js'
 import { IdParameterSchema } from './schemas/shared.js'
 import {
@@ -36,13 +40,18 @@ import { UserSchema } from './schemas/users.js'
 import {
   LateReturnRequestSchema,
   WalletBalanceRequestSchema,
+  WalletFieldSchema,
   WalletSchema,
+  WalletSearchQuerySchema,
+  WalletSortFieldSchema,
 } from './schemas/wallets.js'
 
 // Books schemas
 registry.register('Book', BookSchema)
 registry.register('BookCreateRequest', BookCreateRequestSchema)
 registry.register('BookUpdateRequest', BookUpdateRequestSchema)
+registry.register('BookSortField', BookSortFieldSchema)
+registry.register('BookField', BookFieldSchema)
 
 // Catalog schemas
 registry.register('CatalogSearchQuery', CatalogSearchQuerySchema)
@@ -59,6 +68,8 @@ registry.register('Reservation', ReservationSchema)
 registry.register('ReservationsHistoryQuery', ReservationsHistoryQuerySchema)
 registry.register('ReservationRequest', ReservationRequestSchema)
 registry.register('ReservationReturnResponse', ReservationReturnResponseSchema)
+registry.register('ReservationSortField', ReservationSortFieldSchema)
+registry.register('ReservationField', ReservationFieldSchema)
 
 // System schemas
 registry.register('HealthStatus', HealthStatusSchema)
@@ -81,6 +92,9 @@ registry.register('User', UserSchema)
 registry.register('Wallet', WalletSchema)
 registry.register('WalletBalanceRequest', WalletBalanceRequestSchema)
 registry.register('LateReturnRequest', LateReturnRequestSchema)
+registry.register('WalletField', WalletFieldSchema)
+registry.register('WalletSortField', WalletSortFieldSchema)
+registry.register('WalletSearchQuery', WalletSearchQuerySchema)
 
 // Parameter schemas
 registry.register('IdParameter', IdParameterSchema)

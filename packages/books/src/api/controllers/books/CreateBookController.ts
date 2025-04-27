@@ -1,6 +1,8 @@
 import { EventResponse } from '@book-library-tool/sdk'
-import type { CreateBookCommand } from '@books/commands/CreateBookCommand.js'
-import { CreateBookHandler } from '@books/commands/CreateBookHandler.js'
+import {
+  CreateBookCommand,
+  CreateBookHandler,
+} from '@books/application/index.js'
 import { FastifyRequest } from 'fastify'
 
 export class CreateBookController {

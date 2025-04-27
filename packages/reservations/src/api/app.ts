@@ -1,20 +1,22 @@
 import { MongoDatabaseService } from '@book-library-tool/database'
-import { DomainEvent, RabbitMQEventBus } from '@book-library-tool/event-store'
+import { RabbitMQEventBus } from '@book-library-tool/event-store'
 import { createFastifyServer, startServer } from '@book-library-tool/http'
 import { setCacheService } from '@book-library-tool/redis/src/application/decorators/cache.js'
 import { RedisService } from '@book-library-tool/redis/src/infrastructure/services/redis.js'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
-import { ReservationEventSubscriptions } from '@reservations/event-store/ReservationEventSubscriptions.js'
-import { ReservationProjectionHandler } from '@reservations/event-store/ReservationProjectionHandler.js'
-import { ReservationDocument } from '@reservations/persistence/mongo/documents/ReservationDocument.js'
-import { ReservationReadProjectionRepository } from '@reservations/persistence/mongo/ReservationReadProjectionRepository.js'
-import { ReservationReadRepository } from '@reservations/persistence/mongo/ReservationReadRepository.js'
-import { ReservationWriteProjectionRepository } from '@reservations/persistence/mongo/ReservationWriteProjectionRepository.js'
-import { ReservationWriteRepository } from '@reservations/persistence/mongo/ReservationWriteRepository.js'
-import { createReservationRouter } from '@reservations/routes/reservations/ReservationRouter.js'
-import { BookBroughtHandler } from '@reservations/use_cases/commands/BookBroughtHandler.js'
-import { PaymentHandler } from '@reservations/use_cases/commands/PaymentHandler.js'
-import { ValidateReservationHandler } from '@reservations/use_cases/commands/ValidateReservationHandler.js'
+import { createReservationReadRouter } from '@reservations/api/routes/reservations/ReservationReadRouter.js'
+import { createReservationWriteRouter } from '@reservations/api/routes/reservations/ReservationWriteRouter.js'
+import { BookBroughtHandler } from '@reservations/application/use_cases/commands/BookBroughtHandler.js'
+import { PaymentHandler } from '@reservations/application/use_cases/commands/PaymentHandler.js'
+import { ValidateReservationHandler } from '@reservations/application/use_cases/commands/ValidateReservationHandler.js'
+import { ReservationEventSubscriptions } from '@reservations/infrastructure/event-store/ReservationEventSubscriptions.js'
+import { ReservationProjectionHandler } from '@reservations/infrastructure/event-store/ReservationProjectionHandler.js'
+import { ReservationDocument } from '@reservations/infrastructure/persistence/mongo/documents/ReservationDocument.js'
+import { ReservationReadProjectionRepository } from '@reservations/infrastructure/persistence/mongo/ReservationReadProjectionRepository.js'
+import { ReservationReadRepository } from '@reservations/infrastructure/persistence/mongo/ReservationReadRepository.js'
+import { ReservationWriteProjectionRepository } from '@reservations/infrastructure/persistence/mongo/ReservationWriteProjectionRepository.js'
+import { ReservationWriteRepository } from '@reservations/infrastructure/persistence/mongo/ReservationWriteRepository.js'
 
 async function startReservationService() {
   // Initialize the infrastructure service (database connection)
@@ -170,25 +172,26 @@ async function startReservationService() {
     ],
   })
 
-  /**
-   * Set up reservation routes:
-   *
-   * The createReservationRouter function accepts:
-   *  - The reservation repository (for commands)
-   *  - The projection repository (for queries)
-   *  - The EventBus (for publishing events)
-   */
+  // Mount write (command) routes under /reservations
   app.register(
-    async (instance) => {
-      return instance.register(
-        createReservationRouter(
+    async (instance) =>
+      instance.register(
+        createReservationWriteRouter(
           reservationReadRepository,
           reservationWriteRepository,
           reservationReadProjectionRepository,
           eventBus,
         ),
-      )
-    },
+      ),
+    { prefix: '/reservations' },
+  )
+
+  // Mount read (query) routes under /reservations
+  app.register(
+    async (instance) =>
+      instance.register(
+        createReservationReadRouter(reservationReadProjectionRepository),
+      ),
     { prefix: '/reservations' },
   )
 

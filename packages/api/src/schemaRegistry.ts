@@ -6,18 +6,31 @@ import type { OpenAPIV3 } from 'openapi-types'
  */
 class SchemaRegistry {
   private schemas = new Map<string, TSchema>()
+  private responses = new Map<string, OpenAPIV3.ResponseObject>()
 
   /**
    * Register a schema with the registry
    */
   register<T extends TSchema>(name: string, schema: T): T {
-    if (this.schemas.has(name)) {
-      return schema
+    if (!this.schemas.has(name)) {
+      this.schemas.set(name, schema)
     }
 
-    this.schemas.set(name, schema)
-
     return schema
+  }
+
+  /**
+   * Register a response object under components.responses
+   */
+  registerResponse(
+    name: string,
+    response: OpenAPIV3.ResponseObject,
+  ): OpenAPIV3.ResponseObject {
+    if (!this.responses.has(name)) {
+      this.responses.set(name, response)
+    }
+
+    return response
   }
 
   /**
@@ -41,6 +54,13 @@ class SchemaRegistry {
   }
 
   /**
+   * Create a reference to a response
+   */
+  refResponse(name: string): OpenAPIV3.ReferenceObject {
+    return { $ref: `#/components/responses/${name}` }
+  }
+
+  /**
    * Check if a schema exists
    */
   has(name: string): boolean {
@@ -55,7 +75,7 @@ class SchemaRegistry {
   }
 
   /**
-   * Generate OpenAPI components
+   * Generate OpenAPI components (schemas and responses)
    */
   generateComponents(): OpenAPIV3.ComponentsObject {
     const schemas: Record<
@@ -63,13 +83,17 @@ class SchemaRegistry {
       OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject
     > = {}
 
-    // Use a safer approach to build the schemas object
     this.schemas.forEach((schema, name) => {
-      // This avoids direct indexed assignment
       Object.assign(schemas, { [name]: this.toOpenAPISchema(schema) })
     })
 
-    return { schemas }
+    const responses: Record<string, OpenAPIV3.ResponseObject> = {}
+
+    this.responses.forEach((resp, name) => {
+      Object.assign(responses, { [name]: resp })
+    })
+
+    return { schemas, responses }
   }
 
   /**
@@ -79,9 +103,19 @@ class SchemaRegistry {
     schema: TSchema,
   ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject {
     const jsonSchema = JSON.parse(JSON.stringify(schema))
-
     const cleanSchema = (obj: any): any => {
       if (!obj || typeof obj !== 'object') return obj
+
+      // Collapse anyOf with only const literals into a proper enum
+      if (
+        Array.isArray(obj.anyOf) &&
+        obj.anyOf.every((v: any) => v.const !== undefined)
+      ) {
+        const enumVals = obj.anyOf.map((v: any) => v.const)
+        const type = typeof enumVals[0] === 'number' ? 'number' : 'string'
+
+        return { type, enum: enumVals }
+      }
 
       if (Array.isArray(obj)) {
         return obj.map(cleanSchema)
@@ -90,19 +124,14 @@ class SchemaRegistry {
       const cleaned: any = {}
 
       for (const [key, value] of Object.entries(obj)) {
-        // Skip TypeBox metadata
-        if (['$schema', 'const', 'kind', 'modifier'].includes(key)) {
-          continue
-        }
+        // Strip TypeBox metadata
+        if (['$schema', 'kind', 'modifier'].includes(key)) continue
 
-        if (['anyOf', 'allOf', 'oneOf'].includes(key)) {
-          // Use Object.assign to avoid direct property assignment
+        if (['anyOf', 'allOf', 'oneOf', 'enum'].includes(key)) {
           Object.assign(cleaned, { [key]: (value as any[]).map(cleanSchema) })
         } else if (typeof value === 'object' && value !== null) {
-          // Use Object.assign to avoid direct property assignment
           Object.assign(cleaned, { [key]: cleanSchema(value) })
         } else {
-          // Use Object.assign to avoid direct property assignment
           Object.assign(cleaned, { [key]: value })
         }
       }

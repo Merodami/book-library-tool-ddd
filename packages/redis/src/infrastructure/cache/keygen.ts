@@ -38,10 +38,17 @@ export function httpRequestKeyGenerator(
   const query = req.query ? Object.assign({}, req.query) : {}
 
   // Build a minimal payload for the key
-  const safe = { params, query }
+  // For list endpoints, we'll use query params
+  // For detail endpoints, we'll use the id from params
+
+  // Build a minimal payload for the key
+  // ToDo: We need to adapt this. The cacheKey maybe could be stored on the metadata of the event.
+  // Then we could use the cacheKey directly and skip the stringify process.
+  // Now is going to use hashed id of the request params
+  // const safe = { params, query }
 
   // Stable stringify and hash
-  const payload = stringify(safe)
+  const payload = params.id ? stringify(params.id) : stringify(query)
   const digest = createHash('sha256').update(payload).digest('hex')
 
   return `${prefix}:${methodName}:${digest}`

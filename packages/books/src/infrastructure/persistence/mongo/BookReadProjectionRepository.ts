@@ -1,12 +1,16 @@
 import { schemas } from '@book-library-tool/api'
 import {
-  BaseReadProjectionRepository,
   buildRangeFilter,
   buildTextFilter,
+  MongoReadProjectionRepository,
 } from '@book-library-tool/database'
-import type { BookDocument } from '@books/persistence/mongo/documents/BookDocument.js'
-import { IBookReadProjectionRepository } from '@books/repositories/IBookReadProjectionRepository.js'
-import { GetBookQuery } from '@books/use_cases/queries/GetBookQuery.js'
+import { BookSortField } from '@book-library-tool/sdk'
+import { GetBookQuery } from '@books/application/index.js'
+import {
+  BookReadProjectionRepositoryPort,
+  DomainBook,
+} from '@books/domain/index.js'
+import { type BookDocument, mapToDomain } from '@books/infrastructure/index.js'
 import { Collection, Filter } from 'mongodb'
 
 /**
@@ -14,11 +18,11 @@ import { Collection, Filter } from 'mongodb'
  * Implements filtering, pagination, and mapping to/from domain models.
  */
 export class BookReadProjectionRepository
-  extends BaseReadProjectionRepository<BookDocument, schemas.Book>
-  implements IBookReadProjectionRepository
+  extends MongoReadProjectionRepository<BookDocument, DomainBook>
+  implements BookReadProjectionRepositoryPort
 {
   /**
-   * Constructs a new BookProjectionRepository.
+   * Constructs a new BookReadProjectionRepository.
    * @param collection - MongoDB collection storing BookDocument entries
    */
   constructor(collection: Collection<BookDocument>) {
@@ -34,8 +38,8 @@ export class BookReadProjectionRepository
    */
   async getAllBooks(
     query: schemas.CatalogSearchQuery,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.Book>> {
+    fields?: BookSortField[],
+  ): Promise<schemas.PaginatedResult<DomainBook>> {
     const filter: Filter<BookDocument> = {}
 
     // Text-based filters on title, author, publisher
@@ -78,12 +82,14 @@ export class BookReadProjectionRepository
    */
   async getBookById(
     query: GetBookQuery,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.Book | null> {
+    fields?: BookSortField[],
+    includeDeleted?: boolean,
+  ): Promise<DomainBook | null> {
     return this.findOne(
       { id: query.id } as Filter<BookDocument>,
       fields,
       `book doc for ID ${query.id}`,
+      includeDeleted,
     )
   }
 
@@ -96,34 +102,14 @@ export class BookReadProjectionRepository
    */
   async getBookByIsbn(
     isbn: string,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.Book | null> {
+    fields?: BookSortField[],
+    includeDeleted?: boolean,
+  ): Promise<DomainBook | null> {
     return this.findOne(
       { isbn } as Filter<BookDocument>,
       fields,
       `book doc for ISBN ${isbn}`,
+      includeDeleted,
     )
   }
-}
-
-/**
- * Helper: map MongoDB document to domain Book.
- */
-function mapToDomain(doc: Partial<BookDocument>): schemas.Book {
-  const result: schemas.Book = {}
-
-  // Map fields only if they exist in the document
-  if ('id' in doc) result.id = doc.id
-  if ('isbn' in doc) result.isbn = doc.isbn
-  if ('title' in doc) result.title = doc.title
-  if ('author' in doc) result.author = doc.author
-  if ('publicationYear' in doc) result.publicationYear = doc.publicationYear
-  if ('publisher' in doc) result.publisher = doc.publisher
-  if ('price' in doc) result.price = doc.price
-  if ('version' in doc) result.version = doc.version
-  if ('createdAt' in doc) result.createdAt = doc.createdAt?.toISOString()
-  if ('updatedAt' in doc) result.updatedAt = doc.updatedAt?.toISOString()
-  if ('deletedAt' in doc) result.deletedAt = doc.deletedAt?.toISOString()
-
-  return result
 }

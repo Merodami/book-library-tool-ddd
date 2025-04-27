@@ -1,4 +1,5 @@
-import { DomainWallet } from '@wallets/entities/DomainWallet.js'
+import { logger } from '@book-library-tool/shared'
+import { DomainWallet } from '@wallets/domain/entities/DomainWallet.js'
 import { isLeft } from 'fp-ts/lib/Either.js'
 import * as t from 'io-ts'
 import { PathReporter } from 'io-ts/lib/PathReporter.js'
@@ -150,7 +151,7 @@ export function mapToDomain(raw: unknown): DomainWallet {
   if (isLeft(decoded)) {
     const report = PathReporter.report(decoded).join('; ')
 
-    console.error('Failed raw data:', JSON.stringify(cleaned, null, 2))
+    logger.error('Failed raw data:', JSON.stringify(cleaned, null, 2))
 
     throw new Error(`ReservationDoc validation failed: ${report}`)
   }

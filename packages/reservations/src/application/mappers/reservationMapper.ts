@@ -1,5 +1,5 @@
 import { schemas } from '@book-library-tool/api'
-import type { DomainReservation } from '@reservations/entities/DomainReservation.js'
+import type { DomainReservation } from '@reservations/domain/entities/DomainReservation.js'
 import { omitBy } from 'lodash-es'
 
 /**

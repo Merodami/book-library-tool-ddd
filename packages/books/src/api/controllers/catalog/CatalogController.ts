@@ -1,7 +1,8 @@
 import { schemas } from '@book-library-tool/api'
 import { parseAndValidate } from '@book-library-tool/http'
 import { Cache, httpRequestKeyGenerator } from '@book-library-tool/redis'
-import { GetAllBooksHandler } from '@books/queries/GetAllBooksHandler.js'
+import { BookSortField, BookSortFieldEnum } from '@book-library-tool/sdk'
+import { GetAllBooksHandler, toApiBook } from '@books/application/index.js'
 import type { FastifyRequest } from 'fastify'
 
 export class CatalogController {
@@ -26,16 +27,22 @@ export class CatalogController {
   ): Promise<schemas.PaginatedResult<schemas.Book>> {
     const query = request.query as schemas.CatalogSearchQuery
 
-    const validFields = parseAndValidate<schemas.BookSortField>(
-      query.fields,
-      schemas.ALLOWED_BOOK_FIELDS,
-    )
+    let validFields: BookSortField[] | null = null
+
+    if (query.fields && typeof query.fields === 'string') {
+      const allowed = Object.values(BookSortFieldEnum)
+
+      validFields = parseAndValidate<BookSortField>(query.fields, allowed)
+    }
 
     const result = await this.getAllBooksHandler.execute(
       query,
       validFields || undefined,
     )
 
-    return result
+    return {
+      data: result.data.map(toApiBook),
+      pagination: result.pagination,
+    }
   }
 }

@@ -1,5 +1,5 @@
-import { UpdateWalletBalanceHandler } from '@wallets/commands/UpdateWalletBalanceHandler.js'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import { UpdateWalletBalanceHandler } from '@wallets/application/use_cases/commands/UpdateWalletBalanceHandler.js'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 /**
  * Controller responsible for updating wallet balances.

@@ -8,6 +8,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
+    "@book-library-tool/sdk": "workspace:^",
     "@book-library-tool/shared": "workspace:^",
     "@book-library-tool/types": "workspace:^",
     "@sinclair/typebox": "^0.34.33",

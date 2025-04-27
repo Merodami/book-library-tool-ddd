@@ -1,5 +1,6 @@
 import { logger } from '@book-library-tool/shared'
 import { PaginatedQuery, PaginatedResult } from '@book-library-tool/types'
+import { MongoDatabaseServicePort } from '@database/port/MongoDatabaseServicePort.js'
 import {
   Collection,
   Db,
@@ -31,7 +32,7 @@ interface MongoMetrics {
  * The higher‑level repository (e.g. MongoRepository) uses this service to obtain
  * a specific collection and perform CRUD operations in a database‑agnostic way.
  */
-export class MongoDatabaseService {
+export class MongoDatabaseService implements MongoDatabaseServicePort {
   private client: MongoClient | null = null
   private db: Db | null = null
   private dbName: string
@@ -190,7 +191,7 @@ export class MongoDatabaseService {
    * @param pagination - page & limit
    * @param options - projection and sort
    */
-  async paginateCollection<T extends Document = Document>(
+  async paginate<T extends Document = Document>(
     collection: Collection<T>,
     query: Filter<T>,
     pagination: PaginatedQuery,
@@ -248,7 +249,7 @@ export class MongoDatabaseService {
    * Checks the health of the MongoDB connection.
    * @returns status and details
    */
-  async checkHealth(): Promise<{ status: string; details: any }> {
+  async checkHealth(): Promise<{ status: 'UP' | 'DOWN'; details: unknown }> {
     if (!this.client || !this.db) {
       return { status: 'DOWN', details: { reason: 'Not connected' } }
     }

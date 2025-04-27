@@ -1,10 +1,14 @@
 import { schemas } from '@book-library-tool/api'
+import { BookSortField } from '@book-library-tool/api/src/schemas/books.js'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { IBookReadProjectionRepository } from '@books/repositories/IBookReadProjectionRepository.js'
+import type {
+  BookReadProjectionRepositoryPort,
+  DomainBook,
+} from '@books/domain/index.js'
 
 export class GetAllBooksHandler {
   constructor(
-    private readonly projectionReadRepository: IBookReadProjectionRepository,
+    private readonly projectionReadRepository: BookReadProjectionRepositoryPort,
   ) {}
 
   /**
@@ -17,8 +21,8 @@ export class GetAllBooksHandler {
    */
   async execute(
     query: schemas.CatalogSearchQuery,
-    fields?: schemas.BookSortField[],
-  ): Promise<schemas.PaginatedResult<schemas.Book>> {
+    fields?: BookSortField[],
+  ): Promise<schemas.PaginatedResult<DomainBook>> {
     try {
       // Retrieve all events for the given aggregate ID.
       const books = await this.projectionReadRepository.getAllBooks(

@@ -1,13 +1,11 @@
-import { BaseReadEventSourcedRepository } from '@book-library-tool/database'
-import {
-  BOOK_CREATED,
-  BOOK_DELETED,
-  type DomainEvent,
-} from '@book-library-tool/event-store'
+import { MongoReadRepository } from '@book-library-tool/database'
+import { BOOK_CREATED, BOOK_DELETED } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { ErrorCode, Errors, logger } from '@book-library-tool/shared'
-import { Book } from '@books/entities/Book.js'
-import { IBookReadRepository } from '@books/repositories/IBookReadRepository.js'
+import type { BookReadRepositoryPort } from '@books/domain/index.js'
+import { Book } from '@books/domain/index.js'
 import { Collection } from 'mongodb'
+
 /**
  * Event-sourced repository implementation for the Book aggregate.
  * This repository is responsible for persisting and retrieving Book aggregates
@@ -19,12 +17,27 @@ import { Collection } from 'mongodb'
  * for Book aggregates.
  */
 export class BookReadRepository
-  extends BaseReadEventSourcedRepository<Book>
-  implements IBookReadRepository
+  extends MongoReadRepository<Book>
+  implements BookReadRepositoryPort
 {
   constructor(protected readonly collection: Collection<DomainEvent>) {
     super(collection)
   }
+
+  /**
+   * Retrieves a Book by its unique identifier.
+   *
+   * @param aggregateId - The unique identifier of the Book aggregate.
+   * @returns A promise that resolves to a Book object or null if not found.
+   */
+  async getById(aggregateId: string): Promise<Book | null> {
+    const events = await this.getEventsForAggregate(aggregateId)
+
+    if (events.length === 0) return null
+
+    return this.rehydrateFromEvents(events)
+  }
+
   /**
    * Rehydrates a Book aggregate from its event stream.
    * This method is called by the base repository to reconstruct the aggregate's

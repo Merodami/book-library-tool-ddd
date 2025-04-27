@@ -1,19 +1,16 @@
-import { BaseReadEventSourcedRepository } from '@book-library-tool/database'
-import {
-  type DomainEvent,
-  WALLET_CREATED,
-  WALLET_DELETED,
-} from '@book-library-tool/event-store'
+import { MongoReadRepository } from '@book-library-tool/database'
+import { WALLET_CREATED, WALLET_DELETED } from '@book-library-tool/event-store'
+import type { DomainEvent } from '@book-library-tool/shared'
 import { logger } from '@book-library-tool/shared'
-import { Wallet } from '@wallets/entities/Wallet.js'
-import { IWalletReadRepository } from '@wallets/repositories/IWalletReadRepository.js'
+import { Wallet } from '@wallets/domain/entities/Wallet.js'
+import { WalletReadRepositoryPort } from '@wallets/domain/port/WalletReadRepositoryPort.js'
 
 /**
  * Repository implementation for wallet write operations following CQRS principles
  */
 export class WalletReadRepository
-  extends BaseReadEventSourcedRepository<Wallet>
-  implements IWalletReadRepository
+  extends MongoReadRepository<Wallet>
+  implements WalletReadRepositoryPort
 {
   /**
    * Rehydrates a Wallet aggregate from domain events
